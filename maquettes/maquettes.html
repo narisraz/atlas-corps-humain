@@ -1,0 +1,1188 @@
+<title>Maquettes du corps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : scène 3D plein écran, panneau d'étude à droite (feuille en bas sur mobile), constantes vitales en bas à gauche. */
+:root {
+  --ink: #0e1824;          /* fond, bleu encre de salle d'imagerie */
+  --ink-2: #15222f;        /* surfaces */
+  --ink-3: #1d2d3d;        /* surfaces actives */
+  --line: #2a3d50;
+  --bone: #ece5d5;         /* texte principal, ivoire d'os */
+  --bone-dim: #a9b1b8;
+  --artery: #e2574c;       /* accent : sang oxygéné */
+  --vein: #6a98d8;         /* sang désoxygéné */
+  --nerve: #e6c35c;
+  --glass: rgba(21,34,47,.9);
+  --glass-2: var(--glass-2);
+  --text-2: #d6d2c8;
+  --stage: radial-gradient(ellipse 70% 60% at 40% 45%, #1a2c3e 0%, #0e1824 70%);
+  --font-display: "Spectral", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--bone); font-family: var(--font-body); font-size: 14px; overflow: hidden; }
+#app { position: relative; height: 100%; width: 100%; overflow: hidden;
+  background: var(--stage); }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#scene.hover { cursor: pointer; }
+
+.top { position: absolute; top: 0; left: 0; right: 0; pointer-events: none;
+  padding-top: max(14px, env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 380px); }
+.brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: .01em; }
+.brand h1 em { font-style: italic; font-weight: 500; color: var(--artery); }
+.brand span { font-family: var(--font-mono); font-size: 11px; color: var(--bone-dim); text-transform: uppercase; letter-spacing: .12em; }
+.styles { display: flex; gap: 4px; align-items: center; pointer-events: auto; flex-wrap: wrap; font: 500 12px var(--font-body); }
+.styles span { font: 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--bone-dim); margin-right: 4px; }
+.styles a { color: var(--bone); text-decoration: none; border: 1px solid var(--line); background: var(--glass); padding: 5px 10px; border-radius: 7px; }
+.styles a[aria-current] { border-color: var(--artery); color: var(--artery); }
+.systems { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
+.chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--glass);
+  color: var(--bone); font: 500 12px var(--font-body); padding: 6px 11px 6px 9px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(6px); }
+.chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
+.chip[aria-pressed="false"] { color: var(--bone-dim); background: var(--glass-2); }
+.chip[aria-pressed="false"] i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.chip:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--nerve); outline-offset: 2px; }
+
+#panel { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: max(14px, env(safe-area-inset-bottom, 0px)); width: 350px; background: var(--glass); border: 1px solid var(--line);
+  border-radius: 14px; backdrop-filter: blur(10px); display: flex; flex-direction: column; overflow: hidden; }
+.panel-scroll { overflow-y: auto; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-dim); display: flex; align-items: center; gap: 8px; }
+.eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+#panel h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.1; text-wrap: balance; }
+#panel p { margin: 0; line-height: 1.55; color: var(--text-2); }
+#panel h3 { margin: 0 0 8px; font: 600 12px var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--bone-dim); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 24px 1fr; gap: 10px; line-height: 1.5; color: var(--text-2); }
+.steps li::before { content: counter(s); font: 500 12px var(--font-mono); width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--line); display: grid; place-items: center; color: var(--bone); margin-top: 1px; }
+.figures { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fig { background: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fig b { font: 500 18px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--bone); }
+.fig span { font-size: 12px; color: var(--bone-dim); line-height: 1.35; }
+.know { border-left: 2px solid var(--nerve); padding: 2px 0 2px 12px; font-style: italic; font-family: var(--font-display); font-size: 15px; color: var(--bone); line-height: 1.5; }
+.btn { appearance: none; border: 1px solid var(--line); background: var(--ink-3); color: var(--bone); font: 500 13px var(--font-body);
+  padding: 9px 14px; border-radius: 9px; cursor: pointer; }
+.btn:hover { border-color: #3d566e; }
+.btn.primary { background: var(--artery); border-color: var(--artery); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: #ea6a5f; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.organ-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.organ-list button { text-align: left; appearance: none; background: var(--ink); border: 1px solid var(--line); color: var(--bone);
+  border-radius: 9px; padding: 9px 10px; cursor: pointer; font: 500 13px var(--font-body); display: flex; gap: 8px; align-items: center; }
+.organ-list button i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.organ-list button:hover { border-color: #3d566e; background: var(--ink-3); }
+.soon { font-size: 12.5px; color: var(--bone-dim); line-height: 1.5; }
+.hint { font-size: 12.5px; color: var(--bone-dim); }
+
+.vitals { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+  backdrop-filter: blur(8px); width: 330px; max-width: calc(100% - 32px); }
+.vitals-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.bpm { font: 500 28px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--artery); line-height: 1; }
+.bpm small { font-size: 11px; color: var(--bone-dim); margin-left: 4px; letter-spacing: .06em; }
+.vitals-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font: 12px var(--font-mono); color: var(--bone-dim); font-variant-numeric: tabular-nums; }
+.vitals-side b { color: var(--bone); font-weight: 500; }
+#ecg { width: 100%; height: 38px; display: block; }
+.presets { display: flex; gap: 5px; flex-wrap: wrap; }
+.presets button { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--bone-dim); border-radius: 7px; padding: 4px 9px; font: 500 12px var(--font-body); cursor: pointer; }
+.presets button[aria-pressed="true"] { color: var(--bone); border-color: var(--artery); background: rgba(226,87,76,.12); }
+input[type=range] { width: 100%; accent-color: var(--artery); }
+
+#tip { position: absolute; pointer-events: none; background: var(--bone); color: var(--ink); font: 600 12px var(--font-body); padding: 4px 9px; border-radius: 6px; transform: translate(12px, -28px); white-space: nowrap; }
+
+/* Plongée détaillée */
+#deep { position: absolute; inset: 0; z-index: 10; background: #09121b; display: flex; flex-direction: column;
+  padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 12px; }
+.deep-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.deep-head h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 24px; }
+.deep-head h2 em { color: var(--artery); font-weight: 500; }
+.deep-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; }
+.deep-stage { position: relative; min-height: 0; background: var(--ink); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+#heartCanvas { width: 100%; height: 100%; display: block; }
+.deep-side { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.phase-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.phase-card h3 { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 600; }
+.phase-card p { margin: 0; line-height: 1.55; color: var(--text-2); }
+.phase-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.phase-list li { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 8px; color: var(--bone-dim); font-size: 13px; }
+.phase-list li i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.phase-list li span:last-child { font: 11px var(--font-mono); }
+.phase-list li.on { background: var(--ink-3); color: var(--bone); }
+.valves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.valve { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.valve b { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.valve.open b { color: #8fd19e; } .valve.shut b { color: var(--bone-dim); }
+.speed { display: flex; gap: 4px; }
+
+:root[data-style="atlas"] { --ink:#eceee9; --ink-2:#fbfbf8; --ink-3:#e2e6e2; --line:#c6cdc9; --bone:#1d252c; --bone-dim:#5a656d; --glass:rgba(251,251,248,.92); --glass-2:rgba(236,238,233,.7); --text-2:#333c44;
+  --stage: linear-gradient(rgba(29,37,44,.05) 1px, transparent 1px) 0 0/24px 24px, linear-gradient(90deg, rgba(29,37,44,.05) 1px, transparent 1px) 0 0/24px 24px, #eceee9; color-scheme: light; }
+:root[data-style="verre"] { --ink:#e3e8ec; --ink-2:#f4f6f8; --ink-3:#dde3e8; --line:#c3ccd4; --bone:#18212a; --bone-dim:#56626d; --glass:rgba(248,250,252,.72); --glass-2:rgba(235,240,244,.6); --text-2:#2f3a44;
+  --stage: radial-gradient(ellipse 60% 70% at 38% 40%, #f6f8fa 0%, #d5dde4 55%, #aeb9c3 100%); color-scheme: light; }
+:root[data-style="atlas"] .brand h1, :root[data-style="atlas"] #panel h2 { font-style: normal; }
+@media (max-width: 820px) {
+  .top { max-width: 100%; }
+  .brand h1 { font-size: 21px; }
+  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 46%; border-radius: 16px 16px 0 0; border-left: 0; border-right: 0; border-bottom: 0; }
+  .panel-scroll { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); }
+  #panel.collapsed { max-height: 130px; }
+  .systems { flex-wrap: nowrap; overflow-x: auto; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; scrollbar-width: none; }
+  .chip { flex: none; }
+  .vitals { bottom: calc(46% + 10px); width: 210px; padding: 9px 10px; gap: 6px; }
+  .vitals.lifted { bottom: calc(46% + 10px); }
+  .vitals .presets, .vitals input { display: none; }
+  .vitals.open .presets, .vitals.open input { display: flex; }
+  .bpm { font-size: 22px; }
+  #ecg { height: 28px; }
+  .deep-body { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 1fr) auto; overflow-y: auto; }
+  .deep-side { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div id="app">
+  <canvas id="scene" aria-label="Corps humain en 3D. Glissez pour tourner, pincez ou molette pour zoomer, touchez un organe pour l'étudier."></canvas>
+
+  <div class="top">
+    <div class="brand">
+      <h1>Atlas <em>vivant</em> du corps</h1>
+      <span>anatomie · physiologie · v1</span>
+    </div>
+    <div class="styles" id="styles" role="group" aria-label="Maquettes de style"><span>Maquette</span><a href="#holo">A · Hologramme</a><a href="#atlas">B · Planche d'atlas</a><a href="#verre">C · Verre</a></div>
+    <div class="systems" id="systems" role="group" aria-label="Systèmes affichés"></div>
+  </div>
+
+  <div class="vitals" id="vitals">
+    <div class="vitals-head">
+      <div class="bpm" id="bpmOut">70<small>BPM</small></div>
+      <div class="vitals-side">
+        <span>respiration <b id="respOut">16</b>/min</span>
+        <span>débit ≈ <b id="coOut">4,9</b> L/min</span>
+      </div>
+    </div>
+    <canvas id="ecg" aria-hidden="true"></canvas>
+    <input id="bpm" type="range" min="40" max="190" value="70" aria-label="Fréquence cardiaque">
+    <div class="presets" id="presets">
+      <button data-v="52">Sommeil</button>
+      <button data-v="70" aria-pressed="true">Repos</button>
+      <button data-v="105">Marche</button>
+      <button data-v="165">Course</button>
+    </div>
+  </div>
+
+  <aside id="panel" aria-live="polite"><div class="panel-scroll" id="panelBody"></div></aside>
+  <div id="tip" hidden></div>
+
+  <section id="deep" hidden aria-label="Cycle cardiaque en détail">
+    <div class="deep-head">
+      <h2>Le cycle cardiaque, <em>battement par battement</em></h2>
+      <div class="row">
+        <div class="speed" id="speed">
+          <button class="btn" data-s="0.25">×¼</button>
+          <button class="btn" data-s="0.5">×½</button>
+          <button class="btn" data-s="1">×1</button>
+        </div>
+        <button class="btn" id="playBtn">Pause</button>
+        <button class="btn" id="stepBtn">Phase suivante</button>
+        <button class="btn primary" id="closeDeep">Retour au corps</button>
+      </div>
+    </div>
+    <div class="deep-body">
+      <div class="deep-stage"><canvas id="heartCanvas"></canvas></div>
+      <div class="deep-side">
+        <div class="phase-card">
+          <div class="eyebrow" id="phaseEyebrow">Phase 1 sur 5</div>
+          <h3 id="phaseTitle"></h3>
+          <p id="phaseText"></p>
+        </div>
+        <div>
+          <h3 class="eyebrow" style="margin:0 0 8px">Valves</h3>
+          <div class="valves" id="valves"></div>
+        </div>
+        <ol class="phase-list" id="phaseList"></ol>
+        <p class="hint">Vue de face : la droite du patient est à gauche de l'écran. Le côté droit du cœur (bleu) envoie le sang aux poumons, le côté gauche (rouge) l'envoie au reste du corps.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/objects/MarchingCubes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+(() => {
+'use strict';
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const gauss = (x, m, s) => Math.exp(-((x - m) * (x - m)) / (2 * s * s));
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STYLE = ['holo', 'atlas', 'verre'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'holo';
+document.documentElement.dataset.style = STYLE;
+window.addEventListener('hashchange', () => location.reload());
+document.querySelectorAll('#styles a').forEach(a => { if (a.getAttribute('href') === '#' + STYLE) a.setAttribute('aria-current', 'true'); });
+const BLEND = STYLE === 'atlas' ? THREE.NormalBlending : THREE.AdditiveBlending;
+
+/* ------------------------------------------------------------------ */
+/* Contenu pédagogique                                                  */
+/* ------------------------------------------------------------------ */
+const SYSTEMS = {
+  nerveux:   { nom: 'Nerveux', c: '#e6c35c' },
+  cardio:    { nom: 'Cardiovasculaire', c: '#e2574c' },
+  respi:     { nom: 'Respiratoire', c: '#e79aa0' },
+  digestif:  { nom: 'Digestif', c: '#d79a5e' },
+  urinaire:  { nom: 'Urinaire', c: '#85c4bb' },
+  squelette: { nom: 'Squelette', c: '#ece5d5' },
+};
+
+const ORGANS = {
+  cerveau: { nom: 'Cerveau', sys: 'nerveux', dist: 0.55,
+    role: "Centre de commande du corps. Il reçoit les informations des sens, les interprète, décide et envoie des ordres aux muscles et aux organes, en permanence et sans pause, même pendant le sommeil.",
+    etapes: [
+      "Un récepteur (œil, peau, oreille) transforme un stimulus en signal électrique.",
+      "Le signal remonte par les nerfs et la moelle épinière jusqu'au cortex sensoriel.",
+      "Des réseaux de neurones comparent l'information à la mémoire et préparent une réponse.",
+      "Le cortex moteur envoie l'ordre : le signal redescend la moelle jusqu'au muscle.",
+      "Entre deux neurones, le message passe par une synapse grâce à des neurotransmetteurs."
+    ],
+    chiffres: [['86 Md', 'neurones'], ['1,4 kg', 'environ 2 % du poids'], ['20 %', "de l'énergie du corps"], ['120 m/s', 'vitesse max. d\'un influx']],
+    savoir: "Les points qui s'allument dans le cerveau représentent des neurones qui « déchargent » : un neurone émet un influx quand la somme des signaux reçus dépasse un seuil." },
+  moelle: { nom: 'Moelle épinière et nerfs', sys: 'nerveux', dist: 1.4,
+    role: "Autoroute de l'information entre le cerveau et le corps. Elle gère aussi seule certains réflexes, sans attendre le cerveau.",
+    etapes: [
+      "Les nerfs sensitifs apportent les messages de la peau, des muscles et des organes.",
+      "Ils entrent dans la moelle par l'arrière (racine dorsale).",
+      "Pour un réflexe, un neurone de la moelle relie directement l'entrée à la sortie : la main se retire du chaud avant même que vous ayez mal.",
+      "Les nerfs moteurs sortent par l'avant (racine ventrale) et commandent les muscles."
+    ],
+    chiffres: [['45 cm', 'longueur de la moelle'], ['31', 'paires de nerfs spinaux'], ['~1 m', "le plus long axone (jusqu'au pied)"], ['50 ms', "durée d'un réflexe rotulien"]],
+    savoir: "Les impulsions jaunes qui filent le long des nerfs montrent les deux sens du trafic : vers le cerveau (sensations) et vers les muscles (ordres)." },
+  coeur: { nom: 'Cœur', sys: 'cardio', dist: 0.5, deep: true,
+    role: "Deux pompes accolées. La moitié droite envoie le sang pauvre en oxygène vers les poumons, la moitié gauche envoie le sang riche en oxygène vers tout le corps.",
+    etapes: [
+      "Le nœud sinusal, dans l'oreillette droite, déclenche une impulsion électrique (onde P de l'ECG).",
+      "Les oreillettes se contractent et remplissent complètement les ventricules.",
+      "L'impulsion traverse le nœud auriculo-ventriculaire puis se répand dans les ventricules (complexe QRS).",
+      "Les ventricules se contractent : les valves se ferment derrière le sang et s'ouvrent devant lui.",
+      "Le muscle se relâche (onde T) et le cœur se remplit à nouveau."
+    ],
+    chiffres: [['~100 000', 'battements par jour'], ['70 mL', 'éjectés par battement au repos'], ['5 L/min', 'débit au repos'], ['300 g', 'environ, la taille d\'un poing']],
+    savoir: "Changez la fréquence en bas à gauche : le cœur bat plus vite, le sang circule plus vite et la respiration s'accélère aussi, comme pendant un effort." },
+  vaisseaux: { nom: 'Vaisseaux sanguins', sys: 'cardio', dist: 1.6,
+    role: "Un réseau fermé qui amène l'oxygène et les nutriments à chaque cellule et rapporte les déchets. Les artères partent du cœur, les veines y reviennent.",
+    etapes: [
+      "L'aorte reçoit le sang du ventricule gauche à chaque battement : c'est le pouls.",
+      "Les artères se divisent en artérioles puis en capillaires, fins comme un cheveu.",
+      "Dans les capillaires, l'oxygène passe aux cellules et le CO₂ passe dans le sang.",
+      "Les veines ramènent le sang au cœur, aidées par des valvules et la contraction des muscles des jambes.",
+      "Le sang part ensuite aux poumons se recharger en oxygène (petite circulation)."
+    ],
+    chiffres: [['~100 000 km', 'de vaisseaux'], ['5 L', 'de sang'], ['~1 min', 'pour un tour complet au repos'], ['120/80', 'tension normale (mmHg)']],
+    savoir: "Rouge = sang oxygéné, bleu = sang appauvri. En réalité le sang veineux est rouge sombre ; le bleu est une convention des schémas." },
+  poumons: { nom: 'Poumons', sys: 'respi', dist: 0.6,
+    role: "Ils font entrer l'oxygène dans le sang et en font sortir le dioxyde de carbone. Ils n'ont pas de muscle : c'est le diaphragme qui les fait gonfler.",
+    etapes: [
+      "Le diaphragme se contracte et descend ; la cage thoracique s'élargit.",
+      "La pression dans les poumons baisse sous celle de l'air extérieur : l'air entre.",
+      "L'air descend la trachée, les bronches puis les bronchioles jusqu'aux alvéoles.",
+      "À travers la paroi très fine des alvéoles, l'O₂ passe dans le sang et le CO₂ en sort.",
+      "Le diaphragme se relâche, les poumons élastiques se rétractent : l'air ressort."
+    ],
+    chiffres: [['~480 M', "d'alvéoles"], ['~70 m²', "surface d'échange"], ['0,5 L', 'par respiration calme'], ['12–20', 'respirations / min au repos']],
+    savoir: "Regardez le dôme rouge sous les poumons : c'est le diaphragme. Il descend à chaque inspiration." },
+  diaphragme: { nom: 'Diaphragme', sys: 'respi', dist: 0.6,
+    role: "Le muscle principal de la respiration. Une coupole qui sépare le thorax de l'abdomen.",
+    etapes: [
+      "Le cerveau (tronc cérébral) envoie un signal rythmique par le nerf phrénique.",
+      "Le diaphragme se contracte, s'aplatit et descend de 1 à 2 cm (jusqu'à 10 cm en effort).",
+      "Le volume du thorax augmente, l'air entre dans les poumons.",
+      "Il se relâche et remonte : l'expiration calme ne demande aucun effort."
+    ],
+    chiffres: [['~75 %', "de l'effort d'inspiration au repos"], ['~22 000', 'contractions par jour'], ['2 mm', 'd\'épaisseur environ'], ['C3–C5', 'origine du nerf phrénique']],
+    savoir: "Le hoquet est une contraction brusque et involontaire du diaphragme, suivie de la fermeture des cordes vocales." },
+  estomac: { nom: 'Estomac', sys: 'digestif', dist: 0.55,
+    role: "Un sac musclé qui stocke le repas, le malaxe et commence la digestion des protéines dans un acide très puissant.",
+    etapes: [
+      "L'œsophage pousse la bouchée par des vagues de contraction (péristaltisme).",
+      "L'estomac sécrète de l'acide chlorhydrique et de la pepsine.",
+      "Ses trois couches de muscles brassent le tout en bouillie, le chyme.",
+      "Le pylore laisse passer le chyme par petites portions vers l'intestin grêle."
+    ],
+    chiffres: [['pH 1,5–3,5', 'acidité du suc gastrique'], ['1–1,5 L', 'capacité après un repas'], ['2–4 h', 'pour vider un repas'], ['~3 /min', 'ondes de contraction']],
+    savoir: "Les ondulations visibles sur l'œsophage, l'estomac et les intestins sont des ondes de péristaltisme : le muscle se contracte juste derrière le contenu et le pousse vers l'avant." },
+  foie: { nom: 'Foie', sys: 'digestif', dist: 0.55,
+    role: "L'usine chimique du corps : il trie et transforme ce que l'intestin absorbe, stocke de l'énergie, neutralise des toxiques et fabrique la bile.",
+    etapes: [
+      "Le sang de l'intestin arrive par la veine porte, chargé de nutriments.",
+      "Les cellules du foie (hépatocytes) stockent le sucre sous forme de glycogène.",
+      "Elles transforment l'alcool, les médicaments et l'ammoniac en substances éliminables.",
+      "Elles produisent la bile, stockée dans la vésicule, qui aide à digérer les graisses."
+    ],
+    chiffres: [['1,5 kg', 'le plus gros organe interne'], ['~500', 'fonctions connues'], ['1,5 L/min', 'de sang filtré'], ['0,5–1 L', 'de bile par jour']],
+    savoir: "Le foie peut se régénérer : après l'ablation d'une partie, il retrouve presque sa taille d'origine en quelques semaines." },
+  intestin: { nom: 'Intestin grêle', sys: 'digestif', dist: 0.6,
+    role: "C'est là que la nourriture est vraiment absorbée. Sa paroi est couverte de replis et de villosités qui multiplient sa surface.",
+    etapes: [
+      "Le pancréas et la bile se mélangent au chyme dans le duodénum.",
+      "Les enzymes découpent protéines, sucres et graisses en petites molécules.",
+      "Les villosités absorbent ces molécules dans le sang et la lymphe.",
+      "Le péristaltisme pousse le reste vers le gros intestin."
+    ],
+    chiffres: [['~6 m', 'de long'], ['~30 m²', "surface d'absorption"], ['3–5 h', 'temps de transit'], ['~90 %', 'des nutriments absorbés ici']],
+    savoir: "Les villosités mesurent environ 1 mm. Chacune porte elle-même des microvillosités, ce qui donne cette énorme surface." },
+  colon: { nom: 'Gros intestin', sys: 'digestif', dist: 0.6,
+    role: "Il récupère l'eau et les sels de ce qui reste et héberge des milliers de milliards de bactéries utiles.",
+    etapes: [
+      "Le contenu liquide arrive de l'intestin grêle au niveau du cæcum.",
+      "Le côlon remonte, traverse et redescend en absorbant l'eau.",
+      "Les bactéries fermentent les fibres et produisent des vitamines (K, B).",
+      "Les selles sont stockées dans le rectum avant l'évacuation."
+    ],
+    chiffres: [['1,5 m', 'de long'], ['~38 000 Md', 'bactéries (microbiote)'], ['1,5 L → 0,15 L', "d'eau entre l'entrée et la sortie"], ['12–48 h', 'de transit']],
+    savoir: "Le microbiote intestinal compte à peu près autant de cellules que le corps humain lui-même." },
+  reins: { nom: 'Reins', sys: 'urinaire', dist: 0.6,
+    role: "Deux filtres qui nettoient le sang en continu, règlent la quantité d'eau et de sels du corps et participent au contrôle de la tension.",
+    etapes: [
+      "Le sang entre dans le rein par l'artère rénale.",
+      "Dans chaque néphron, le glomérule filtre le plasma : eau, sels, sucre, déchets.",
+      "Le tubule récupère presque tout ce qui est utile (99 % de l'eau).",
+      "Le reste forme l'urine, qui descend par les uretères vers la vessie."
+    ],
+    chiffres: [['180 L', 'filtrés par jour'], ['1–2 L', "d'urine par jour"], ['~1 M', 'de néphrons par rein'], ['20 %', 'du débit cardiaque']],
+    savoir: "Les gouttes jaunes qui descendent des reins vers la vessie représentent l'urine qui avance dans les uretères." },
+  vessie: { nom: 'Vessie', sys: 'urinaire', dist: 0.5,
+    role: "Un réservoir élastique qui stocke l'urine jusqu'au bon moment.",
+    etapes: [
+      "L'urine arrive goutte à goutte par les deux uretères.",
+      "La paroi musculaire s'étire sans que la pression monte beaucoup.",
+      "Vers 200–300 mL, des capteurs envoient l'envie d'uriner au cerveau.",
+      "Le cerveau autorise la miction : le muscle de la vessie se contracte et le sphincter s'ouvre."
+    ],
+    chiffres: [['400–600 mL', 'capacité'], ['~200 mL', 'première envie'], ['4–7', 'mictions par jour'], ['~1 mL/min', "débit d'urine au repos"]],
+    savoir: "Dans la scène, la vessie se remplit lentement puis se vide, en accéléré." },
+  squelette: { nom: 'Squelette', sys: 'squelette', dist: 1.8,
+    role: "La charpente du corps : il soutient, protège les organes, sert de levier aux muscles, stocke le calcium et fabrique les cellules du sang.",
+    etapes: [
+      "Les muscles tirent sur les os via les tendons ; les articulations servent de charnières.",
+      "Le crâne protège le cerveau, la cage thoracique le cœur et les poumons.",
+      "La moelle osseuse rouge produit globules rouges, blancs et plaquettes.",
+      "L'os se reconstruit en permanence : environ 10 % du squelette est renouvelé chaque année."
+    ],
+    chiffres: [['206', 'os chez l\'adulte'], ['~300', 'os chez le nouveau-né'], ['15 %', 'du poids du corps'], ['2 M/s', 'globules rouges produits']],
+    savoir: "Le plus petit os est l'étrier, dans l'oreille moyenne : environ 3 mm." },
+};
+
+/* ------------------------------------------------------------------ */
+/* Rythmes : cœur, respiration                                          */
+/* ------------------------------------------------------------------ */
+const state = { bpm: 70, selected: null, visible: Object.fromEntries(Object.keys(SYSTEMS).map(k => [k, true])), deepOpen: false };
+const respRate = () => clamp(Math.round(10 + (state.bpm - 60) * 0.18), 8, 40);
+const strokeVol = () => clamp(70 + (state.bpm - 70) * 0.3, 60, 105);
+// Phase cardiaque p ∈ [0,1) : 0–0,12 systole auriculaire, 0,12–0,20 contraction isovolumique,
+// 0,20–0,45 éjection, 0,45–0,53 relaxation isovolumique, 0,53–1 remplissage.
+const ventContract = p => smooth(0.12, 0.2, p) * (1 - smooth(0.4, 0.53, p));
+const atrContract = p => p < 0.12 ? Math.sin(p / 0.12 * Math.PI) : 0;
+const ecgAt = p => 0.12 * gauss(p, 0.06, 0.018) - 0.12 * gauss(p, 0.145, 0.006) + 1.0 * gauss(p, 0.16, 0.0075)
+  - 0.28 * gauss(p, 0.175, 0.007) + 0.26 * gauss(p, 0.38, 0.035);
+
+/* ------------------------------------------------------------------ */
+/* Scène Three.js                                                      */
+/* ------------------------------------------------------------------ */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 50);
+camera.position.set(0.0, 1.05, 3.45);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.target.set(0, 0.93, 0);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 0.25; controls.maxDistance = 5;
+controls.enablePan = true;
+
+scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x2a1d1a, 0.75));
+const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(1.5, 2.5, 2.5); scene.add(key);
+const rim = new THREE.DirectionalLight(0x7fa8ff, 0.6); rim.position.set(-2, 1.5, -2); scene.add(rim);
+
+const groups = {};
+for (const k of Object.keys(SYSTEMS)) { groups[k] = new THREE.Group(); scene.add(groups[k]); }
+const pickables = [];
+const organMeshes = {};
+const animated = { peristaltic: [], flows: [] };
+
+let toonRamp = null;
+function mat(color, o = {}) {
+  let m;
+  if (STYLE === 'atlas') {
+    if (!toonRamp) { toonRamp = new THREE.DataTexture(new Uint8Array([120, 190, 255]), 3, 1, THREE.RedFormat); toonRamp.minFilter = toonRamp.magFilter = THREE.NearestFilter; toonRamp.needsUpdate = true; }
+    const q = Object.assign({}, o); delete q.roughness; delete q.metalness; delete q.clearcoat;
+    m = new THREE.MeshToonMaterial(Object.assign({ color, gradientMap: toonRamp, transparent: true, opacity: 1 }, q));
+    if (m.emissive) m.emissiveIntensity = Math.min(m.emissiveIntensity, 0.25);
+  } else if (STYLE === 'verre') {
+    m = new THREE.MeshPhysicalMaterial(Object.assign({ color, roughness: 0.45, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.25 }, o, { transparent: false, opacity: 1, depthWrite: true }));
+  } else {
+    m = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.0, transparent: true, opacity: 1 }, o));
+  }
+  m.userData.base = m.opacity; return m;
+}
+function add(mesh, organ, sys, parent) {
+  mesh.userData.organ = organ;
+  (parent || groups[sys]).add(mesh);
+  pickables.push(mesh);
+  (organMeshes[organ] = organMeshes[organ] || []).push(mesh);
+  return mesh;
+}
+function segment(a, b, r, material, cyl) {
+  const d = new THREE.Vector3().subVectors(b, a); const len = d.length();
+  const g = cyl ? new THREE.CylinderGeometry(r, r * 0.85, len, 10) : new THREE.CapsuleGeometry(r, len, 6, 18);
+  const m = new THREE.Mesh(g, material);
+  m.position.copy(a).add(b).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(V3(0, 1, 0), d.normalize());
+  return m;
+}
+function curveOf(pts, closed) { return new THREE.CatmullRomCurve3(pts.map(p => V3(p[0], p[1], p[2])), !!closed, 'centripetal'); }
+function tube(pts, r, segs, material) {
+  const c = curveOf(pts);
+  const g = new THREE.TubeGeometry(c, segs, r, 12, false);
+  const uv = g.attributes.uv; const L = c.getLength(); const a = new Float32Array(uv.count);
+  for (let i = 0; i < uv.count; i++) a[i] = uv.getX(i) * L;
+  g.setAttribute('aLen', new THREE.BufferAttribute(a, 1));
+  const m = new THREE.Mesh(g, material); m.userData.curve = c; return m;
+}
+function peristalticMat(color, amp, freq, speed, o) {
+  const m = mat(color, Object.assign({ roughness: 0.6 }, o));
+  m.userData.u = { uTime: { value: 0 }, uAmp: { value: amp }, uFreq: { value: freq }, uSpeed: { value: speed } };
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, m.userData.u);
+    sh.vertexShader = 'attribute float aLen;\nuniform float uTime;\nuniform float uAmp;\nuniform float uFreq;\nuniform float uSpeed;\n' +
+      sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\nfloat pw = sin(aLen * uFreq - uTime * uSpeed);\ntransformed += objectNormal * uAmp * smoothstep(0.35, 1.0, pw);');
+  };
+  animated.peristaltic.push(m); return m;
+}
+function deform(geo, fn) {
+  const p = geo.attributes.position; const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); fn(v); p.setXYZ(i, v.x, v.y, v.z); }
+  geo.computeVertexNormals(); return geo;
+}
+
+/* --- Peau : silhouette lisse obtenue par champ de distance (SDF) + marching cubes --- */
+function buildBodyGeometry(res) {
+  const P = [];
+  const E = (c, r, k) => P.push({ t: 0, c, r, k: k ?? 0.04 });
+  const C = (a, b, r1, r2, k) => P.push({ t: 1, a, b, r1, r2, k: k ?? 0.04 });
+  E([0, 1.708, 0.006], [0.076, 0.098, 0.09], 0.02);           // crâne
+  E([0, 1.64, 0.028], [0.054, 0.05, 0.058], 0.035);           // mâchoire
+  E([0, 1.69, 0.088], [0.012, 0.022, 0.014], 0.015);          // nez
+  C([0, 1.49, -0.014], [0, 1.63, -0.006], 0.052, 0.045, 0.04); // cou
+  C([-0.13, 1.455, -0.012], [0.13, 1.455, -0.012], 0.055, 0.055, 0.06); // ceinture scapulaire
+  E([0, 1.35, -0.006], [0.158, 0.135, 0.096], 0.05);          // thorax
+  E([0, 1.17, 0.0], [0.128, 0.12, 0.084], 0.07);              // taille
+  E([0, 0.985, -0.006], [0.155, 0.105, 0.098], 0.06);         // bassin
+  E([0, 0.95, -0.055], [0.12, 0.07, 0.06], 0.05);             // fessiers
+  for (const s of [-1, 1]) {
+    E([s * 0.072, 1.37, 0.05], [0.068, 0.05, 0.045], 0.04);    // pectoraux
+    E([s * 0.185, 1.43, -0.008], [0.052, 0.056, 0.052], 0.035); // deltoïde
+    C([s * 0.198, 1.405, -0.01], [s * 0.232, 1.165, -0.012], 0.042, 0.032, 0.025);
+    E([s * 0.214, 1.29, 0.0], [0.034, 0.075, 0.036], 0.03);     // biceps
+    C([s * 0.232, 1.165, -0.012], [s * 0.264, 0.925, 0.012], 0.032, 0.022, 0.02);
+    E([s * 0.242, 1.08, -0.002], [0.034, 0.062, 0.034], 0.03);  // avant-bras
+    E([s * 0.272, 0.872, 0.02], [0.017, 0.042, 0.03], 0.02);    // paume
+    C([s * 0.274, 0.85, 0.03], [s * 0.272, 0.8, 0.034], 0.012, 0.008, 0.012); // doigts
+    C([s * 0.262, 0.875, 0.045], [s * 0.258, 0.84, 0.06], 0.009, 0.007, 0.012); // pouce
+    C([s * 0.088, 0.95, 0.0], [s * 0.1, 0.52, 0.012], 0.074, 0.048, 0.03); // cuisse
+    E([s * 0.1, 0.51, 0.03], [0.038, 0.04, 0.03], 0.02);        // genou
+    C([s * 0.1, 0.5, 0.012], [s * 0.1, 0.085, -0.004], 0.044, 0.028, 0.025);
+    E([s * 0.103, 0.385, -0.026], [0.04, 0.085, 0.04], 0.035);  // mollet
+    E([s * 0.1, 0.033, 0.04], [0.033, 0.026, 0.088], 0.03);     // pied
+  }
+  for (const p of P) {
+    if (p.t === 0) { p.bc = p.c; p.br = Math.max(...p.r); }
+    else { p.bc = [(p.a[0] + p.b[0]) / 2, (p.a[1] + p.b[1]) / 2, (p.a[2] + p.b[2]) / 2]; p.br = Math.hypot(p.b[0] - p.a[0], p.b[1] - p.a[1], p.b[2] - p.a[2]) / 2 + Math.max(p.r1, p.r2); }
+  }
+  const sdf = (x, y, z) => {
+    let d = 1e9;
+    for (const p of P) {
+      const dx = x - p.bc[0], dy = y - p.bc[1], dz = z - p.bc[2];
+      if (Math.sqrt(dx * dx + dy * dy + dz * dz) - p.br > d + p.k) continue;
+      let di;
+      if (p.t === 0) {
+        const px = (x - p.c[0]) / p.r[0], py = (y - p.c[1]) / p.r[1], pz = (z - p.c[2]) / p.r[2];
+        const k0 = Math.sqrt(px * px + py * py + pz * pz);
+        const qx = px / p.r[0], qy = py / p.r[1], qz = pz / p.r[2]; const k1 = Math.sqrt(qx * qx + qy * qy + qz * qz);
+        di = k0 * (k0 - 1) / k1;
+      } else {
+        const pax = x - p.a[0], pay = y - p.a[1], paz = z - p.a[2]; const bax = p.b[0] - p.a[0], bay = p.b[1] - p.a[1], baz = p.b[2] - p.a[2];
+        const h = clamp((pax * bax + pay * bay + paz * baz) / (bax * bax + bay * bay + baz * baz), 0, 1);
+        di = Math.hypot(pax - bax * h, pay - bay * h, paz - baz * h) - (p.r1 + (p.r2 - p.r1) * h);
+      }
+      const hh = Math.max(p.k - Math.abs(d - di), 0) / p.k; d = Math.min(d, di) - hh * hh * p.k * 0.25;
+    }
+    return d;
+  };
+  const H = 0.96, CY = 0.92;
+  const mc = new THREE.MarchingCubes(res, new THREE.MeshBasicMaterial(), false, false, 400000);
+  mc.isolation = 0; const n = mc.size, half = n / 2;
+  for (let k = 0; k < n; k++) { const z = (k - half) / half * H;
+    for (let j = 0; j < n; j++) { const y = CY + (j - half) / half * H;
+      for (let i = 0; i < n; i++) { const x = (i - half) / half * H;
+        mc.field[i + j * n + k * n * n] = (Math.abs(x) > 0.34 || Math.abs(z) > 0.17) ? -0.2 : -sdf(x, y, z);
+      } } }
+  mc.update();
+  const cnt = mc.geometry.drawRange.count;
+  const g = new THREE.BufferGeometry();
+  const pos = mc.geometry.attributes.position.array.slice(0, cnt * 3); const nor = mc.geometry.attributes.normal.array.slice(0, cnt * 3);
+  for (let i = 0; i < cnt; i++) { pos[i * 3] *= H; pos[i * 3 + 1] = pos[i * 3 + 1] * H + CY; pos[i * 3 + 2] *= H; }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  const merged = THREE.BufferGeometryUtils ? THREE.BufferGeometryUtils.mergeVertices(g, 1e-5) : g;
+  merged.computeVertexNormals();
+  return merged;
+}
+const bodyGeo = buildBodyGeometry(150);
+
+const skinMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, side: THREE.DoubleSide,
+  uniforms: { uColor: { value: new THREE.Color('#b8cde4') }, uOpacity: { value: 1 }, uScan: { value: -1 } },
+  vertexShader: 'varying vec3 vN; varying vec3 vV; varying float vY; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vY = (modelMatrix * vec4(position,1.0)).y; gl_Position = projectionMatrix * mv; }',
+  fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; uniform float uScan; varying vec3 vN; varying vec3 vV; varying float vY; void main(){ float f = 1.0 - abs(dot(normalize(vN), normalize(vV))); float a = pow(f, 2.2) * 0.55 + 0.03; float band = exp(-pow((vY - uScan) / 0.012, 2.0)); vec3 c = mix(uColor, vec3(0.6, 0.97, 1.0), band); gl_FragColor = vec4(c, (a + band * 0.35) * uOpacity); }'
+});
+const skin = new THREE.Group(); scene.add(skin);
+const outlineMats = [];
+function outlineMat(color, px) {
+  const m = new THREE.ShaderMaterial({ side: THREE.BackSide, transparent: true, depthWrite: false,
+    uniforms: { uColor: { value: new THREE.Color(color) }, uW: { value: px }, uRes: { value: new THREE.Vector2(1, 1) }, uOpacity: { value: 1 } },
+    vertexShader: 'uniform float uW; uniform vec2 uRes; void main(){ vec4 c = projectionMatrix * modelViewMatrix * vec4(position,1.0); vec3 n = normalize(normalMatrix * normal); c.xy += n.xy * uW * c.w * 2.0 / uRes; gl_Position = c; }',
+    fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; void main(){ gl_FragColor = vec4(uColor, uOpacity); }' });
+  outlineMats.push(m); return m;
+}
+if (STYLE === 'holo') {
+  skin.add(new THREE.Mesh(bodyGeo, skinMat));
+  const grid = new THREE.PolarGridHelper(0.62, 12, 5, 72, 0x3f7fa8, 0x2a4c66); grid.material.transparent = true; grid.material.opacity = 0.45; scene.add(grid);
+} else if (STYLE === 'atlas') {
+  skin.add(new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.32, depthWrite: false })));
+  const mask = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide, stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp }));
+  mask.renderOrder = -2; skin.add(mask);
+  const ol = outlineMat('#27303a', 2.4); ol.stencilWrite = true; ol.stencilRef = 1; ol.stencilFunc = THREE.NotEqualStencilFunc;
+  const olm = new THREE.Mesh(bodyGeo, ol); olm.renderOrder = -1; skin.add(olm);
+  // Toise : la vraie échelle du corps, graduée tous les 10 cm
+  const ruler = new THREE.Group(); const lm = new THREE.LineBasicMaterial({ color: '#5a656d' }); const pts = [V3(0, 0, 0), V3(0, 1.8, 0)];
+  for (let c = 0; c <= 180; c += 10) { const w = c % 50 === 0 ? 0.03 : 0.015; pts.push(V3(0, c / 100, 0), V3(w, c / 100, 0)); }
+  ruler.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), lm));
+  for (const c of [0, 50, 100, 150]) {
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 48; const x = cv.getContext('2d'); x.fillStyle = '#5a656d'; x.font = '500 30px "IBM Plex Mono", monospace'; x.fillText(c + (c === 150 ? ' cm' : ''), 4, 34);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true })); sp.scale.set(0.12, 0.045, 1); sp.position.set(0.1, c / 100 + 0.005, 0); ruler.add(sp);
+  }
+  ruler.position.set(-0.48, 0, 0); scene.add(ruler);
+} else {
+  const glass = new THREE.MeshPhysicalMaterial({ color: '#f4f8fb', transmission: 1, roughness: 0.07, thickness: 0.04, ior: 1.12, metalness: 0, specularIntensity: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.1, envMapIntensity: 0.7,
+    attenuationColor: new THREE.Color('#cfe2ee'), attenuationDistance: 2.5, depthWrite: false });
+  skin.add(new THREE.Mesh(bodyGeo, glass));
+  const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+}
+{ // ombre de contact au sol
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  const col = STYLE === 'holo' ? '90,200,255' : '20,28,36';
+  g.addColorStop(0, `rgba(${col},${STYLE === 'holo' ? 0.35 : 0.32})`); g.addColorStop(1, `rgba(${col},0)`); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.5), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = 0.002; scene.add(sh);
+}
+
+/* --- Squelette --- */
+{
+  const bone = mat('#e8dfcb', { roughness: 0.8, opacity: 0.5, depthWrite: false });
+  const skullMat = mat('#e8dfcb', { roughness: 0.8, opacity: 0.2, depthWrite: false });
+  const g = groups.squelette;
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 24), skullMat); skull.scale.set(0.93, 1.05, 1.08); skull.position.set(0, 1.69, 0.005);
+  add(skull, 'squelette', 'squelette');
+  const jaw = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.01, 8, 24, Math.PI), skullMat); jaw.rotation.x = Math.PI / 2; jaw.rotation.z = Math.PI; jaw.position.set(0, 1.6, 0.02);
+  add(jaw, 'squelette', 'squelette');
+  if (STYLE === 'verre') { skull.visible = false; jaw.visible = false; }
+  // Colonne vertébrale (courbures cervicale, dorsale, lombaire)
+  for (let i = 0; i < 25; i++) {
+    const y = 0.97 + i * 0.0255; const t = (y - 0.97) / 0.64;
+    const z = -0.072 - 0.018 * Math.sin(t * Math.PI * 1.6) + 0.01;
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.03 - t * 0.008, 0.016, 0.026), bone); v.position.set(0, y, z);
+    add(v, 'squelette', 'squelette');
+  }
+  // Côtes
+  for (let i = 0; i < 10; i++) {
+    const y = 1.43 - i * 0.032; const rx = 0.11 + Math.min(i, 5) * 0.009; const front = i < 7;
+    for (const s of [-1, 1]) {
+      const pts = [[s * 0.018, y, -0.075], [s * rx, y - 0.02, -0.035], [s * (rx + 0.005), y - 0.045, 0.03]];
+      if (front) pts.push([s * 0.035, y - 0.07 - i * 0.004, 0.085]);
+      add(tube(pts, 0.0055, 40, bone), 'squelette', 'squelette');
+    }
+  }
+  const sternum = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.17, 0.012), bone); sternum.position.set(0, 1.33, 0.09); sternum.rotation.x = -0.12;
+  add(sternum, 'squelette', 'squelette');
+  for (const s of [-1, 1]) {
+    add(tube([[s * 0.02, 1.46, 0.07], [s * 0.1, 1.475, 0.05], [s * 0.18, 1.465, 0.0]], 0.007, 24, bone), 'squelette', 'squelette');
+    add(segment(V3(s * 0.2, 1.43, 0), V3(s * 0.235, 1.17, 0), 0.013, bone, true), 'squelette', 'squelette');
+    add(segment(V3(s * 0.232, 1.165, 0.008), V3(s * 0.262, 0.92, 0.018), 0.008, bone, true), 'squelette', 'squelette');
+    add(segment(V3(s * 0.24, 1.165, -0.008), V3(s * 0.27, 0.92, 0.0), 0.007, bone, true), 'squelette', 'squelette');
+    add(segment(V3(s * 0.085, 0.93, 0), V3(s * 0.1, 0.52, 0.01), 0.017, bone, true), 'squelette', 'squelette');
+    add(segment(V3(s * 0.1, 0.5, 0.012), V3(s * 0.1, 0.08, 0), 0.013, bone, true), 'squelette', 'squelette');
+    add(segment(V3(s * 0.116, 0.49, 0.0), V3(s * 0.112, 0.09, -0.005), 0.006, bone, true), 'squelette', 'squelette');
+    const pat = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 10), bone); pat.position.set(s * 0.1, 0.51, 0.05); add(pat, 'squelette', 'squelette');
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), bone); wing.scale.set(0.065, 0.055, 0.016);
+    wing.position.set(s * 0.075, 1.0, -0.025); wing.rotation.y = s * 0.7; add(wing, 'squelette', 'squelette');
+    const scap = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), bone); scap.scale.set(0.05, 0.065, 0.008);
+    scap.position.set(s * 0.12, 1.37, -0.095); scap.rotation.y = -s * 0.35; add(scap, 'squelette', 'squelette');
+  }
+  const pubis = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.012, 8, 24, Math.PI), bone); pubis.rotation.x = Math.PI / 2; pubis.rotation.z = Math.PI; pubis.position.set(0, 0.925, -0.005);
+  add(pubis, 'squelette', 'squelette');
+}
+
+/* --- Système nerveux --- */
+let neuronPts;
+{
+  const brainMat = mat('#e7b4b0', { roughness: 0.75, emissive: new THREE.Color('#3a1416'), emissiveIntensity: 0.4 });
+  const bg = deform(new THREE.SphereGeometry(1, 96, 64), v => {
+    const n = 0.045 * Math.sin(v.x * 11 + v.y * 4) * Math.sin(v.y * 13 + v.z * 3) + 0.03 * Math.sin(v.z * 17 + v.x * 6);
+    let k = 1 + n;
+    if (v.y > 0) k -= 0.12 * Math.exp(-v.x * v.x / 0.004) * v.y;   // scissure inter-hémisphérique
+    v.multiplyScalar(k);
+    if (v.y < -0.3) v.y = -0.3 + (v.y + 0.3) * 0.4;                // base aplatie
+  });
+  const brain = new THREE.Mesh(bg, brainMat); brain.scale.set(0.083, 0.072, 0.095); brain.position.set(0, 1.705, 0.008);
+  add(brain, 'cerveau', 'nerveux');
+  const cereb = new THREE.Mesh(deform(new THREE.SphereGeometry(1, 40, 24), v => v.multiplyScalar(1 + 0.04 * Math.sin(v.y * 40))), brainMat);
+  cereb.scale.set(0.048, 0.026, 0.034); cereb.position.set(0, 1.645, -0.055); add(cereb, 'cerveau', 'nerveux');
+  // Neurones qui déchargent
+  const N = 260; const pos = new Float32Array(N * 3); const col = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    let x, y, z; do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (x * x + y * y + z * z > 1 || y < -0.3);
+    pos.set([x * 0.085, 1.705 + y * 0.075, 0.008 + z * 0.097], i * 3);
+  }
+  const ng = new THREE.BufferGeometry(); ng.setAttribute('position', new THREE.BufferAttribute(pos, 3)); ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  neuronPts = new THREE.Points(ng, new THREE.PointsMaterial({ size: 0.014, vertexColors: true, transparent: true, depthWrite: false, blending: BLEND, map: dotTexture() }));
+  neuronPts.userData.level = new Float32Array(N);
+  groups.nerveux.add(neuronPts);
+
+  const nerveMat = mat('#e6c35c', { roughness: 0.5, emissive: new THREE.Color('#5a4410'), emissiveIntensity: 0.6, opacity: 0.85 });
+  const cordPts = [[0, 1.64, -0.04], [0, 1.58, -0.055]];
+  for (let i = 0; i <= 8; i++) { const y = 1.55 - i * 0.07; const t = (y - 0.97) / 0.64; cordPts.push([0, y, -0.072 - 0.018 * Math.sin(t * Math.PI * 1.6) + 0.01]); }
+  const nervePaths = [cordPts];
+  for (const s of [-1, 1]) {
+    nervePaths.push([[0, 1.5, -0.06], [s * 0.08, 1.46, -0.03], [s * 0.19, 1.43, -0.012], [s * 0.233, 1.18, -0.012], [s * 0.266, 0.93, 0.0], [s * 0.275, 0.84, 0.01]]);
+    nervePaths.push([[0, 1.0, -0.065], [s * 0.05, 0.93, -0.045], [s * 0.093, 0.8, -0.02], [s * 0.1, 0.5, -0.02], [s * 0.1, 0.08, -0.012], [s * 0.1, 0.02, 0.06]]);
+    for (let k = 0; k < 4; k++) { const y = 1.4 - k * 0.07; nervePaths.push([[0, y, -0.07], [s * 0.1, y - 0.025, -0.04], [s * 0.13, y - 0.05, 0.03]]); }
+  }
+  const nerveCurves = nervePaths.map((p, i) => { const m = tube(p, i === 0 ? 0.0065 : 0.0028, 60, nerveMat); add(m, 'moelle', 'nerveux'); return m.userData.curve; });
+  makeFlow(nerveCurves, '#ffe18a', { speed: 0.9, perUnit: 26, size: 0.016, both: true, group: groups.nerveux });
+}
+
+/* --- Système cardiovasculaire --- */
+let heartGroup;
+{
+  heartGroup = new THREE.Group(); heartGroup.position.set(0.02, 1.3, 0.05); groups.cardio.add(heartGroup);
+  const heartMat = mat('#a3262a', { roughness: 0.45, emissive: new THREE.Color('#300608'), emissiveIntensity: 0.5 });
+  const hg = deform(new THREE.SphereGeometry(1, 64, 48), v => {
+    const t = (v.y + 1) / 2; const k = 0.32 + 0.68 * Math.pow(t, 0.55);
+    v.x *= k; v.z *= k;
+    if (v.y > 0.55) v.y -= 0.12 * Math.cos(v.x * 4.5) * (v.y - 0.55) * 3;
+    v.x += 0.06 * Math.sin(v.y * 3);
+  });
+  const heart = new THREE.Mesh(hg, heartMat); heart.scale.set(0.052, 0.066, 0.046); heart.rotation.z = 0.55; heart.rotation.x = 0.25;
+  add(heart, 'coeur', 'cardio', heartGroup);
+  const sulc = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.0035, 8, 32, Math.PI * 1.2), mat('#e2c27a', { roughness: 0.6 }));
+  sulc.rotation.set(0.25, 0.4, 0.55 + Math.PI * 0.5); sulc.position.set(-0.004, 0.015, 0.01); add(sulc, 'coeur', 'cardio', heartGroup);
+
+  const artMat = mat('#d4473f', { roughness: 0.45, opacity: 0.6 });
+  const venMat = mat('#4f7fc4', { roughness: 0.45, opacity: 0.55 });
+  const arterial = [[[0.02, 1.33, 0.05], [0.015, 1.4, 0.035], [0.0, 1.435, 0.0], [-0.004, 1.41, -0.045], [0, 1.3, -0.05], [0, 1.12, -0.05], [0, 0.97, -0.03]]];
+  for (const s of [-1, 1]) {
+    arterial.push([[0, 0.97, -0.03], [s * 0.06, 0.92, 0.0], [s * 0.09, 0.8, 0.02], [s * 0.1, 0.5, 0.025], [s * 0.1, 0.25, 0.005], [s * 0.1, 0.06, 0.03]]);
+    arterial.push([[0.0, 1.435, 0.0], [s * 0.025, 1.5, 0.012], [s * 0.035, 1.6, 0.015], [s * 0.03, 1.7, 0.0]]);
+    arterial.push([[0.0, 1.435, 0.0], [s * 0.08, 1.45, 0.0], [s * 0.19, 1.44, 0.0], [s * 0.233, 1.18, 0.006], [s * 0.264, 0.94, 0.014], [s * 0.272, 0.84, 0.02]]);
+    arterial.push([[0, 1.12, -0.05], [s * 0.06, 1.06, -0.04]]);
+  }
+  const venous = arterial.map(path => path.map(([x, y, z]) => [x + (Math.abs(x) > 0.03 ? Math.sign(x) * 0.012 : -0.016), y, z + 0.012]).reverse());
+  venous[0] = [[-0.016, 0.97, -0.018], [-0.02, 1.12, -0.035], [-0.02, 1.25, -0.02], [-0.01, 1.3, 0.035]];
+  const pulmA = [], pulmV = [];
+  for (const s of [-1, 1]) {
+    pulmA.push([[0.005, 1.335, 0.06], [s * 0.03, 1.355, 0.03], [s * 0.075, 1.34, 0.0], [s * 0.09, 1.27, -0.005]]);
+    pulmV.push([[s * 0.09, 1.25, 0.01], [s * 0.065, 1.3, 0.02], [s * 0.03, 1.31, 0.025], [0.025, 1.31, 0.035]]);
+  }
+  const mk = (paths, m, r) => paths.map((p, i) => { const t = tube(p, i === 0 ? r * 1.5 : r, 60, m); add(t, 'vaisseaux', 'cardio'); return t.userData.curve; });
+  const aC = mk(arterial, artMat, 0.0065), vC = mk(venous, venMat, 0.0065);
+  const paC = mk(pulmA, venMat, 0.006), pvC = mk(pulmV, artMat, 0.006);
+  makeFlow(aC.concat(pvC), '#ff6a5c', { speed: 0.35, perUnit: 60, size: 0.013, pulse: true, group: groups.cardio });
+  makeFlow(vC.concat(paC), '#6fa4ff', { speed: 0.22, perUnit: 50, size: 0.012, group: groups.cardio });
+}
+
+/* --- Système respiratoire --- */
+let lungs = [], diaphragm;
+{
+  const lungMat = mat('#e8939a', { roughness: 0.85, opacity: 0.62, depthWrite: false, emissive: new THREE.Color('#3a1418'), emissiveIntensity: 0.3 });
+  for (const s of [-1, 1]) {
+    const g = deform(new THREE.SphereGeometry(1, 48, 36), v => {
+      if (v.x * s < 0) v.x *= 0.45;                        // face médiane aplatie
+      if (v.y < -0.4) v.y = -0.4 + (v.y + 0.4) * 0.35 - 0.12 * (1 - v.x * v.x); // base concave posée sur le diaphragme
+      const t = (v.y + 1) / 2; v.x *= 0.55 + 0.45 * Math.sqrt(1 - Math.pow(Math.max(0, t - 0.5) * 2, 2)) ; v.z *= 0.6 + 0.4 * (1 - Math.max(0, t - 0.6));
+    });
+    const l = new THREE.Mesh(g, lungMat); l.scale.set(s > 0 ? 0.068 : 0.074, 0.13, 0.075); l.position.set(s * 0.083, 1.31, -0.005);
+    add(l, 'poumons', 'respi'); lungs.push(l);
+  }
+  const airMat = mat('#f1d4cf', { roughness: 0.6, opacity: 0.9 });
+  add(tube([[0, 1.6, 0.03], [0, 1.5, 0.02], [0, 1.43, 0.005]], 0.009, 20, airMat), 'poumons', 'respi');
+  for (const s of [-1, 1]) {
+    add(tube([[0, 1.43, 0.005], [s * 0.03, 1.4, 0.0], [s * 0.06, 1.36, -0.005]], 0.006, 20, airMat), 'poumons', 'respi');
+    for (let k = 0; k < 3; k++) add(tube([[s * 0.06, 1.36, -0.005], [s * (0.075 + k * 0.006), 1.36 - 0.035 * (k + 1), -0.005 + (k - 1) * 0.02]], 0.0035, 10, airMat), 'poumons', 'respi');
+  }
+  const dmat = mat('#b5413c', { roughness: 0.7, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+  diaphragm = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2.4), dmat);
+  diaphragm.scale.set(0.155, 0.06, 0.1); diaphragm.position.set(0, 1.17, -0.005); diaphragm.userData.baseY = 1.17;
+  add(diaphragm, 'diaphragme', 'respi');
+}
+
+/* --- Système digestif --- */
+{
+  const gutMat = peristalticMat('#d9967a', 0.004, 70, 4);
+  const esoMat = peristalticMat('#d48f86', 0.003, 50, 5);
+  add(tube([[0, 1.6, 0.012], [0, 1.47, -0.03], [0.004, 1.32, -0.035], [0.015, 1.22, -0.005], [0.03, 1.2, 0.025]], 0.0065, 80, esoMat), 'estomac', 'digestif');
+  const stomMat = peristalticMat('#d78a6c', 0.006, 45, 2.2);
+  add(tube([[0.025, 1.205, 0.025], [0.06, 1.19, 0.035], [0.088, 1.14, 0.045], [0.075, 1.09, 0.055], [0.035, 1.085, 0.055], [0.008, 1.1, 0.05]], 0.027, 80, stomMat), 'estomac', 'digestif');
+  const liver = new THREE.Mesh(deform(new THREE.SphereGeometry(1, 48, 32), v => { const k = 1 - 0.55 * Math.max(0, v.x); v.y *= k; v.z *= 0.6 + 0.4 * k; if (v.y < 0) v.y *= 0.6; }),
+    mat('#7d2c27', { roughness: 0.5, emissive: new THREE.Color('#1e0605'), emissiveIntensity: 0.6 }));
+  liver.scale.set(0.105, 0.06, 0.07); liver.position.set(-0.04, 1.15, 0.035); liver.rotation.z = 0.2;
+  add(liver, 'foie', 'digestif');
+  const gb = new THREE.Mesh(new THREE.SphereGeometry(0.012, 16, 12), mat('#5b8a3a', { roughness: 0.4 })); gb.scale.set(1, 1.6, 1); gb.position.set(-0.05, 1.1, 0.08);
+  add(gb, 'foie', 'digestif');
+  // Intestin grêle : un serpentin de ~6 m replié (ici à l'échelle de la scène)
+  const pts = [[0.008, 1.1, 0.05], [-0.02, 1.075, 0.05], [0.0, 1.055, 0.06]];
+  for (let r = 0; r < 6; r++) {
+    const y = 1.045 - r * 0.021;
+    for (let k = 0; k <= 7; k++) { let x = -0.072 + 0.144 * k / 7; if (r % 2) x = -x; pts.push([x, y + 0.006 * Math.sin(k * 1.9 + r), 0.05 + 0.018 * Math.sin(k * 1.4 + r * 2.1)]); }
+  }
+  pts.push([-0.07, 0.93, 0.05], [-0.085, 0.935, 0.055]);
+  add(tube(pts, 0.0085, 900, peristalticMat('#e3a58a', 0.003, 90, 3)), 'intestin', 'digestif');
+  add(tube([[-0.085, 0.925, 0.05], [-0.098, 0.98, 0.045], [-0.098, 1.07, 0.04], [-0.05, 1.085, 0.06], [0.05, 1.085, 0.06], [0.098, 1.07, 0.04], [0.098, 0.98, 0.04], [0.075, 0.93, 0.035], [0.03, 0.915, 0.02], [0.0, 0.885, -0.01]],
+    0.014, 260, peristalticMat('#b9805f', 0.004, 40, 1.2, { opacity: 0.95 })), 'colon', 'digestif');
+}
+
+/* --- Système urinaire --- */
+let bladder;
+{
+  const kmat = mat('#8b3a35', { roughness: 0.5, emissive: new THREE.Color('#1e0605'), emissiveIntensity: 0.5 });
+  const ureters = [];
+  for (const s of [-1, 1]) {
+    const k = new THREE.Mesh(deform(new THREE.SphereGeometry(1, 32, 24), v => { if (v.x * s < 0) v.x *= 0.6 + 0.4 * Math.abs(v.y); }), kmat);
+    const y = s < 0 ? 1.04 : 1.055;
+    k.scale.set(0.024, 0.044, 0.02); k.position.set(s * 0.062, y, -0.045); k.rotation.z = s * 0.2;
+    add(k, 'reins', 'urinaire');
+    const u = tube([[s * 0.052, y - 0.02, -0.04], [s * 0.05, 0.98, -0.02], [s * 0.035, 0.92, 0.01], [s * 0.012, 0.905, 0.03]], 0.0025, 40, mat('#d8c47a', { roughness: 0.5, opacity: 0.85 }));
+    add(u, 'reins', 'urinaire'); ureters.push(u.userData.curve);
+  }
+  bladder = new THREE.Mesh(new THREE.SphereGeometry(0.028, 28, 20), mat('#d9b25a', { roughness: 0.4, opacity: 0.7, depthWrite: false }));
+  bladder.position.set(0, 0.9, 0.035); add(bladder, 'vessie', 'urinaire');
+  makeFlow(ureters, '#ffe27a', { speed: 0.03, perUnit: 70, size: 0.01, group: groups.urinaire });
+}
+
+/* --- Particules qui circulent le long de courbes (sang, influx, urine) --- */
+function dotTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t;
+}
+function makeFlow(curves, color, o) {
+  const samples = curves.map(c => ({ pts: c.getSpacedPoints(240), L: c.getLength() }));
+  const parts = [];
+  samples.forEach((s, ci) => { const n = Math.max(3, Math.round(s.L * o.perUnit)); for (let i = 0; i < n; i++) parts.push({ ci, u: Math.random(), j: 0.75 + Math.random() * 0.5, dir: o.both && Math.random() < 0.5 ? -1 : 1 }); });
+  const pos = new Float32Array(parts.length * 3);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color, size: o.size, map: dotTexture(), transparent: true, depthWrite: false, blending: BLEND }));
+  o.group.add(pts);
+  animated.flows.push({ samples, parts, pos, g, o, pts });
+}
+function updateFlows(dt, p) {
+  const rate = state.bpm / 70;
+  for (const f of animated.flows) {
+    const mult = f.o.pulse ? 0.45 + 1.6 * ventContract(p) : 1;
+    for (let i = 0; i < f.parts.length; i++) {
+      const q = f.parts[i]; const s = f.samples[q.ci];
+      q.u += q.dir * dt * f.o.speed * rate * mult * q.j / s.L;
+      if (q.u > 1) q.u -= 1; if (q.u < 0) q.u += 1;
+      const fi = q.u * (s.pts.length - 1); const i0 = Math.floor(fi); const a = s.pts[i0], b = s.pts[Math.min(i0 + 1, s.pts.length - 1)]; const t = fi - i0;
+      f.pos[i * 3] = a.x + (b.x - a.x) * t; f.pos[i * 3 + 1] = a.y + (b.y - a.y) * t; f.pos[i * 3 + 2] = a.z + (b.z - a.z) * t;
+    }
+    f.g.attributes.position.needsUpdate = true;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Interface : systèmes, panneau, constantes                           */
+/* ------------------------------------------------------------------ */
+const $ = id => document.getElementById(id);
+const sysBox = $('systems');
+for (const [k, s] of Object.entries(SYSTEMS)) {
+  const b = document.createElement('button'); b.className = 'chip'; b.style.setProperty('--c', s.c); b.setAttribute('aria-pressed', 'true');
+  b.innerHTML = `<i></i>${s.nom}`;
+  b.onclick = () => { state.visible[k] = !state.visible[k]; b.setAttribute('aria-pressed', String(state.visible[k])); groups[k].visible = state.visible[k]; };
+  sysBox.appendChild(b);
+}
+
+const panelBody = $('panelBody'); const panel = $('panel');
+function renderHome() {
+  const bySys = Object.entries(ORGANS);
+  panelBody.innerHTML = `
+    <div class="eyebrow">Mode d'emploi</div>
+    <h2>Explorez un corps qui fonctionne</h2>
+    <p>Chaque organe est animé selon son vrai rythme : le cœur bat, le sang circule, les poumons respirent, l'intestin ondule, les nerfs transmettent. Tournez autour du corps et touchez un organe pour comprendre comment il marche.</p>
+    <div>
+      <h3>Organes</h3>
+      <div class="organ-list">${bySys.map(([id, o]) => `<button data-o="${id}" style="--c:${SYSTEMS[o.sys].c}"><i></i>${o.nom}</button>`).join('')}</div>
+    </div>
+    <div class="know">Commencez par le cœur : il a déjà une plongée détaillée, phase par phase, avec l'ECG et les valves.</div>
+    <p class="hint">Glisser pour tourner · molette ou pincement pour zoomer · clic droit ou deux doigts pour déplacer. Les pastilles en haut masquent un système pour voir ce qu'il cache.</p>`;
+  panelBody.querySelectorAll('[data-o]').forEach(b => b.onclick = () => select(b.dataset.o));
+}
+function renderOrgan(id) {
+  const o = ORGANS[id]; const s = SYSTEMS[o.sys];
+  panelBody.innerHTML = `
+    <div class="row" style="justify-content:space-between">
+      <div class="eyebrow" style="--c:${s.c}"><i></i>Système ${s.nom.toLowerCase()}</div>
+      <button class="btn" id="backBtn">Vue d'ensemble</button>
+    </div>
+    <h2>${o.nom}</h2>
+    <p>${o.role}</p>
+    ${o.deep ? `<button class="btn primary" id="deepBtn">Plonger dans le cycle cardiaque</button>` : ''}
+    <div><h3>Comment ça marche</h3><ol class="steps">${o.etapes.map(e => `<li><span>${e}</span></li>`).join('')}</ol></div>
+    <div><h3>En chiffres</h3><div class="figures">${o.chiffres.map(([v, l]) => `<div class="fig"><b>${v}</b><span>${l}</span></div>`).join('')}</div></div>
+    <div class="know">${o.savoir}</div>
+    ${o.deep ? '' : `<p class="soon">Plongée détaillée à venir pour cet organe.</p>`}`;
+  $('backBtn').onclick = () => select(null);
+  if (o.deep) $('deepBtn').onclick = openDeep;
+  panelBody.scrollTop = 0;
+}
+
+// Fréquence cardiaque
+const bpmInput = $('bpm');
+function setBpm(v) {
+  state.bpm = +v; bpmInput.value = v;
+  $('bpmOut').innerHTML = `${state.bpm}<small>BPM</small>`;
+  $('respOut').textContent = respRate();
+  $('coOut').textContent = (state.bpm * strokeVol() / 1000).toFixed(1).replace('.', ',');
+  document.querySelectorAll('#presets button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === state.bpm)));
+}
+bpmInput.oninput = e => setBpm(e.target.value);
+document.querySelectorAll('#presets button').forEach(b => b.onclick = () => setBpm(b.dataset.v));
+$('vitals').addEventListener('click', e => { if (e.target.closest('.vitals-head')) $('vitals').classList.toggle('open'); });
+
+/* ------------------------------------------------------------------ */
+/* Sélection, survol, caméra                                           */
+/* ------------------------------------------------------------------ */
+const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2(); const tip = $('tip');
+let hovered = null;
+function setHighlight(id, on) {
+  if (!id) return;
+  for (const m of organMeshes[id]) {
+    if (!m.material.emissive) continue;
+    if (m.material.userData.e0 === undefined) { m.material.userData.e0 = m.material.emissive.getHex(); m.material.userData.ei0 = m.material.emissiveIntensity; }
+    m.material.emissive.setHex(on ? 0x4a2c18 : m.material.userData.e0);
+    m.material.emissiveIntensity = on ? 0.55 : m.material.userData.ei0;
+  }
+}
+function pick(ev) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const list = pickables.filter(m => groups[ORGANS[m.userData.organ].sys].visible);
+  const hits = ray.intersectObjects(list, false);
+  // Les objets très transparents (crâne) laissent passer le clic vers ce qu'ils contiennent
+  const hit = hits.find(h => h.object.material.opacity > 0.3 || hits.length === 1) || hits[0];
+  return hit ? hit.object.userData.organ : null;
+}
+canvas.addEventListener('pointermove', ev => {
+  if (ev.pointerType === 'touch' || state.deepOpen) return;
+  const id = pick(ev);
+  if (id !== hovered) { if (hovered !== state.selected) setHighlight(hovered, false); hovered = id; if (id) setHighlight(id, true); }
+  canvas.classList.toggle('hover', !!id);
+  if (id) { tip.hidden = false; tip.textContent = ORGANS[id].nom; tip.style.left = ev.clientX + 'px'; tip.style.top = ev.clientY + 'px'; } else tip.hidden = true;
+});
+canvas.addEventListener('pointerleave', () => { tip.hidden = true; if (hovered && hovered !== state.selected) setHighlight(hovered, false); hovered = null; });
+let downAt = null;
+canvas.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+canvas.addEventListener('pointerup', ev => {
+  if (!downAt) return; const d = Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]); downAt = null;
+  if (d > 6) return;
+  const id = pick(ev); if (id) select(id); else if (state.selected) select(null);
+});
+
+const camAnim = { t: 1, fromP: new THREE.Vector3(), toP: new THREE.Vector3(), fromT: new THREE.Vector3(), toT: new THREE.Vector3() };
+function flyTo(target, dist) {
+  const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+  if (dir.z < 0.3) { dir.z = 0.6; dir.normalize(); }
+  camAnim.fromP.copy(camera.position); camAnim.fromT.copy(controls.target);
+  camAnim.toT.copy(target); camAnim.toP.copy(target).addScaledVector(dir, dist); camAnim.t = 0;
+}
+function centerOf(id) { const b = new THREE.Box3(); organMeshes[id].forEach(m => b.expandByObject(m)); return b.getCenter(new THREE.Vector3()); }
+function applyDim() {
+  const sel = state.selected;
+  for (const [id, meshes] of Object.entries(organMeshes)) {
+    const dim = sel && id !== sel;
+    for (const m of meshes) { const mt = m.material; const base = mt.userData.base ?? 1; mt.opacity = dim ? Math.min(base, 0.14) : base; mt.depthWrite = dim ? false : (base >= 0.9); m.children.forEach(c => { c.visible = !dim; }); }
+  }
+  skinMat.uniforms.uOpacity.value = sel ? 0.6 : 1;
+  outlineMats.forEach(m => m.uniforms.uOpacity.value = 1);
+}
+function select(id) {
+  if (state.selected) setHighlight(state.selected, false);
+  state.selected = id;
+  if (id) {
+    const sys = ORGANS[id].sys;
+    if (!state.visible[sys]) { state.visible[sys] = true; groups[sys].visible = true; sysBox.children[Object.keys(SYSTEMS).indexOf(sys)].setAttribute('aria-pressed', 'true'); }
+    setHighlight(id, true); renderOrgan(id); flyTo(centerOf(id), ORGANS[id].dist);
+  } else { renderHome(); flyTo(V3(0, 0.93, 0), 3.45); }
+  applyDim();
+}
+
+/* ------------------------------------------------------------------ */
+/* ECG miniature                                                       */
+/* ------------------------------------------------------------------ */
+const ecgC = $('ecg'); const ecgX = ecgC.getContext('2d'); const ecgBuf = new Float32Array(240); let ecgHead = 0, ecgAcc = 0;
+function drawEcg(dt, p) {
+  const w = ecgC.clientWidth, h = ecgC.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (ecgC.width !== Math.round(w * dpr)) { ecgC.width = Math.round(w * dpr); ecgC.height = Math.round(h * dpr); }
+  ecgAcc += dt; const step = 2.4 / ecgBuf.length;
+  while (ecgAcc > step) { ecgAcc -= step; ecgBuf[ecgHead] = ecgAt(p); ecgHead = (ecgHead + 1) % ecgBuf.length; }
+  ecgX.setTransform(dpr, 0, 0, dpr, 0, 0); ecgX.clearRect(0, 0, w, h);
+  ecgX.strokeStyle = 'rgba(169,177,184,.15)'; ecgX.lineWidth = 1;
+  for (let x = 0; x < w; x += 12) { ecgX.beginPath(); ecgX.moveTo(x + .5, 0); ecgX.lineTo(x + .5, h); ecgX.stroke(); }
+  ecgX.strokeStyle = '#e2574c'; ecgX.lineWidth = 1.6; ecgX.beginPath();
+  for (let i = 0; i < ecgBuf.length; i++) { const v = ecgBuf[(ecgHead + i) % ecgBuf.length]; const x = i / (ecgBuf.length - 1) * w; const y = h * 0.72 - v * h * 0.62; i ? ecgX.lineTo(x, y) : ecgX.moveTo(x, y); }
+  ecgX.stroke();
+}
+
+/* ------------------------------------------------------------------ */
+/* Boucle d'animation                                                  */
+/* ------------------------------------------------------------------ */
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  // Sur grand écran le panneau occupe la droite : on décale le centre de la vue
+  const off = w > 820 ? -175 : 0; camera.setViewOffset(w, h, -off, (w <= 820 ? h * 0.18 : 0), w, h);
+  camera.updateProjectionMatrix();
+  const dpr = renderer.getPixelRatio(); outlineMats.forEach(m => m.uniforms.uRes.value.set(w * dpr, h * dpr));
+}
+window.addEventListener('resize', resize); resize();
+
+let last = performance.now(), cardiac = 0, breath = 0, clock = 0, bladderFill = 0.2;
+const neuronCol = new THREE.Color();
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (state.deepOpen) { drawHeartDeep(dt); return; }
+  if (reduceMotion) dt *= 0.4;
+  clock += dt;
+  cardiac = (cardiac + dt * state.bpm / 60) % 1;
+  breath = (breath + dt * respRate() / 60) % 1;
+  const p = cardiac;
+
+  // Cœur : les ventricules se serrent, les oreillettes pulsent juste avant
+  const v = ventContract(p), a = atrContract(p);
+  heartGroup.scale.set(1 - 0.09 * v + 0.03 * a, 1 - 0.06 * v + 0.02 * a, 1 - 0.09 * v + 0.03 * a);
+  // Respiration : inspiration ≈ 40 % du cycle
+  const insp = breath < 0.4 ? smooth(0, 0.4, breath) : 1 - smooth(0.4, 1, breath);
+  lungs.forEach(l => { const k = 1 + 0.07 * insp; l.scale.x = (l.position.x > 0 ? 0.068 : 0.074) * k; l.scale.y = 0.13 * (1 + 0.05 * insp); l.scale.z = 0.075 * k; l.position.y = 1.31 - 0.006 * insp; });
+  diaphragm.position.y = diaphragm.userData.baseY - 0.018 * insp; diaphragm.scale.y = 0.06 * (1 - 0.35 * insp);
+  // Péristaltisme
+  for (const m of animated.peristaltic) m.userData.u.uTime.value = clock;
+  if (STYLE === 'holo') skinMat.uniforms.uScan.value = ((clock * 0.35) % 1.3) * 1.45;
+  // Vessie : remplissage lent puis vidange (en accéléré)
+  bladderFill += dt / 40; if (bladderFill > 1.15) bladderFill = 0.15;
+  const bf = Math.min(bladderFill, 1); bladder.scale.setScalar(0.55 + 0.6 * bf);
+  // Neurones
+  const lv = neuronPts.userData.level; const col = neuronPts.geometry.attributes.color;
+  const fireRate = 2.2 * dt * (0.8 + state.bpm / 120);
+  for (let i = 0; i < lv.length; i++) {
+    lv[i] *= Math.exp(-dt * 6);
+    if (Math.random() < fireRate * 0.08) lv[i] = 1;
+    neuronCol.setRGB(1.0 * lv[i], 0.85 * lv[i], 0.45 * lv[i]); col.setXYZ(i, neuronCol.r, neuronCol.g, neuronCol.b);
+  }
+  col.needsUpdate = true;
+  updateFlows(dt, p);
+  drawEcg(dt, p);
+
+  if (camAnim.t < 1) {
+    camAnim.t = Math.min(1, camAnim.t + dt / 0.9); const e = 1 - Math.pow(1 - camAnim.t, 3);
+    camera.position.lerpVectors(camAnim.fromP, camAnim.toP, e); controls.target.lerpVectors(camAnim.fromT, camAnim.toT, e);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ------------------------------------------------------------------ */
+/* Plongée : le cycle cardiaque en coupe                               */
+/* ------------------------------------------------------------------ */
+const PHASES = [
+  { a: 0.0, b: 0.12, c: '#d9a066', t: 'Systole auriculaire', ecg: 'onde P',
+    d: "Le nœud sinusal vient de donner le signal. Les oreillettes se contractent et poussent les derniers 20 % de sang dans les ventricules. Les valves tricuspide et mitrale sont ouvertes, les valves pulmonaire et aortique fermées." },
+  { a: 0.12, b: 0.2, c: '#e6c35c', t: 'Contraction isovolumique', ecg: 'QRS',
+    d: "L'onde électrique gagne les ventricules, qui commencent à se contracter. La pression monte et referme les valves tricuspide et mitrale : c'est le premier bruit du cœur, « toum ». Toutes les valves sont fermées, le volume ne change pas encore." },
+  { a: 0.2, b: 0.45, c: '#e2574c', t: 'Éjection', ecg: 'segment ST',
+    d: "La pression du ventricule gauche dépasse celle de l'aorte (≈ 80 mmHg), celle du droit dépasse l'artère pulmonaire (≈ 10 mmHg). Les valves aortique et pulmonaire s'ouvrent : environ 70 mL partent de chaque côté. Pendant ce temps, les oreillettes se remplissent déjà." },
+  { a: 0.45, b: 0.53, c: '#a77fd4', t: 'Relaxation isovolumique', ecg: 'onde T',
+    d: "Les ventricules se relâchent et leur pression chute. Le sang tente de refluer et referme les valves aortique et pulmonaire : deuxième bruit, « ta ». Toutes les valves sont de nouveau fermées." },
+  { a: 0.53, b: 1.0, c: '#6a98d8', t: 'Remplissage ventriculaire', ecg: 'ligne de base',
+    d: "Quand la pression ventriculaire passe sous celle des oreillettes, les valves tricuspide et mitrale s'ouvrent. Le sang des veines coule passivement dans les ventricules : c'est environ 80 % du remplissage, sans aucun effort du muscle." },
+];
+const avOpen = p => p < 0.12 || p >= 0.53;
+const slOpen = p => p >= 0.2 && p < 0.45;
+const deep = { p: 0.55, speed: 0.5, playing: true, parts: null, lastPhase: -1, flash: null };
+const hc = $('heartCanvas'); const hx = hc.getContext('2d');
+// Chemins du sang dans le schéma (espace logique 800×560) : veine → oreillette → valve AV → ventricule → valve sigmoïde → artère
+const PATHS = {
+  droit: [[70, 120], [250, 200], [285, 285], [290, 420], [372, 300], [372, 50]],
+  gauche: [[730, 120], [550, 200], [520, 285], [505, 430], [430, 300], [430, 50]],
+};
+function initParts() {
+  deep.parts = [];
+  for (const side of ['droit', 'gauche']) for (let i = 0; i < 70; i++) deep.parts.push({ side, s: Math.random() * 5, j: Math.random(), off: (Math.random() - 0.5) * 2 });
+}
+function pathPoint(path, s) {
+  const i = Math.min(4, Math.floor(s)); const t = s - i; const a = path[i], b = path[i + 1];
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, b[0] - a[0], b[1] - a[1]];
+}
+const phaseIdx = p => PHASES.findIndex(ph => p >= ph.a && p < ph.b);
+
+// Panneau latéral de la plongée
+const phaseList = $('phaseList');
+phaseList.innerHTML = PHASES.map((ph, i) => `<li data-i="${i}" style="--c:${ph.c}"><i></i><span>${ph.t}</span><span>${ph.ecg}</span></li>`).join('');
+phaseList.querySelectorAll('li').forEach(li => li.onclick = () => { deep.p = PHASES[+li.dataset.i].a + 0.001; });
+function updateDeepText(i) {
+  const ph = PHASES[i];
+  $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`;
+  $('phaseTitle').textContent = ph.t; $('phaseText').textContent = ph.d;
+  phaseList.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === i));
+  const av = avOpen(deep.p), sl = slOpen(deep.p);
+  $('valves').innerHTML = [['Tricuspide', av], ['Mitrale', av], ['Pulmonaire', sl], ['Aortique', sl]]
+    .map(([n, o]) => `<div class="valve ${o ? 'open' : 'shut'}"><span>${n}</span><b>${o ? 'ouverte' : 'fermée'}</b></div>`).join('');
+}
+
+function drawHeartDeep(dt) {
+  if (deep.playing) deep.p = (deep.p + dt * deep.speed * state.bpm / 60) % 1;
+  const p = deep.p; const v = ventContract(p), a = atrContract(p);
+  const i = phaseIdx(p);
+  if (i !== deep.lastPhase) {
+    if (i === 1) deep.flash = { txt: 'TOUM', t: 0 }; if (i === 3) deep.flash = { txt: 'TA', t: 0 };
+    deep.lastPhase = i; updateDeepText(i);
+  }
+  // Mouvement des particules : elles attendent derrière une valve fermée
+  const beat = 60 / state.bpm; const k = deep.playing ? dt * deep.speed / beat : 0;
+  for (const q of deep.parts) {
+    let sp;
+    if (q.s < 1) sp = 0.9; else if (q.s < 2) sp = a > 0 ? 4 : 1.6; else if (q.s < 4) sp = slOpen(p) ? 9 : 1.6; else sp = 7;
+    let ns = q.s + sp * k;
+    if (!avOpen(p) && q.s <= 2 && ns > 2 - q.j * 0.75) ns = Math.max(q.s, 2 - q.j * 0.75);
+    if (q.s < 2 && ns >= 2 && !avOpen(p)) ns = Math.min(ns, 1.99);
+    if (!slOpen(p) && q.s <= 4 && q.s >= 2 && ns > 3.9 - q.j * 1.5) ns = Math.max(q.s, 3.9 - q.j * 1.5);
+    if (q.s < 4 && ns >= 4 && !slOpen(p)) ns = Math.min(ns, 3.99);
+    q.s = ns; if (q.s >= 5) { q.s = Math.random() * 0.2; q.j = Math.random(); }
+  }
+
+  // Dessin
+  const w = hc.clientWidth, h = hc.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (hc.width !== Math.round(w * dpr) || hc.height !== Math.round(h * dpr)) { hc.width = Math.round(w * dpr); hc.height = Math.round(h * dpr); }
+  const ecgH = Math.min(120, h * 0.2);
+  const sc = Math.min(w / 800, (h - ecgH - 10) / 560); const ox = (w - 800 * sc) / 2;
+  hx.setTransform(dpr, 0, 0, dpr, 0, 0); hx.clearRect(0, 0, w, h);
+  hx.save(); hx.translate(ox, 6); hx.scale(sc, sc);
+  const blue = '#4f7fc4', red = '#d4473f', blueF = 'rgba(79,127,196,.28)', redF = 'rgba(212,71,63,.28)';
+  // Vaisseaux
+  const vessel = (pts, col, wd) => { hx.strokeStyle = col; hx.lineWidth = wd; hx.lineCap = 'round'; hx.beginPath(); pts.forEach((q, n) => n ? hx.lineTo(q[0], q[1]) : hx.moveTo(q[0], q[1])); hx.stroke(); };
+  vessel([[40, 110], [250, 200]], blueF, 46); vessel([[60, 330], [240, 240]], blueF, 46);
+  vessel([[760, 110], [550, 200]], redF, 40); vessel([[760, 300], [570, 230]], redF, 40);
+  vessel([[372, 300], [372, 40]], blueF, 40 + 10 * (slOpen(p) ? v : 0)); vessel([[430, 300], [430, 40]], redF, 46 + 10 * (slOpen(p) ? v : 0));
+  // Cavités
+  const chamber = (x, y, rx, ry, fill, stroke) => { hx.beginPath(); hx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); hx.fillStyle = fill; hx.fill(); hx.lineWidth = 6; hx.strokeStyle = stroke; hx.stroke(); };
+  const ka = 1 - 0.18 * a + 0.06 * (slOpen(p) ? 1 : 0) * 0.5; const kv = 1 - 0.22 * v;
+  chamber(250, 200, 82 * ka, 64 * ka, 'rgba(79,127,196,.22)', '#8a5a5a');
+  chamber(550, 200, 82 * ka, 64 * ka, 'rgba(212,71,63,.22)', '#8a5a5a');
+  chamber(300, 410, 92 * kv, 108 * kv, 'rgba(79,127,196,.22)', '#9c4a4a');
+  chamber(500, 420, 98 * kv, 122 * kv, 'rgba(212,71,63,.22)', '#9c4a4a');
+  // Valves (deux feuillets)
+  const valve = (x, y, open, ang, len) => {
+    hx.strokeStyle = open ? '#8fd19e' : '#ece5d5'; hx.lineWidth = 5; hx.lineCap = 'round';
+    for (const sgn of [-1, 1]) {
+      const bx = x + Math.cos(ang) * sgn * len, by = y + Math.sin(ang) * sgn * len;
+      const fold = open ? 1.25 : 0; const dirA = ang + Math.PI / 2;
+      const tx = open ? bx + Math.cos(dirA) * len * 0.9 : x, ty = open ? by + Math.sin(dirA) * len * 0.9 : y;
+      hx.beginPath(); hx.moveTo(bx, by); hx.lineTo(tx + (open ? 0 : sgn * fold), ty); hx.stroke();
+    }
+  };
+  valve(285, 285, avOpen(p), 0.15, 26); valve(520, 285, avOpen(p), -0.15, 26);
+  valve(372, 300, slOpen(p), 0, 17); valve(430, 300, slOpen(p), 0, 20);
+  // Sang
+  for (const q of deep.parts) {
+    const [x, y, dx, dy] = pathPoint(PATHS[q.side], q.s); const L = Math.hypot(dx, dy) || 1; const spread = q.s >= 2 && q.s < 4 ? 30 : 12;
+    hx.fillStyle = q.side === 'droit' ? '#7fb0ff' : '#ff7466';
+    hx.beginPath(); hx.arc(x - dy / L * q.off * spread, y + dx / L * q.off * spread, 4.2, 0, Math.PI * 2); hx.fill();
+  }
+  // Étiquettes
+  hx.fillStyle = '#ece5d5'; hx.font = '600 15px "IBM Plex Sans", system-ui, sans-serif'; hx.textAlign = 'center';
+  hx.fillText('Oreillette droite', 250, 205); hx.fillText('Oreillette gauche', 550, 205);
+  hx.fillText('Ventricule droit', 300, 425); hx.fillText('Ventricule gauche', 500, 435);
+  hx.font = '12px "IBM Plex Mono", ui-monospace, monospace'; hx.fillStyle = '#a9b1b8';
+  hx.textAlign = 'left'; hx.fillText('veines caves', 18, 80); hx.fillText('(corps)', 18, 96);
+  hx.textAlign = 'right'; hx.fillText('veines pulmonaires', 790, 80); hx.fillText('(poumons)', 790, 96);
+  hx.textAlign = 'right'; hx.fillText('artère pulmonaire → poumons', 358, 30);
+  hx.textAlign = 'left'; hx.fillText('aorte → corps', 446, 30);
+  hx.textAlign = 'center'; hx.fillText('septum', 400, 520);
+  // Bruits du cœur
+  if (deep.flash) {
+    deep.flash.t += dt * (deep.playing ? 1 : 0) + (deep.playing ? 0 : dt);
+    const al = Math.max(0, 1 - deep.flash.t / 0.9);
+    if (al > 0) { hx.globalAlpha = al; hx.fillStyle = '#e6c35c'; hx.font = 'italic 600 44px Spectral, Georgia, serif'; hx.textAlign = 'center'; hx.fillText(`« ${deep.flash.txt.toLowerCase()} »`, 400, 128); hx.globalAlpha = 1; }
+  }
+  hx.restore();
+
+  // ECG + frise des phases
+  const ey = h - ecgH; const gx = 16, gw = w - 32;
+  hx.fillStyle = 'rgba(21,34,47,.9)'; hx.fillRect(0, ey - 6, w, ecgH + 6);
+  PHASES.forEach(ph => { hx.fillStyle = ph.c; hx.globalAlpha = 0.18; hx.fillRect(gx + ph.a * gw, ey + 4, (ph.b - ph.a) * gw, ecgH - 26); hx.globalAlpha = 1; hx.fillRect(gx + ph.a * gw, ey + ecgH - 18, (ph.b - ph.a) * gw - 2, 4); });
+  hx.strokeStyle = '#ff6a5c'; hx.lineWidth = 2; hx.beginPath();
+  for (let n = 0; n <= 300; n++) { const pp = n / 300; const x = gx + pp * gw; const y = ey + (ecgH - 26) * 0.78 - ecgAt(pp) * (ecgH - 26) * 0.66; n ? hx.lineTo(x, y) : hx.moveTo(x, y); }
+  hx.stroke();
+  const cx = gx + p * gw; hx.strokeStyle = '#ece5d5'; hx.lineWidth = 1.5; hx.beginPath(); hx.moveTo(cx, ey); hx.lineTo(cx, ey + ecgH - 8); hx.stroke();
+  hx.fillStyle = '#a9b1b8'; hx.font = '11px "IBM Plex Mono", monospace'; hx.textAlign = 'left';
+  hx.fillText(`ECG · un battement = ${(60 / state.bpm).toFixed(2).replace('.', ',')} s à ${state.bpm} BPM`, gx, ey + ecgH - 2);
+}
+
+function openDeep() {
+  state.deepOpen = true; $('deep').hidden = false; if (!deep.parts) initParts(); deep.lastPhase = -1;
+  tip.hidden = true;
+  if (reduceMotion) setSpeed(0.25);
+}
+function setSpeed(s) { deep.speed = s; document.querySelectorAll('#speed button').forEach(b => b.classList.toggle('primary', +b.dataset.s === s)); }
+document.querySelectorAll('#speed button').forEach(b => b.onclick = () => setSpeed(+b.dataset.s));
+setSpeed(0.5);
+$('playBtn').onclick = () => { deep.playing = !deep.playing; $('playBtn').textContent = deep.playing ? 'Pause' : 'Lecture'; };
+$('stepBtn').onclick = () => { const i = phaseIdx(deep.p); deep.p = PHASES[(i + 1) % 5].a + 0.001; };
+$('closeDeep').onclick = () => { state.deepOpen = false; $('deep').hidden = true; last = performance.now(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (state.deepOpen) $('closeDeep').click(); else if (state.selected) select(null); } });
+
+if (STYLE === 'atlas') {
+  neuronPts.visible = false;
+  const om = outlineMat('#27303a', 1.3);
+  for (const m of pickables) if (!['squelette', 'vaisseaux', 'moelle'].includes(m.userData.organ) && m.material.opacity >= 0.9) m.add(new THREE.Mesh(m.geometry, om));
+}
+resize();
+if (STYLE === 'verre') { for (const m of pickables) if (m.material.envMapIntensity !== undefined) m.material.envMapIntensity = 0.35; }
+renderHome(); setBpm(70);
+requestAnimationFrame(frame);
+})();
+</script>

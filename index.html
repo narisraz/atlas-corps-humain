@@ -1,0 +1,1917 @@
+<title>Atlas vivant du corps</title>
+<script>document.documentElement.dataset.style = 'verre';</script>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : scène 3D plein écran, panneau d'étude à droite (feuille en bas sur mobile), constantes vitales en bas à gauche. */
+:root {
+  --ink: #0e1824;          /* fond, bleu encre de salle d'imagerie */
+  --ink-2: #15222f;        /* surfaces */
+  --ink-3: #1d2d3d;        /* surfaces actives */
+  --line: #2a3d50;
+  --bone: #ece5d5;         /* texte principal, ivoire d'os */
+  --bone-dim: #a9b1b8;
+  --artery: #e2574c;       /* accent : sang oxygéné */
+  --vein: #6a98d8;         /* sang désoxygéné */
+  --nerve: #e6c35c;
+  --glass: rgba(21,34,47,.9);
+  --glass-2: var(--glass-2);
+  --text-2: #d6d2c8;
+  --stage: radial-gradient(ellipse 70% 60% at 40% 45%, #1a2c3e 0%, #0e1824 70%);
+  --font-display: "Spectral", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--bone); font-family: var(--font-body); font-size: 14px; overflow: hidden; }
+#app { position: relative; height: 100%; width: 100%; overflow: hidden;
+  background: var(--stage); }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#scene.hover { cursor: pointer; }
+
+.top { position: absolute; top: 0; left: 0; right: 0; pointer-events: none;
+  padding-top: max(14px, env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 380px); }
+.brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: .01em; }
+.brand h1 em { font-style: italic; font-weight: 500; color: var(--artery); }
+.brand span { font-family: var(--font-mono); font-size: 11px; color: var(--bone-dim); text-transform: uppercase; letter-spacing: .12em; }
+.styles { display: flex; gap: 4px; align-items: center; pointer-events: auto; flex-wrap: wrap; font: 500 12px var(--font-body); }
+.styles span { font: 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--bone-dim); margin-right: 4px; }
+.styles a { color: var(--bone); text-decoration: none; border: 1px solid var(--line); background: var(--glass); padding: 5px 10px; border-radius: 7px; }
+.styles a[aria-current] { border-color: var(--artery); color: var(--artery); }
+.systems { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
+.chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--glass);
+  color: var(--bone); font: 500 12px var(--font-body); padding: 6px 11px 6px 9px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(6px); }
+.chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
+.chip[aria-pressed="false"] { color: var(--bone-dim); background: var(--glass-2); }
+.chip[aria-pressed="false"] i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.chip:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--nerve); outline-offset: 2px; }
+
+#panel { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: max(14px, env(safe-area-inset-bottom, 0px)); width: 350px; background: var(--glass); border: 1px solid var(--line);
+  border-radius: 14px; backdrop-filter: blur(10px); display: flex; flex-direction: column; overflow: hidden; }
+.panel-scroll { overflow-y: auto; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-dim); display: flex; align-items: center; gap: 8px; }
+.eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+#panel h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.1; text-wrap: balance; }
+#panel p { margin: 0; line-height: 1.55; color: var(--text-2); }
+#panel h3 { margin: 0 0 8px; font: 600 12px var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--bone-dim); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 24px 1fr; gap: 10px; line-height: 1.5; color: var(--text-2); }
+.steps li::before { content: counter(s); font: 500 12px var(--font-mono); width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--line); display: grid; place-items: center; color: var(--bone); margin-top: 1px; }
+.figures { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fig { background: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fig b { font: 500 18px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--bone); }
+.fig span { font-size: 12px; color: var(--bone-dim); line-height: 1.35; }
+.know { border-left: 2px solid var(--nerve); padding: 2px 0 2px 12px; font-style: italic; font-family: var(--font-display); font-size: 15px; color: var(--bone); line-height: 1.5; }
+.btn { appearance: none; border: 1px solid var(--line); background: var(--ink-3); color: var(--bone); font: 500 13px var(--font-body);
+  padding: 9px 14px; border-radius: 9px; cursor: pointer; }
+.btn:hover { border-color: #3d566e; }
+.btn.primary { background: var(--artery); border-color: var(--artery); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: #ea6a5f; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.organ-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.organ-list button { text-align: left; appearance: none; background: var(--ink); border: 1px solid var(--line); color: var(--bone);
+  border-radius: 9px; padding: 9px 10px; cursor: pointer; font: 500 13px var(--font-body); display: flex; gap: 8px; align-items: center; }
+.organ-list button i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.organ-list button:hover { border-color: #3d566e; background: var(--ink-3); }
+.soon { font-size: 12.5px; color: var(--bone-dim); line-height: 1.5; }
+.hint { font-size: 12.5px; color: var(--bone-dim); }
+
+.vitals { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+  backdrop-filter: blur(8px); width: 330px; max-width: calc(100% - 32px); }
+.vitals-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.bpm { font: 500 28px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--artery); line-height: 1; }
+.bpm small { font-size: 11px; color: var(--bone-dim); margin-left: 4px; letter-spacing: .06em; }
+.vitals-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font: 12px var(--font-mono); color: var(--bone-dim); font-variant-numeric: tabular-nums; }
+.vitals-side b { color: var(--bone); font-weight: 500; }
+#ecg { width: 100%; height: 38px; display: block; }
+.presets { display: flex; gap: 5px; flex-wrap: wrap; }
+.presets button { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--bone-dim); border-radius: 7px; padding: 4px 9px; font: 500 12px var(--font-body); cursor: pointer; }
+.presets button[aria-pressed="true"] { color: var(--bone); border-color: var(--artery); background: rgba(226,87,76,.12); }
+input[type=range] { width: 100%; accent-color: var(--artery); }
+
+#loader { position: absolute; left: 0; right: 0; top: 46%; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; color: var(--bone-dim); font: 500 13px var(--font-body); text-align: center; padding-inline: 16px; }
+#loader b { font: 500 22px var(--font-mono); color: var(--bone); font-variant-numeric: tabular-nums; }
+@media (min-width: 821px) { #loader { right: 380px; } }
+@media (max-width: 820px) { #loader { top: 22%; } }
+#panel a { color: var(--artery); }
+#tip { position: absolute; pointer-events: none; background: var(--bone); color: var(--ink); font: 600 12px var(--font-body); padding: 4px 9px; border-radius: 6px; transform: translate(12px, -28px); white-space: nowrap; }
+
+/* Plongée détaillée */
+#deep, #deepLung, #deepBrain { --ink:#0e1824; --ink-2:#15222f; --ink-3:#1d2d3d; --line:#2a3d50; --bone:#ece5d5; --bone-dim:#a9b1b8; --text-2:#d6d2c8; color: var(--bone); color-scheme: dark;
+  position: absolute; inset: 0; z-index: 10; background: #09121b; display: flex; flex-direction: column;
+  padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 12px; }
+.deep-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.deep-head h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 24px; }
+.deep-head h2 em { color: var(--artery); font-weight: 500; }
+.deep-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; }
+.deep-stage { position: relative; min-height: 0; background: var(--ink); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+#heartCanvas, .d3 { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - var(--ecg-h)); display: block; touch-action: none; outline: none; }
+.deep-stage { --ecg-h: 96px; }
+#deepEcg, .dgraph { position: absolute; left: 0; bottom: 0; width: 100%; height: var(--ecg-h); background: rgba(21,34,47,.92); border-top: 1px solid var(--line); }
+#deepLabels, .dlabels { position: absolute; left: 0; top: 0; right: 0; bottom: var(--ecg-h); pointer-events: none; overflow: hidden; }
+.lab { position: absolute; left: 0; top: 0; translate: -50% -50%; font: 600 12px var(--font-body); color: #ece5d5; background: rgba(9,18,27,.7); border: 1px solid rgba(236,229,213,.22); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.lab.hot { background: #ffd36b; color: #09121b; border-color: #ffd36b; }
+.lab.v { color: #e6c35c; font-weight: 500; }
+#deepFlash { position: absolute; top: 52px; left: 0; right: 0; text-align: center; font: italic 600 40px Spectral, Georgia, serif; color: #e6c35c; opacity: 0; pointer-events: none; }
+.stage-tools { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.stage-tools .btn { white-space: nowrap; pointer-events: auto; }
+#deepLoad, .dload { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bone-dim); font-size: 14px; }
+.deep-side { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.phase-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.phase-card h3 { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 600; }
+.phase-card p { margin: 0; line-height: 1.55; color: var(--text-2); }
+.phase-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.phase-list li { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 8px; color: var(--bone-dim); font-size: 13px; }
+.phase-list li i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.phase-list li span:last-child { font: 11px var(--font-mono); }
+.phase-list li.on { background: var(--ink-3); color: var(--bone); }
+.valves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.valve { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.valve b { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.valve.open b { color: #8fd19e; } .valve.shut b { color: var(--bone-dim); }
+.speed { display: flex; gap: 4px; }
+
+:root[data-style="atlas"] { --ink:#eceee9; --ink-2:#fbfbf8; --ink-3:#e2e6e2; --line:#c6cdc9; --bone:#1d252c; --bone-dim:#5a656d; --glass:rgba(251,251,248,.92); --glass-2:rgba(236,238,233,.7); --text-2:#333c44;
+  --stage: linear-gradient(rgba(29,37,44,.05) 1px, transparent 1px) 0 0/24px 24px, linear-gradient(90deg, rgba(29,37,44,.05) 1px, transparent 1px) 0 0/24px 24px, #eceee9; color-scheme: light; }
+:root[data-style="verre"] { --ink:#e3e8ec; --ink-2:#f4f6f8; --ink-3:#dde3e8; --line:#c3ccd4; --bone:#18212a; --bone-dim:#56626d; --glass:rgba(248,250,252,.72); --glass-2:rgba(235,240,244,.6); --text-2:#2f3a44;
+  --stage: radial-gradient(ellipse 60% 70% at 38% 40%, #f6f8fa 0%, #d5dde4 55%, #aeb9c3 100%); color-scheme: light; }
+:root[data-style="atlas"] .brand h1, :root[data-style="atlas"] #panel h2 { font-style: normal; }
+@media (max-width: 820px) {
+  .top { max-width: 100%; }
+  .brand h1 { font-size: 21px; }
+  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 46%; border-radius: 16px 16px 0 0; border-left: 0; border-right: 0; border-bottom: 0; }
+  .panel-scroll { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); }
+  #panel.collapsed { max-height: 130px; }
+  .systems { flex-wrap: nowrap; overflow-x: auto; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; scrollbar-width: none; }
+  .chip { flex: none; }
+  .vitals { bottom: calc(46% + 10px); width: 210px; padding: 9px 10px; gap: 6px; }
+  .vitals.lifted { bottom: calc(46% + 10px); }
+  .vitals .presets, .vitals input { display: none; }
+  .vitals.open .presets, .vitals.open input { display: flex; }
+  .bpm { font-size: 22px; }
+  #ecg { height: 28px; }
+  .deep-body { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 1fr) auto; overflow-y: auto; }
+  .deep-side { overflow: visible; }
+  .deep-stage { --ecg-h: 72px; min-height: 58vh; }
+  .deep-body { grid-template-rows: auto auto; }
+  .lab { font-size: 10.5px; padding: 1px 6px; }
+  .lab.v { display: none; }
+  .deep-head h2 { font-size: 19px; }
+  .deep-head .btn, .stage-tools .btn { padding: 5px 9px; font-size: 12px; }
+  .deep-head .row { gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div id="app">
+  <canvas id="scene" aria-label="Corps humain en 3D. Glissez pour tourner, pincez ou molette pour zoomer, touchez un organe pour l'étudier."></canvas>
+
+  <div class="top">
+    <div class="brand">
+      <h1>Atlas <em>vivant</em> du corps</h1>
+      <span>anatomie · physiologie · v3</span>
+    </div>
+    <div class="systems" id="systems" role="group" aria-label="Systèmes affichés"></div>
+  </div>
+
+  <div class="vitals" id="vitals">
+    <div class="vitals-head">
+      <div class="bpm" id="bpmOut">70<small>BPM</small></div>
+      <div class="vitals-side">
+        <span>respiration <b id="respOut">16</b>/min</span>
+        <span>débit ≈ <b id="coOut">4,9</b> L/min</span>
+      </div>
+    </div>
+    <canvas id="ecg" aria-hidden="true"></canvas>
+    <input id="bpm" type="range" min="40" max="190" value="70" aria-label="Fréquence cardiaque">
+    <div class="presets" id="presets">
+      <button data-v="52">Sommeil</button>
+      <button data-v="70" aria-pressed="true">Repos</button>
+      <button data-v="105">Marche</button>
+      <button data-v="165">Course</button>
+    </div>
+  </div>
+
+  <aside id="panel" aria-live="polite"><div class="panel-scroll" id="panelBody"></div></aside>
+  <div id="tip" hidden></div>
+  <div id="loader" role="status"><span>Chargement de l'anatomie</span><b>0 %</b></div>
+
+  <section id="deep" hidden aria-label="Cycle cardiaque en détail">
+    <div class="deep-head">
+      <h2>Le cycle cardiaque, <em>battement par battement</em></h2>
+      <div class="row">
+        <div class="speed" id="speed">
+          <button class="btn" data-s="0.25">×¼</button>
+          <button class="btn" data-s="0.5">×½</button>
+          <button class="btn" data-s="1">×1</button>
+        </div>
+        <button class="btn" id="playBtn">Pause</button>
+        <button class="btn" id="stepBtn">Phase suivante</button>
+        <button class="btn primary" id="closeDeep">Retour au corps</button>
+      </div>
+    </div>
+    <div class="deep-body">
+      <div class="deep-stage"><canvas id="heartCanvas" aria-label="Cœur en 3D, ouvert en coupe"></canvas><div id="deepLabels"></div><div id="deepFlash"></div>
+        <div class="stage-tools"><button class="btn primary" id="cutBtn">Coupe</button><button class="btn primary" id="labBtn">Étiquettes</button></div>
+        <div id="deepLoad" hidden>Chargement du cœur 3D…</div><canvas id="deepEcg"></canvas></div>
+      <div class="deep-side">
+        <div class="phase-card">
+          <div class="eyebrow" id="phaseEyebrow">Phase 1 sur 5</div>
+          <h3 id="phaseTitle"></h3>
+          <p id="phaseText"></p>
+        </div>
+        <div>
+          <h3 class="eyebrow" style="margin:0 0 8px">Valves</h3>
+          <div class="valves" id="valves"></div>
+        </div>
+        <ol class="phase-list" id="phaseList"></ol>
+        <p class="hint">Coupe « 4 cavités » du vrai cœur (Z-Anatomy) : la droite du patient est à gauche de l'écran. Bleu : sang pauvre en oxygène, envoyé aux poumons. Rouge : sang riche en oxygène, envoyé au corps. Faites tourner le cœur avec la souris ou le doigt, zoomez à la molette ou en pinçant.</p>
+      </div>
+    </div>
+  </section>
+  <section id="deepLung" hidden aria-label="Respiration en détail">
+    <div class="deep-head">
+      <h2>Respirer, <em>de la trachée à l'alvéole</em></h2>
+      <div class="row">
+        <div class="speed" id="lSpeed"><button class="btn" data-s="0.25">×¼</button><button class="btn" data-s="0.5">×½</button><button class="btn" data-s="1">×1</button></div>
+        <button class="btn" id="lPlay">Pause</button>
+        <button class="btn" id="lNext">Échelle suivante</button>
+        <button class="btn primary" id="lClose">Retour au corps</button>
+      </div>
+    </div>
+    <div class="deep-body">
+      <div class="deep-stage"><canvas id="lungCanvas" class="d3" aria-label="Poumons en 3D"></canvas><div id="lLabels" class="dlabels"></div>
+        <div class="stage-tools" id="lLevels"><button class="btn" data-l="0">1 · Poumons</button><button class="btn" data-l="1">2 · Bronchioles</button><button class="btn" data-l="2">3 · Alvéole</button></div>
+        <div id="lLoad" class="dload" hidden>Chargement des poumons 3D…</div><canvas id="lGraph" class="dgraph"></canvas></div>
+      <div class="deep-side">
+        <div class="phase-card"><div class="eyebrow" id="lEyebrow"></div><h3 id="lTitle"></h3><p id="lText"></p></div>
+        <div><h3 class="eyebrow" style="margin:0 0 8px">En direct</h3><div class="valves" id="lStats"></div></div>
+        <ol class="phase-list" id="lSteps"></ol>
+        <p class="hint" id="lHint"></p>
+      </div>
+    </div>
+  </section>
+  <section id="deepBrain" hidden aria-label="Le cerveau en détail">
+    <div class="deep-head">
+      <h2>Le cerveau, <em>des aires à la synapse</em></h2>
+      <div class="row">
+        <div class="speed" id="bSpeed"><button class="btn" data-s="0.25">×¼</button><button class="btn" data-s="0.5">×½</button><button class="btn" data-s="1">×1</button></div>
+        <button class="btn" id="bPlay">Pause</button>
+        <button class="btn" id="bNext">Échelle suivante</button>
+        <button class="btn primary" id="bClose">Retour au corps</button>
+      </div>
+    </div>
+    <div class="deep-body">
+      <div class="deep-stage"><canvas id="brainCanvas" class="d3" aria-label="Cerveau en 3D"></canvas><div id="bLabels" class="dlabels"></div>
+        <div class="stage-tools" id="bLevels"><button class="btn" data-l="0">1 · Cerveau</button><button class="btn" data-l="1">2 · Neurone</button><button class="btn" data-l="2">3 · Synapse</button><button class="btn" id="bReplay" hidden>Rejouer</button><button class="btn" id="bFire" hidden>Stimuler</button></div>
+        <div id="bLoad" class="dload" hidden>Chargement du cerveau 3D…</div><canvas id="bGraph" class="dgraph"></canvas></div>
+      <div class="deep-side">
+        <div class="phase-card"><div class="eyebrow" id="bEyebrow"></div><h3 id="bTitle"></h3><p id="bText"></p></div>
+        <div><h3 class="eyebrow" style="margin:0 0 8px">En direct</h3><div class="valves" id="bStats"></div></div>
+        <ol class="phase-list" id="bList"></ol>
+        <p class="hint" id="bHint"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/babylonjs@7.54.0/babylon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@7.54.0/babylon.glTFFileLoader.min.js"></script>
+<script>
+(() => {
+'use strict';
+const V3 = (x, y, z) => new BABYLON.Vector3(x, y, z);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const gauss = (x, m, s) => Math.exp(-((x - m) * (x - m)) / (2 * s * s));
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ------------------------------------------------------------------ */
+/* Contenu pédagogique                                                  */
+/* ------------------------------------------------------------------ */
+const SYSTEMS = {
+  nerveux:   { nom: 'Nerveux', c: '#e6c35c' },
+  cardio:    { nom: 'Cardiovasculaire', c: '#e2574c' },
+  respi:     { nom: 'Respiratoire', c: '#e79aa0' },
+  digestif:  { nom: 'Digestif', c: '#d79a5e' },
+  urinaire:  { nom: 'Urinaire', c: '#85c4bb' },
+  squelette: { nom: 'Squelette', c: '#ece5d5' },
+};
+
+const ORGANS = {
+  cerveau: { nom: 'Cerveau', sys: 'nerveux', dist: 0.55, deep: 'cerveau',
+    role: "Centre de commande du corps. Il reçoit les informations des sens, les interprète, décide et envoie des ordres aux muscles et aux organes, en permanence et sans pause, même pendant le sommeil.",
+    etapes: [
+      "Un récepteur (œil, peau, oreille) transforme un stimulus en signal électrique.",
+      "Le signal remonte par les nerfs et la moelle épinière jusqu'au cortex sensoriel.",
+      "Des réseaux de neurones comparent l'information à la mémoire et préparent une réponse.",
+      "Le cortex moteur envoie l'ordre : le signal redescend la moelle jusqu'au muscle.",
+      "Entre deux neurones, le message passe par une synapse grâce à des neurotransmetteurs."
+    ],
+    chiffres: [['86 Md', 'neurones'], ['1,4 kg', 'environ 2 % du poids'], ['20 %', "de l'énergie du corps"], ['120 m/s', 'vitesse max. d\'un influx']],
+    savoir: "Les points qui s'allument dans le cerveau représentent des neurones qui « déchargent » : un neurone émet un influx quand la somme des signaux reçus dépasse un seuil." },
+  moelle: { nom: 'Moelle épinière et nerfs', sys: 'nerveux', dist: 1.4,
+    role: "Autoroute de l'information entre le cerveau et le corps. Elle gère aussi seule certains réflexes, sans attendre le cerveau.",
+    etapes: [
+      "Les nerfs sensitifs apportent les messages de la peau, des muscles et des organes.",
+      "Ils entrent dans la moelle par l'arrière (racine dorsale).",
+      "Pour un réflexe, un neurone de la moelle relie directement l'entrée à la sortie : la main se retire du chaud avant même que vous ayez mal.",
+      "Les nerfs moteurs sortent par l'avant (racine ventrale) et commandent les muscles."
+    ],
+    chiffres: [['45 cm', 'longueur de la moelle'], ['31', 'paires de nerfs spinaux'], ['~1 m', "le plus long axone (jusqu'au pied)"], ['50 ms', "durée d'un réflexe rotulien"]],
+    savoir: "Les impulsions jaunes qui filent le long des nerfs montrent les deux sens du trafic : vers le cerveau (sensations) et vers les muscles (ordres)." },
+  coeur: { nom: 'Cœur', sys: 'cardio', dist: 0.5, deep: 'coeur',
+    role: "Deux pompes accolées. La moitié droite envoie le sang pauvre en oxygène vers les poumons, la moitié gauche envoie le sang riche en oxygène vers tout le corps.",
+    etapes: [
+      "Le nœud sinusal, dans l'oreillette droite, déclenche une impulsion électrique (onde P de l'ECG).",
+      "Les oreillettes se contractent et remplissent complètement les ventricules.",
+      "L'impulsion traverse le nœud auriculo-ventriculaire puis se répand dans les ventricules (complexe QRS).",
+      "Les ventricules se contractent : les valves se ferment derrière le sang et s'ouvrent devant lui.",
+      "Le muscle se relâche (onde T) et le cœur se remplit à nouveau."
+    ],
+    chiffres: [['~100 000', 'battements par jour'], ['70 mL', 'éjectés par battement au repos'], ['5 L/min', 'débit au repos'], ['300 g', 'environ, la taille d\'un poing']],
+    savoir: "Changez la fréquence en bas à gauche : le cœur bat plus vite, le sang circule plus vite et la respiration s'accélère aussi, comme pendant un effort." },
+  vaisseaux: { nom: 'Vaisseaux sanguins', sys: 'cardio', dist: 1.6,
+    role: "Un réseau fermé qui amène l'oxygène et les nutriments à chaque cellule et rapporte les déchets. Les artères partent du cœur, les veines y reviennent.",
+    etapes: [
+      "L'aorte reçoit le sang du ventricule gauche à chaque battement : c'est le pouls.",
+      "Les artères se divisent en artérioles puis en capillaires, fins comme un cheveu.",
+      "Dans les capillaires, l'oxygène passe aux cellules et le CO₂ passe dans le sang.",
+      "Les veines ramènent le sang au cœur, aidées par des valvules et la contraction des muscles des jambes.",
+      "Le sang part ensuite aux poumons se recharger en oxygène (petite circulation)."
+    ],
+    chiffres: [['~100 000 km', 'de vaisseaux'], ['5 L', 'de sang'], ['~1 min', 'pour un tour complet au repos'], ['120/80', 'tension normale (mmHg)']],
+    savoir: "Rouge = sang oxygéné, bleu = sang appauvri. En réalité le sang veineux est rouge sombre ; le bleu est une convention des schémas." },
+  poumons: { nom: 'Poumons', sys: 'respi', dist: 0.6, deep: 'poumons',
+    role: "Ils font entrer l'oxygène dans le sang et en font sortir le dioxyde de carbone. Ils n'ont pas de muscle : c'est le diaphragme qui les fait gonfler.",
+    etapes: [
+      "Le diaphragme se contracte et descend ; la cage thoracique s'élargit.",
+      "La pression dans les poumons baisse sous celle de l'air extérieur : l'air entre.",
+      "L'air descend la trachée, les bronches puis les bronchioles jusqu'aux alvéoles.",
+      "À travers la paroi très fine des alvéoles, l'O₂ passe dans le sang et le CO₂ en sort.",
+      "Le diaphragme se relâche, les poumons élastiques se rétractent : l'air ressort."
+    ],
+    chiffres: [['~480 M', "d'alvéoles"], ['~70 m²', "surface d'échange"], ['0,5 L', 'par respiration calme'], ['12–20', 'respirations / min au repos']],
+    savoir: "Regardez le dôme rouge sous les poumons : c'est le diaphragme. Il descend à chaque inspiration." },
+  diaphragme: { nom: 'Diaphragme', sys: 'respi', dist: 0.6,
+    role: "Le muscle principal de la respiration. Une coupole qui sépare le thorax de l'abdomen.",
+    etapes: [
+      "Le cerveau (tronc cérébral) envoie un signal rythmique par le nerf phrénique.",
+      "Le diaphragme se contracte, s'aplatit et descend de 1 à 2 cm (jusqu'à 10 cm en effort).",
+      "Le volume du thorax augmente, l'air entre dans les poumons.",
+      "Il se relâche et remonte : l'expiration calme ne demande aucun effort."
+    ],
+    chiffres: [['~75 %', "de l'effort d'inspiration au repos"], ['~22 000', 'contractions par jour'], ['2 mm', 'd\'épaisseur environ'], ['C3–C5', 'origine du nerf phrénique']],
+    savoir: "Le hoquet est une contraction brusque et involontaire du diaphragme, suivie de la fermeture des cordes vocales." },
+  estomac: { nom: 'Estomac', sys: 'digestif', dist: 0.55,
+    role: "Un sac musclé qui stocke le repas, le malaxe et commence la digestion des protéines dans un acide très puissant.",
+    etapes: [
+      "L'œsophage pousse la bouchée par des vagues de contraction (péristaltisme).",
+      "L'estomac sécrète de l'acide chlorhydrique et de la pepsine.",
+      "Ses trois couches de muscles brassent le tout en bouillie, le chyme.",
+      "Le pylore laisse passer le chyme par petites portions vers l'intestin grêle."
+    ],
+    chiffres: [['pH 1,5–3,5', 'acidité du suc gastrique'], ['1–1,5 L', 'capacité après un repas'], ['2–4 h', 'pour vider un repas'], ['~3 /min', 'ondes de contraction']],
+    savoir: "Les ondulations visibles sur l'œsophage, l'estomac et les intestins sont des ondes de péristaltisme : le muscle se contracte juste derrière le contenu et le pousse vers l'avant." },
+  foie: { nom: 'Foie', sys: 'digestif', dist: 0.55,
+    role: "L'usine chimique du corps : il trie et transforme ce que l'intestin absorbe, stocke de l'énergie, neutralise des toxiques et fabrique la bile.",
+    etapes: [
+      "Le sang de l'intestin arrive par la veine porte, chargé de nutriments.",
+      "Les cellules du foie (hépatocytes) stockent le sucre sous forme de glycogène.",
+      "Elles transforment l'alcool, les médicaments et l'ammoniac en substances éliminables.",
+      "Elles produisent la bile, stockée dans la vésicule, qui aide à digérer les graisses."
+    ],
+    chiffres: [['1,5 kg', 'le plus gros organe interne'], ['~500', 'fonctions connues'], ['1,5 L/min', 'de sang filtré'], ['0,5–1 L', 'de bile par jour']],
+    savoir: "Le foie peut se régénérer : après l'ablation d'une partie, il retrouve presque sa taille d'origine en quelques semaines." },
+  intestin: { nom: 'Intestin grêle', sys: 'digestif', dist: 0.6,
+    role: "C'est là que la nourriture est vraiment absorbée. Sa paroi est couverte de replis et de villosités qui multiplient sa surface.",
+    etapes: [
+      "Le pancréas et la bile se mélangent au chyme dans le duodénum.",
+      "Les enzymes découpent protéines, sucres et graisses en petites molécules.",
+      "Les villosités absorbent ces molécules dans le sang et la lymphe.",
+      "Le péristaltisme pousse le reste vers le gros intestin."
+    ],
+    chiffres: [['~6 m', 'de long'], ['~30 m²', "surface d'absorption"], ['3–5 h', 'temps de transit'], ['~90 %', 'des nutriments absorbés ici']],
+    savoir: "Les villosités mesurent environ 1 mm. Chacune porte elle-même des microvillosités, ce qui donne cette énorme surface." },
+  colon: { nom: 'Gros intestin', sys: 'digestif', dist: 0.6,
+    role: "Il récupère l'eau et les sels de ce qui reste et héberge des milliers de milliards de bactéries utiles.",
+    etapes: [
+      "Le contenu liquide arrive de l'intestin grêle au niveau du cæcum.",
+      "Le côlon remonte, traverse et redescend en absorbant l'eau.",
+      "Les bactéries fermentent les fibres et produisent des vitamines (K, B).",
+      "Les selles sont stockées dans le rectum avant l'évacuation."
+    ],
+    chiffres: [['1,5 m', 'de long'], ['~38 000 Md', 'bactéries (microbiote)'], ['1,5 L → 0,15 L', "d'eau entre l'entrée et la sortie"], ['12–48 h', 'de transit']],
+    savoir: "Le microbiote intestinal compte à peu près autant de cellules que le corps humain lui-même." },
+  reins: { nom: 'Reins', sys: 'urinaire', dist: 0.6,
+    role: "Deux filtres qui nettoient le sang en continu, règlent la quantité d'eau et de sels du corps et participent au contrôle de la tension.",
+    etapes: [
+      "Le sang entre dans le rein par l'artère rénale.",
+      "Dans chaque néphron, le glomérule filtre le plasma : eau, sels, sucre, déchets.",
+      "Le tubule récupère presque tout ce qui est utile (99 % de l'eau).",
+      "Le reste forme l'urine, qui descend par les uretères vers la vessie."
+    ],
+    chiffres: [['180 L', 'filtrés par jour'], ['1–2 L', "d'urine par jour"], ['~1 M', 'de néphrons par rein'], ['20 %', 'du débit cardiaque']],
+    savoir: "Les gouttes jaunes qui descendent des reins vers la vessie représentent l'urine qui avance dans les uretères." },
+  vessie: { nom: 'Vessie', sys: 'urinaire', dist: 0.5,
+    role: "Un réservoir élastique qui stocke l'urine jusqu'au bon moment.",
+    etapes: [
+      "L'urine arrive goutte à goutte par les deux uretères.",
+      "La paroi musculaire s'étire sans que la pression monte beaucoup.",
+      "Vers 200–300 mL, des capteurs envoient l'envie d'uriner au cerveau.",
+      "Le cerveau autorise la miction : le muscle de la vessie se contracte et le sphincter s'ouvre."
+    ],
+    chiffres: [['400–600 mL', 'capacité'], ['~200 mL', 'première envie'], ['4–7', 'mictions par jour'], ['~1 mL/min', "débit d'urine au repos"]],
+    savoir: "Dans la scène, la vessie se remplit lentement puis se vide, en accéléré." },
+  squelette: { nom: 'Squelette', sys: 'squelette', dist: 1.8,
+    role: "La charpente du corps : il soutient, protège les organes, sert de levier aux muscles, stocke le calcium et fabrique les cellules du sang.",
+    etapes: [
+      "Les muscles tirent sur les os via les tendons ; les articulations servent de charnières.",
+      "Le crâne protège le cerveau, la cage thoracique le cœur et les poumons.",
+      "La moelle osseuse rouge produit globules rouges, blancs et plaquettes.",
+      "L'os se reconstruit en permanence : environ 10 % du squelette est renouvelé chaque année."
+    ],
+    chiffres: [['206', 'os chez l\'adulte'], ['~300', 'os chez le nouveau-né'], ['15 %', 'du poids du corps'], ['2 M/s', 'globules rouges produits']],
+    savoir: "Le plus petit os est l'étrier, dans l'oreille moyenne : environ 3 mm." },
+};
+
+/* ------------------------------------------------------------------ */
+/* Rythmes : cœur, respiration                                          */
+/* ------------------------------------------------------------------ */
+const state = { bpm: 70, selected: null, visible: Object.fromEntries(Object.keys(SYSTEMS).map(k => [k, true])), deepOpen: false };
+const respRate = () => clamp(Math.round(10 + (state.bpm - 60) * 0.18), 8, 40);
+const strokeVol = () => clamp(70 + (state.bpm - 70) * 0.3, 60, 105);
+// Phase cardiaque p ∈ [0,1) : 0–0,12 systole auriculaire, 0,12–0,20 contraction isovolumique,
+// 0,20–0,45 éjection, 0,45–0,53 relaxation isovolumique, 0,53–1 remplissage.
+const ventContract = p => smooth(0.12, 0.2, p) * (1 - smooth(0.4, 0.53, p));
+const atrContract = p => p < 0.12 ? Math.sin(p / 0.12 * Math.PI) : 0;
+const ecgAt = p => 0.12 * gauss(p, 0.06, 0.018) - 0.12 * gauss(p, 0.145, 0.006) + 1.0 * gauss(p, 0.16, 0.0075)
+  - 0.28 * gauss(p, 0.175, 0.007) + 0.26 * gauss(p, 0.38, 0.035);
+
+/* ------------------------------------------------------------------ */
+/* Scène Babylon.js                                                    */
+/* ------------------------------------------------------------------ */
+const canvas = document.getElementById('scene');
+const engine = new BABYLON.Engine(canvas, true, { stencil: true, antialias: true, alpha: true, premultipliedAlpha: false }, true);
+engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+const scene = new BABYLON.Scene(engine);
+scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+scene.skipPointerMovePicking = true;
+const HOME = { target: V3(0, 0.88, 0), radius: 3.25 };
+const camera = new BABYLON.ArcRotateCamera('cam', Math.PI / 2, Math.PI / 2.08, HOME.radius * (window.innerWidth <= 820 ? 1.35 : 1), HOME.target.clone(), scene);
+camera.attachControl(canvas, true);
+camera.fov = 0.62; camera.minZ = 0.01; camera.maxZ = 50;
+camera.lowerRadiusLimit = 0.22; camera.upperRadiusLimit = 6;
+camera.wheelDeltaPercentage = 0.012; camera.pinchDeltaPercentage = 0.004;
+camera.panningSensibility = 2500; camera.inertia = 0.86; camera.angularSensibilityX = camera.angularSensibilityY = 900;
+
+const hemi = new BABYLON.HemisphericLight('ciel', V3(0, 1, 0.3), scene);
+hemi.intensity = 0.75; hemi.groundColor = new BABYLON.Color3(0.32, 0.28, 0.27);
+const key = new BABYLON.DirectionalLight('cle', V3(-0.5, -0.8, -0.9), scene); key.intensity = 1.6;
+const rim = new BABYLON.DirectionalLight('contre', V3(0.6, -0.3, 1), scene); rim.intensity = 0.7; rim.diffuse = new BABYLON.Color3(0.75, 0.85, 1);
+
+// Studio virtuel capturé une fois dans une sonde : il sert de reflet au verre et aux organes
+const studio = [];
+{
+  const sky = BABYLON.MeshBuilder.CreateSphere('studio', { diameter: 30, sideOrientation: BABYLON.Mesh.BACKSIDE }, scene);
+  const tex = new BABYLON.DynamicTexture('degrade', { width: 8, height: 256 }, scene, false);
+  const cx = tex.getContext(); const g = cx.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#e6ecf1'); g.addColorStop(0.55, '#b9c4cd'); g.addColorStop(1, '#7d8893');
+  cx.fillStyle = g; cx.fillRect(0, 0, 8, 256); tex.update();
+  const sm = new BABYLON.StandardMaterial('studioMat', scene); sm.emissiveTexture = tex; sm.disableLighting = true; sm.backFaceCulling = false; sky.material = sm;
+  studio.push(sky);
+  for (const [x, y, z, w, h] of [[-3, 3, 3, 3, 4], [3.5, 2, 2, 2, 3], [0, 4, -3, 5, 1.5]]) {
+    const p = BABYLON.MeshBuilder.CreatePlane('boite', { width: w, height: h, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+    p.position.set(x, y, z); p.lookAt(V3(0, 1, 0));
+    const pm = new BABYLON.StandardMaterial('boiteMat', scene); pm.emissiveColor = new BABYLON.Color3(1.6, 1.6, 1.6); pm.disableLighting = true; p.material = pm;
+    studio.push(p);
+  }
+  studio.forEach(m => { m.isPickable = false; m.layerMask = 0x10000000; });
+}
+const probe = new BABYLON.ReflectionProbe('sonde', 256, scene);
+probe.position = V3(0, 1, 0);
+studio.forEach(m => probe.renderList.push(m));
+probe.cubeTexture.refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+probe.cubeTexture.activeCamera = null;
+scene.environmentTexture = probe.cubeTexture;
+
+const hl = new BABYLON.HighlightLayer('surbrillance', scene, { blurHorizontalSize: 0.5, blurVerticalSize: 0.5 });
+hl.blurHorizontalSize = hl.blurVerticalSize = 0.5;
+hl.innerGlow = false; hl.outerGlow = true;
+
+/* --- Matériaux --- */
+const C3 = h => BABYLON.Color3.FromHexString(h).toLinearSpace();
+function organMat(name, hex, o = {}) {
+  const m = new BABYLON.PBRMaterial(name, scene);
+  m.albedoColor = C3(hex); m.metallic = 0; m.roughness = o.rough ?? 0.4;
+  m.clearCoat.isEnabled = (o.coat ?? 0.55) > 0; m.clearCoat.intensity = o.coat ?? 0.55; m.clearCoat.roughness = 0.12;
+  m.environmentIntensity = o.env ?? 0.55;
+  if (o.emissive) m.emissiveColor = C3(o.emissive);
+  m.alpha = o.alpha ?? 1; m.backFaceCulling = o.cull ?? true;
+  if (m.alpha < 1) { m.transparencyMode = BABYLON.PBRMaterial.PBRMATERIAL_ALPHABLEND; m.needDepthPrePass = !!o.prepass; }
+  m.metadata = { base: m.alpha };
+  return m;
+}
+const glass = new BABYLON.StandardMaterial('verre', scene);
+glass.diffuseColor = new BABYLON.Color3(0.93, 0.96, 0.99); glass.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5); glass.specularPower = 128;
+glass.reflectionTexture = probe.cubeTexture; glass.reflectionTexture.level = 0.55;
+glass.reflectionFresnelParameters = new BABYLON.FresnelParameters({ bias: 0.03, power: 3, leftColor: BABYLON.Color3.White(), rightColor: BABYLON.Color3.Black() });
+glass.useReflectionOverAlpha = true; glass.useSpecularOverAlpha = true; glass.backFaceCulling = false;
+glass.alpha = 0.14; glass.backFaceCulling = true; glass.disableDepthWrite = true;
+
+// Ondes de péristaltisme : décalage des sommets le long de la normale (plugin de matériau)
+class WavePlugin extends BABYLON.MaterialPluginBase {
+  constructor(material, amp, freq, speed) {
+    super(material, 'Onde', 200, { ONDE: false });
+    this.amp = amp; this.freq = freq; this.speed = speed; this.time = 0; this._enable(true);
+  }
+  prepareDefines(defines) { defines.ONDE = true; }
+  getClassName() { return 'WavePlugin'; }
+  getUniforms() {
+    return { ubo: [{ name: 'ondeT', size: 1, type: 'float' }, { name: 'ondeA', size: 1, type: 'float' }, { name: 'ondeF', size: 1, type: 'float' }, { name: 'ondeV', size: 1, type: 'float' }],
+      vertex: '#ifdef ONDE\nuniform float ondeT; uniform float ondeA; uniform float ondeF; uniform float ondeV;\n#endif\n' };
+  }
+  bindForSubMesh(ubo) { ubo.updateFloat('ondeT', this.time); ubo.updateFloat('ondeA', this.amp); ubo.updateFloat('ondeF', this.freq); ubo.updateFloat('ondeV', this.speed); }
+  getCustomCode(type) {
+    if (type !== 'vertex') return null;
+    return { CUSTOM_VERTEX_UPDATE_POSITION: '#ifdef ONDE\nfloat ondeW = sin(dot(positionUpdated, vec3(0.62, 1.0, 0.41)) * ondeF - ondeT * ondeV);\npositionUpdated += normalUpdated * ondeA * smoothstep(0.35, 1.0, ondeW);\n#endif\n' };
+  }
+}
+const waves = [];
+
+/* --- Organes : correspondance entre le modèle Z-Anatomy et les fiches --- */
+const PARTS = {
+  peau:       { sys: null },
+  squelette:  { organ: 'squelette', sys: 'squelette', col: '#ebe2cd', rough: 0.62, coat: 0.15 },
+  crane:      { organ: 'squelette', sys: 'squelette', col: '#ebe2cd', rough: 0.6, coat: 0.1, alpha: 0.22, pick: false },
+  cerveau:    { organ: 'cerveau', sys: 'nerveux', col: '#e7aeab', rough: 0.5 },
+  moelle:     { organ: 'moelle', sys: 'nerveux', col: '#f1cf63', rough: 0.45, emissive: '#3a2a05' },
+  coeur:      { organ: 'coeur', sys: 'cardio', col: '#b42f2d', rough: 0.35, coat: 0.8 },
+  arteres:    { organ: 'vaisseaux', sys: 'cardio', col: '#d63b35', rough: 0.35 },
+  veines:     { organ: 'vaisseaux', sys: 'cardio', col: '#3d6ec6', rough: 0.35 },
+  poumons:    { organ: 'poumons', sys: 'respi', col: '#f0a3a8', rough: 0.6, coat: 0.3, alpha: 0.55 },
+  diaphragme: { organ: 'diaphragme', sys: 'respi', col: '#b8433d', rough: 0.55, alpha: 0.6, cull: false },
+  estomac:    { organ: 'estomac', sys: 'digestif', col: '#dc8f74', rough: 0.4, wave: [0.0016, 55, 2.2] },
+  foie:       { organ: 'foie', sys: 'digestif', col: '#7c2b26', rough: 0.35, coat: 0.8 },
+  intestin:   { organ: 'intestin', sys: 'digestif', col: '#e9a78d', rough: 0.45, wave: [0.0012, 90, 3] },
+  colon:      { organ: 'colon', sys: 'digestif', col: '#bf8460', rough: 0.45, wave: [0.0014, 45, 1.2] },
+  reins:      { organ: 'reins', sys: 'urinaire', col: '#8e3a33', rough: 0.35, coat: 0.7 },
+  vessie:     { organ: 'vessie', sys: 'urinaire', col: '#e2c063', rough: 0.35, alpha: 0.85 },
+};
+const meshOf = {};               // nom de pièce → mesh
+const organMeshes = {};          // fiche → meshes
+const pickables = [];
+const flows = [];                // particules (sang, influx, urine)
+const groups = {};
+for (const k of Object.keys(SYSTEMS)) {
+  groups[k] = {
+    _v: true, meshes: [],
+    get visible() { return this._v; },
+    set visible(v) { this._v = v; this.meshes.forEach(m => m.setEnabled(v)); },
+  };
+}
+
+/* --- Particules qui circulent le long des vrais trajets (instances fines) --- */
+function resample(pts, step) {
+  const out = [pts[0]]; let carry = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1]; const L = BABYLON.Vector3.Distance(a, b); let t = step - carry;
+    while (t <= L) { out.push(BABYLON.Vector3.Lerp(a, b, t / L)); t += step; }
+    carry = L - (t - step);
+  }
+  return out;
+}
+function makeFlow(name, paths, hex, o) {
+  const tracks = paths.map(p => resample(p, 0.004)).filter(t => t.length > 3);
+  const parts = [];
+  for (let ti = 0; ti < tracks.length; ti++) {
+    const n = Math.max(1, Math.round(tracks[ti].length * 0.004 * o.perMeter));
+    for (let i = 0; i < n; i++) parts.push({ t: ti, u: Math.random(), j: 0.75 + Math.random() * 0.5, dir: o.both && Math.random() < 0.5 ? -1 : 1 });
+  }
+  const dot = BABYLON.MeshBuilder.CreateIcoSphere(name, { radius: o.size, subdivisions: 1 }, scene);
+  const m = new BABYLON.StandardMaterial(name + 'Mat', scene); m.emissiveColor = BABYLON.Color3.FromHexString(hex); m.disableLighting = true; dot.material = m;
+  dot.isPickable = false; dot.alwaysSelectAsActiveMesh = true;
+  const buf = new Float32Array(parts.length * 16);
+  for (let i = 0; i < parts.length; i++) { buf[i * 16] = buf[i * 16 + 5] = buf[i * 16 + 10] = buf[i * 16 + 15] = 1; }
+  dot.thinInstanceSetBuffer('matrix', buf, 16, false);
+  const f = { dot, buf, parts, tracks, o };
+  flows.push(f); groups[o.sys].meshes.push(dot);
+  return f;
+}
+function updateFlows(dt, p) {
+  const rate = state.bpm / 70;
+  for (const f of flows) {
+    if (!f.dot.isEnabled()) continue;
+    const mult = f.o.pulse ? 0.4 + 1.7 * ventContract(p) : 1;
+    for (let i = 0; i < f.parts.length; i++) {
+      const q = f.parts[i]; const tr = f.tracks[q.t]; const L = tr.length * 0.004;
+      q.u += q.dir * dt * f.o.speed * (f.o.paced ? rate : 1) * mult * q.j / L;
+      if (q.u > 1) q.u -= 1; if (q.u < 0) q.u += 1;
+      const fi = q.u * (tr.length - 1); const i0 = Math.floor(fi); const a = tr[i0], b = tr[Math.min(i0 + 1, tr.length - 1)]; const t = fi - i0;
+      const k = i * 16 + 12;
+      f.buf[k] = a.x + (b.x - a.x) * t; f.buf[k + 1] = a.y + (b.y - a.y) * t; f.buf[k + 2] = a.z + (b.z - a.z) * t;
+    }
+    f.dot.thinInstanceBufferUpdated('matrix');
+  }
+}
+
+/* --- Chargement du modèle et des trajets --- */
+const loaderEl = document.getElementById('loader');
+let neurons = null, ready = false;
+async function fetchModel(url, onProgress) {
+  const r = await fetch(url); const total = +r.headers.get('content-length') || 6.7e6;
+  const rd = r.body.getReader(); const parts = []; let n = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); n += value.length; onProgress(Math.min(1, n / total)); }
+  const txt = new TextDecoder().decode(await new Blob(parts).arrayBuffer());
+  const bin = Uint8Array.from(atob(txt.trim()), c => c.charCodeAt(0));
+  const ds = new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(ds).arrayBuffer());
+}
+async function loadBody() {
+  BABYLON.SceneLoader.ShowLoadingScreen = false;
+  // Le modèle est servi en gzip + base64 (corps.txt) : l'hébergement n'accepte pas .glb
+  const glb = await fetchModel('corps.txt', f => loaderEl.querySelector('b').textContent = Math.round(f * 100) + ' %');
+  const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, scene, null, '.glb');
+  for (const m of res.meshes) {
+    const name = (m.name || '').replace(/_primitive\d+$/, '');
+    const cfg = PARTS[name]; if (!cfg) continue;
+    meshOf[name] = m;
+    if (name === 'peau') { m.material = glass; m.isPickable = false; m.renderingGroupId = 0; continue; }
+    const mt = organMat(name, cfg.col, cfg); m.material = mt;
+    if (cfg.wave) { const w = new WavePlugin(mt, ...cfg.wave); waves.push(w); }
+    m.metadata = { organ: cfg.organ, part: name };
+    m.isPickable = cfg.pick !== false;
+    if (m.isPickable) pickables.push(m);
+    (organMeshes[cfg.organ] = organMeshes[cfg.organ] || []).push(m);
+    groups[cfg.sys].meshes.push(m);
+    const c = m.getBoundingInfo().boundingBox.center; m.setPivotPoint(c.clone());
+  }
+  // Trajets réels (Z-Anatomy) : sang, influx nerveux, urine
+  const tr = await (await fetch('trajets.json')).json();
+  const heartC = meshOf.coeur.getBoundingInfo().boundingBox.centerWorld;
+  const toV = c => c.p.map(q => V3(q[0], q[1], q[2]));
+  const orient = (pts, toward) => { const d0 = BABYLON.Vector3.Distance(pts[0], heartC), d1 = BABYLON.Vector3.Distance(pts[pts.length - 1], heartC); return (toward ? d0 < d1 : d0 > d1) ? pts.reverse() : pts; };
+  const pulm = n => /lung|pulmonary|poumon/i.test(n);
+  const oxy = [], deoxy = [];
+  for (const c of tr.art) { const p = orient(toV(c), false); (pulm(c.n) ? deoxy : oxy).push(p); }
+  for (const c of tr.vei) { const p = orient(toV(c), true); (pulm(c.n) ? oxy : deoxy).push(p); }
+  makeFlow('sangRouge', oxy, '#ff5a4d', { sys: 'cardio', perMeter: 26, size: 0.0017, speed: 0.12, pulse: true, paced: true });
+  makeFlow('sangBleu', deoxy, '#5d95ff', { sys: 'cardio', perMeter: 22, size: 0.0017, speed: 0.08, paced: true });
+  makeFlow('influx', tr.ner.map(toV), '#ffd860', { sys: 'nerveux', perMeter: 10, size: 0.0014, speed: 0.6, both: true });
+  makeFlow('urine', tr.uri.map(c => { const p = toV(c); return p[0].y < p[p.length - 1].y ? p.reverse() : p; }), '#ffe27a', { sys: 'urinaire', perMeter: 60, size: 0.0018, speed: 0.012 });
+
+  // Neurones qui déchargent : points pris à la surface du cerveau, un peu à l'intérieur
+  {
+    const b = meshOf.cerveau; const P = b.getVerticesData(BABYLON.VertexBuffer.PositionKind); const N = b.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+    const W = b.computeWorldMatrix(true); const count = 320; const pos = [];
+    for (let i = 0; i < count; i++) {
+      const v = Math.floor(Math.random() * (P.length / 3));
+      const lp = V3(P[v * 3] - N[v * 3] * 0.003, P[v * 3 + 1] - N[v * 3 + 1] * 0.003, P[v * 3 + 2] - N[v * 3 + 2] * 0.003);
+      pos.push(BABYLON.Vector3.TransformCoordinates(lp, W));
+    }
+    const dot = BABYLON.MeshBuilder.CreateIcoSphere('neurones', { radius: 0.0028, subdivisions: 1 }, scene);
+    const m = new BABYLON.StandardMaterial('neuronesMat', scene); m.emissiveColor = BABYLON.Color3.FromHexString('#fff2b0'); m.disableLighting = true; dot.material = m;
+    dot.isPickable = false; dot.alwaysSelectAsActiveMesh = true;
+    const buf = new Float32Array(count * 16);
+    pos.forEach((p, i) => { buf[i * 16 + 12] = p.x; buf[i * 16 + 13] = p.y; buf[i * 16 + 14] = p.z; buf[i * 16 + 15] = 1; });
+    dot.thinInstanceSetBuffer('matrix', buf, 16, false);
+    neurons = { dot, buf, level: new Float32Array(count) };
+    groups.nerveux.meshes.push(dot);
+  }
+  loaderEl.hidden = true; ready = true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sélection, survol, caméra                                           */
+/* ------------------------------------------------------------------ */
+const tip = document.getElementById('tip');
+let hovered = null;
+function setHighlight(id, on) {
+  if (!id || !organMeshes[id]) return;
+  for (const m of organMeshes[id]) { if (on) hl.addMesh(m, new BABYLON.Color3(1, 1, 1)); else hl.removeMesh(m); }
+}
+function pickAt(x, y) {
+  const r = canvas.getBoundingClientRect();
+  const hit = scene.pick(x - r.left, y - r.top, m => m.isPickable && m.isEnabled() && !!m.metadata && m.material && m.material.alpha > 0.2);
+  return hit && hit.hit ? hit.pickedMesh.metadata.organ : null;
+}
+let lastMove = 0;
+canvas.addEventListener('pointermove', ev => {
+  if (ev.pointerType === 'touch' || state.deepOpen || !ready) return;
+  const now = performance.now(); if (now - lastMove < 60) return; lastMove = now;
+  const id = pickAt(ev.clientX, ev.clientY);
+  if (id !== hovered) { if (hovered && hovered !== state.selected) setHighlight(hovered, false); hovered = id; if (id) setHighlight(id, true); }
+  canvas.classList.toggle('hover', !!id);
+  if (id) { tip.hidden = false; tip.textContent = ORGANS[id].nom; tip.style.left = ev.clientX + 'px'; tip.style.top = ev.clientY + 'px'; } else tip.hidden = true;
+});
+canvas.addEventListener('pointerleave', () => { tip.hidden = true; if (hovered && hovered !== state.selected) setHighlight(hovered, false); hovered = null; });
+let downAt = null;
+canvas.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+canvas.addEventListener('pointerup', ev => {
+  if (!downAt || !ready) return; const d = Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]); downAt = null;
+  if (d > 6) return;
+  const id = pickAt(ev.clientX, ev.clientY); if (id) select(id); else if (state.selected) select(null);
+});
+
+const camAnim = { t: 1, start: 0, fromT: V3(0, 0, 0), toT: V3(0, 0, 0), fromR: 3, toR: 3 };
+function flyTo(target, radius) {
+  camAnim.fromT.copyFrom(camera.target); camAnim.toT.copyFrom(target);
+  camAnim.fromR = camera.radius; camAnim.toR = radius * (canvas.clientWidth <= 820 ? 1.35 : 1); camAnim.t = 0; camAnim.start = performance.now();
+}
+function centerOf(id) {
+  let mn = V3(1e9, 1e9, 1e9), mx = V3(-1e9, -1e9, -1e9);
+  for (const m of organMeshes[id]) { const b = m.getBoundingInfo().boundingBox; mn = BABYLON.Vector3.Minimize(mn, b.minimumWorld); mx = BABYLON.Vector3.Maximize(mx, b.maximumWorld); }
+  return { c: mn.add(mx).scale(0.5), size: BABYLON.Vector3.Distance(mn, mx) };
+}
+function applyDim() {
+  const sel = state.selected;
+  for (const [id, meshes] of Object.entries(organMeshes)) {
+    const dim = sel && id !== sel;
+    for (const m of meshes) {
+      const mt = m.material; const base = mt.metadata.base;
+      mt.alpha = dim ? Math.min(base, 0.07) : base;
+      mt.transparencyMode = mt.alpha < 1 ? BABYLON.PBRMaterial.PBRMATERIAL_ALPHABLEND : BABYLON.PBRMaterial.PBRMATERIAL_OPAQUE;
+    }
+  }
+  for (const f of flows) f.dot.visibility = sel && sel !== 'vaisseaux' && sel !== 'coeur' && sel !== 'moelle' && sel !== 'reins' && sel !== 'vessie' ? 0.25 : 1;
+  glass.alpha = sel ? 0.06 : 0.14;
+}
+function select(id) {
+  if (state.selected) setHighlight(state.selected, false);
+  state.selected = id;
+  if (id) {
+    const sys = ORGANS[id].sys;
+    if (!state.visible[sys]) { state.visible[sys] = true; groups[sys].visible = true; sysBox.children[Object.keys(SYSTEMS).indexOf(sys)].setAttribute('aria-pressed', 'true'); }
+    renderOrgan(id);
+    const { c, size } = centerOf(id); flyTo(c, clamp(size * 2.2, 0.35, 2.6));
+  } else { renderHome(); flyTo(HOME.target, HOME.radius); }
+  applyDim();
+}
+
+/* ------------------------------------------------------------------ */
+/* Interface : systèmes, panneau, constantes                           */
+/* ------------------------------------------------------------------ */
+const $ = id => document.getElementById(id);
+const sysBox = $('systems');
+for (const [k, s] of Object.entries(SYSTEMS)) {
+  const b = document.createElement('button'); b.className = 'chip'; b.style.setProperty('--c', s.c); b.setAttribute('aria-pressed', 'true');
+  b.innerHTML = `<i></i>${s.nom}`;
+  b.onclick = () => { state.visible[k] = !state.visible[k]; b.setAttribute('aria-pressed', String(state.visible[k])); groups[k].visible = state.visible[k]; };
+  sysBox.appendChild(b);
+}
+
+const panelBody = $('panelBody'); const panel = $('panel');
+function renderHome() {
+  const bySys = Object.entries(ORGANS);
+  panelBody.innerHTML = `
+    <div class="eyebrow">Mode d'emploi</div>
+    <h2>Explorez un corps qui fonctionne</h2>
+    <p>Chaque organe est animé selon son vrai rythme : le cœur bat, le sang circule, les poumons respirent, l'intestin ondule, les nerfs transmettent. Tournez autour du corps et touchez un organe pour comprendre comment il marche.</p>
+    <div>
+      <h3>Organes</h3>
+      <div class="organ-list">${bySys.map(([id, o]) => `<button data-o="${id}" style="--c:${SYSTEMS[o.sys].c}"><i></i>${o.nom}</button>`).join('')}</div>
+    </div>
+    <div class="know">Commencez par le cœur : il a déjà une plongée détaillée, phase par phase, avec l'ECG et les valves.</div>
+    <p class="hint">Modèles 3D : <a href="https://www.z-anatomy.com" target="_blank" rel="noopener">Z-Anatomy</a> (CC BY-SA 4.0), d'après BodyParts3D © DBCLS (CC BY-SA 2.1 JP).</p>
+    <p class="hint">Glisser pour tourner · molette ou pincement pour zoomer · clic droit ou deux doigts pour déplacer. Les pastilles en haut masquent un système pour voir ce qu'il cache.</p>`;
+  panelBody.querySelectorAll('[data-o]').forEach(b => b.onclick = () => select(b.dataset.o));
+}
+function renderOrgan(id) {
+  const o = ORGANS[id]; const s = SYSTEMS[o.sys];
+  panelBody.innerHTML = `
+    <div class="row" style="justify-content:space-between">
+      <div class="eyebrow" style="--c:${s.c}"><i></i>Système ${s.nom.toLowerCase()}</div>
+      <button class="btn" id="backBtn">Vue d'ensemble</button>
+    </div>
+    <h2>${o.nom}</h2>
+    <p>${o.role}</p>
+    ${o.deep ? `<button class="btn primary" id="deepBtn">${({ coeur: 'Plonger dans le cycle cardiaque', poumons: "Plonger jusqu'à l'alvéole", cerveau: 'Plonger dans le cerveau et le neurone' })[o.deep]}</button>` : ''}
+    <div><h3>Comment ça marche</h3><ol class="steps">${o.etapes.map(e => `<li><span>${e}</span></li>`).join('')}</ol></div>
+    <div><h3>En chiffres</h3><div class="figures">${o.chiffres.map(([v, l]) => `<div class="fig"><b>${v}</b><span>${l}</span></div>`).join('')}</div></div>
+    <div class="know">${o.savoir}</div>
+    ${o.deep ? '' : `<p class="soon">Plongée détaillée à venir pour cet organe.</p>`}`;
+  $('backBtn').onclick = () => select(null);
+  if (o.deep) $('deepBtn').onclick = ({ coeur: openDeep, poumons: openLungDeep, cerveau: openBrainDeep })[o.deep];
+  panelBody.scrollTop = 0;
+}
+
+// Fréquence cardiaque
+const bpmInput = $('bpm');
+function setBpm(v) {
+  state.bpm = +v; bpmInput.value = v;
+  $('bpmOut').innerHTML = `${state.bpm}<small>BPM</small>`;
+  $('respOut').textContent = respRate();
+  $('coOut').textContent = (state.bpm * strokeVol() / 1000).toFixed(1).replace('.', ',');
+  document.querySelectorAll('#presets button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === state.bpm)));
+}
+bpmInput.oninput = e => setBpm(e.target.value);
+document.querySelectorAll('#presets button').forEach(b => b.onclick = () => setBpm(b.dataset.v));
+$('vitals').addEventListener('click', e => { if (e.target.closest('.vitals-head')) $('vitals').classList.toggle('open'); });
+
+/* ------------------------------------------------------------------ */
+/* ECG miniature                                                       */
+/* ------------------------------------------------------------------ */
+const ecgC = $('ecg'); const ecgX = ecgC.getContext('2d'); const ecgBuf = new Float32Array(240); let ecgHead = 0, ecgAcc = 0;
+function drawEcg(dt, p) {
+  const w = ecgC.clientWidth, h = ecgC.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (ecgC.width !== Math.round(w * dpr)) { ecgC.width = Math.round(w * dpr); ecgC.height = Math.round(h * dpr); }
+  ecgAcc += dt; const step = 2.4 / ecgBuf.length;
+  while (ecgAcc > step) { ecgAcc -= step; ecgBuf[ecgHead] = ecgAt(p); ecgHead = (ecgHead + 1) % ecgBuf.length; }
+  ecgX.setTransform(dpr, 0, 0, dpr, 0, 0); ecgX.clearRect(0, 0, w, h);
+  ecgX.strokeStyle = 'rgba(169,177,184,.15)'; ecgX.lineWidth = 1;
+  for (let x = 0; x < w; x += 12) { ecgX.beginPath(); ecgX.moveTo(x + .5, 0); ecgX.lineTo(x + .5, h); ecgX.stroke(); }
+  ecgX.strokeStyle = '#e2574c'; ecgX.lineWidth = 1.6; ecgX.beginPath();
+  for (let i = 0; i < ecgBuf.length; i++) { const v = ecgBuf[(ecgHead + i) % ecgBuf.length]; const x = i / (ecgBuf.length - 1) * w; const y = h * 0.72 - v * h * 0.62; i ? ecgX.lineTo(x, y) : ecgX.moveTo(x, y); }
+  ecgX.stroke();
+}
+
+/* ------------------------------------------------------------------ */
+/* Boucle d'animation                                                  */
+/* ------------------------------------------------------------------ */
+function layoutOffset() {
+  const w = canvas.clientWidth;
+  // Sur grand écran le panneau occupe la droite : on décale le corps vers la gauche ; sur mobile on le remonte
+  camera.targetScreenOffset.x = w > 820 ? -camera.radius * 0.115 : 0;
+  camera.targetScreenOffset.y = w > 820 ? 0 : camera.radius * 0.1;
+}
+window.addEventListener('resize', () => engine.resize());
+
+let last = performance.now(), cardiac = 0, breath = 0, clock = 0, bladderFill = 0.2;
+engine.runRenderLoop(() => {
+  const now = performance.now();
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (state.deepOpen) { ({ coeur: drawHeartDeep, poumons: drawLungDeep, cerveau: drawBrainDeep })[state.deepOpen](dt); return; }
+  if (reduceMotion) dt *= 0.4;
+  clock += dt;
+  cardiac = (cardiac + dt * state.bpm / 60) % 1;
+  breath = (breath + dt * respRate() / 60) % 1;
+  const p = cardiac;
+  if (ready) {
+    const v = ventContract(p), a = atrContract(p);
+    meshOf.coeur.scaling.set(1 - 0.07 * v + 0.025 * a, 1 - 0.05 * v + 0.02 * a, 1 - 0.07 * v + 0.025 * a);
+    const insp = breath < 0.4 ? smooth(0, 0.4, breath) : 1 - smooth(0.4, 1, breath);
+    meshOf.poumons.scaling.set(1 + 0.045 * insp, 1 + 0.035 * insp, 1 + 0.045 * insp);
+    meshOf.diaphragme.position.y = -0.014 * insp;
+    for (const w of waves) w.time = clock;
+    bladderFill += dt / 40; if (bladderFill > 1.15) bladderFill = 0.15;
+    meshOf.vessie.scaling.setAll(0.7 + 0.45 * Math.min(bladderFill, 1));
+    if (neurons && neurons.dot.isEnabled()) {
+      const lv = neurons.level; const fire = 0.18 * dt * (0.8 + state.bpm / 120) * 10;
+      for (let i = 0; i < lv.length; i++) {
+        lv[i] *= Math.exp(-dt * 7); if (Math.random() < fire * 0.1) lv[i] = 1;
+        const s = lv[i] < 0.05 ? 0 : lv[i]; const k = i * 16; neurons.buf[k] = neurons.buf[k + 5] = neurons.buf[k + 10] = s;
+      }
+      neurons.dot.thinInstanceBufferUpdated('matrix');
+    }
+    updateFlows(dt, p);
+  }
+  drawEcg(dt, p);
+  if (camAnim.t < 1) {
+    camAnim.t = Math.min(1, (now - camAnim.start) / 900); const e = 1 - Math.pow(1 - camAnim.t, 3);
+    camera.target = BABYLON.Vector3.Lerp(camAnim.fromT, camAnim.toT, e);
+    camera.radius = camAnim.fromR + (camAnim.toR - camAnim.fromR) * e;
+  }
+  layoutOffset();
+  scene.render();
+});
+
+/* ------------------------------------------------------------------ */
+/* Plongée : le cycle cardiaque en coupe                               */
+/* ------------------------------------------------------------------ */
+const PHASES = [
+  { a: 0.0, b: 0.12, c: '#d9a066', t: 'Systole auriculaire', ecg: 'onde P',
+    d: "Le nœud sinusal vient de donner le signal. Les oreillettes se contractent et poussent les derniers 20 % de sang dans les ventricules. Les valves tricuspide et mitrale sont ouvertes, les valves pulmonaire et aortique fermées." },
+  { a: 0.12, b: 0.2, c: '#e6c35c', t: 'Contraction isovolumique', ecg: 'QRS',
+    d: "L'onde électrique gagne les ventricules, qui commencent à se contracter. La pression monte et referme les valves tricuspide et mitrale : c'est le premier bruit du cœur, « toum ». Toutes les valves sont fermées, le volume ne change pas encore." },
+  { a: 0.2, b: 0.45, c: '#e2574c', t: 'Éjection', ecg: 'segment ST',
+    d: "La pression du ventricule gauche dépasse celle de l'aorte (≈ 80 mmHg), celle du droit dépasse l'artère pulmonaire (≈ 10 mmHg). Les valves aortique et pulmonaire s'ouvrent : environ 70 mL partent de chaque côté. Pendant ce temps, les oreillettes se remplissent déjà." },
+  { a: 0.45, b: 0.53, c: '#a77fd4', t: 'Relaxation isovolumique', ecg: 'onde T',
+    d: "Les ventricules se relâchent et leur pression chute. Le sang tente de refluer et referme les valves aortique et pulmonaire : deuxième bruit, « ta ». Toutes les valves sont de nouveau fermées." },
+  { a: 0.53, b: 1.0, c: '#6a98d8', t: 'Remplissage ventriculaire', ecg: 'ligne de base',
+    d: "Quand la pression ventriculaire passe sous celle des oreillettes, les valves tricuspide et mitrale s'ouvrent. Le sang des veines coule passivement dans les ventricules : c'est environ 80 % du remplissage, sans aucun effort du muscle." },
+];
+const avOpen = p => p < 0.12 || p >= 0.53;
+const slOpen = p => p >= 0.2 && p < 0.45;
+/* ------------------------------------------------------------------ */
+/* Plongée 3D : le vrai cœur (Z-Anatomy) ouvert en coupe 4 cavités     */
+/* ------------------------------------------------------------------ */
+const deep = { p: 0.55, speed: 0.5, playing: true, lastPhase: -1, flash: 0, flashTxt: '', cut: true, labels: window.innerWidth > 820, sc: null, loading: null };
+const hc = $('heartCanvas'); const deepEcgC = $('deepEcg'); const dx = deepEcgC.getContext('2d');
+const labelBox = $('deepLabels'); const flashEl = $('deepFlash');
+const H3 = h => BABYLON.Color3.FromHexString(h);
+
+// Ensemble de pièces : couleur, découpe par le plan de coupe
+const HEART_PARTS = {
+  og: ['#b4554c', 1], od: ['#a8564f', 1], vg: ['#9c3a35', 1], vd: ['#97423c', 1],
+  aorte: ['#c4453c', 1], tronc_pulm: ['#5d74b4', 1], veines_caves: ['#566fb0', 1], veines_pulm: ['#c25a50', 1],
+  coronaires: ['#d8584c', 1], veines_card: ['#6a82c4', 1],
+  tri_inf: ['#eadfcb', 0], tri_sep: ['#eadfcb', 0], mit_post: ['#eadfcb', 0],
+  ao_lc: ['#eadfcb', 0], ao_nc: ['#eadfcb', 0], ao_rc: ['#eadfcb', 0], pu_ant: ['#eadfcb', 0], pu_l: ['#eadfcb', 0], pu_r: ['#eadfcb', 0],
+};
+function meanOf(m) {
+  const P = m.getVerticesData('position'); const c = V3(0, 0, 0); const n = P.length / 3;
+  for (let i = 0; i < P.length; i += 3) { c.x += P[i]; c.y += P[i + 1]; c.z += P[i + 2]; }
+  return c.scaleInPlace(1 / n);
+}
+const perp = (v, f) => v.subtract(f.scale(BABYLON.Vector3.Dot(v, f)));
+
+async function initHeart3D() {
+  const eng = new BABYLON.Engine(hc, true, { stencil: true, antialias: true }, true);
+  eng.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+  const sc = new BABYLON.Scene(eng); sc.clearColor = new BABYLON.Color4(0.035, 0.07, 0.105, 1);
+  sc.skipPointerMovePicking = true;
+  const cam = new BABYLON.ArcRotateCamera('dc', Math.PI / 2, Math.PI / 2, 0.3, V3(0, 1.3, 0), sc);
+  cam.attachControl(hc, true); cam.minZ = 0.004; cam.maxZ = 5; cam.fov = 0.6;
+  cam.wheelDeltaPercentage = 0.01; cam.pinchDeltaPercentage = 0.004; cam.lowerRadiusLimit = 0.08; cam.upperRadiusLimit = 0.6;
+  cam.panningSensibility = 0; cam.inertia = 0.85;
+  const hemi = new BABYLON.HemisphericLight('h', V3(0, 1, 0.4), sc); hemi.intensity = 0.6; hemi.groundColor = new BABYLON.Color3(0.18, 0.12, 0.14);
+  const key = new BABYLON.DirectionalLight('k', V3(-0.3, -0.5, -1), sc); key.intensity = 1.0;
+  const rim = new BABYLON.DirectionalLight('r', V3(0.6, 0.3, 1), sc); rim.intensity = 0.45; rim.diffuse = H3('#9fc3ff');
+  // La lumière principale suit la caméra pour que l'intérieur de la coupe reste lisible
+  sc.onBeforeRenderObservable.add(() => { key.direction = cam.target.subtract(cam.position).normalize().add(V3(0.15, -0.35, 0)); });
+
+  const glb = await fetchModel('coeur3d.txt', () => {});
+  const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, sc, null, '.glb');
+  const M = {}, C = {};
+  for (const m of res.meshes) {
+    const n = (m.name || '').replace(/_primitive\d+$/, ''); if (!HEART_PARTS[n]) continue;
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices(); m.isPickable = false;
+    M[n] = m; C[n] = meanOf(m);
+  }
+  // Plan de coupe « 4 cavités » : contient l'axe droite-gauche et l'axe base-pointe
+  const lr = C.og.add(C.vg).subtract(C.od.add(C.vd)).normalize();
+  const ba = C.vg.add(C.vd).subtract(C.og.add(C.od)).normalize();
+  let n = BABYLON.Vector3.Cross(lr, ba).normalize(); if (n.z < 0) n = n.negate();
+  const c0 = C.og.add(C.vg).add(C.od).add(C.vd).scale(0.25);
+  const plane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.004))));
+  const vplane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.014))));
+  const mats = {};
+  for (const [k, [col, cut]] of Object.entries(HEART_PARTS)) {
+    const m = M[k]; if (!m) continue;
+    const mt = new BABYLON.StandardMaterial('m_' + k, sc); mt.diffuseColor = H3(col);
+    mt.specularColor = new BABYLON.Color3(0.32, 0.26, 0.26); mt.specularPower = 48; mt.backFaceCulling = false; mt.twoSidedLighting = true;
+    if (!cut) mt.emissiveColor = new BABYLON.Color3(0.12, 0.1, 0.09);
+    mt.clipPlane = cut ? plane : vplane;
+    m.material = mt; mats[k] = mt;
+  }
+  // Cavités : elles se contractent autour de leur centre
+  for (const k of ['og', 'od', 'vg', 'vd']) M[k].setPivotPoint(C[k]);
+  // Valves : chaque feuillet pivote autour de sa charnière (côté anneau, en amont)
+  const valves = [];
+  const mkValve = (keys, from, to, openA, shutA, kind) => {
+    const f = to.subtract(from).normalize();
+    const cs = keys.map(k => C[k]);
+    let v = cs.reduce((a, b) => a.add(b), V3(0, 0, 0)).scale(1 / cs.length);
+    if (keys.length === 1) { const r0 = perp(cs[0].subtract(from.add(to).scale(0.5)), f).normalize(); v = cs[0].subtract(r0.scale(0.012)); }
+    const leaves = keys.map(k => {
+      const m = M[k]; const c = C[k]; const r = perp(c.subtract(v), f).normalize();
+      const P = m.getVerticesData('position'); let best = -1e9, hinge = c;
+      for (let i = 0; i < P.length; i += 3) { const p = V3(P[i], P[i + 1], P[i + 2]).subtract(v); const s = BABYLON.Vector3.Dot(p, r) - 0.6 * BABYLON.Vector3.Dot(p, f); if (s > best) { best = s; hinge = V3(P[i], P[i + 1], P[i + 2]); } }
+      m.setPivotPoint(hinge); m.rotationQuaternion = BABYLON.Quaternion.Identity();
+      return { m, axis: BABYLON.Vector3.Cross(f, r).normalize() };
+    });
+    const o = { leaves, openA, shutA, kind, s: 0, center: v }; valves.push(o); return o;
+  };
+  const avTri = mkValve(['tri_inf', 'tri_sep'], C.od, C.vd, 0.22, -0.08, 'av');
+  const avMit = mkValve(['mit_post'], C.og, C.vg, 0.22, -0.08, 'av');
+  const slPu = mkValve(['pu_ant', 'pu_l', 'pu_r'], C.vd, C.pu_ant.add(C.pu_l).add(C.pu_r).scale(1 / 3), 0.5, 0, 'sl');
+  const slAo = mkValve(['ao_lc', 'ao_nc', 'ao_rc'], C.vg, C.ao_lc.add(C.ao_nc).add(C.ao_rc).scale(1 / 3), 0.5, 0, 'sl');
+  const mitC = C.mit_post.add(C.og.add(C.vg).scale(0.5)).scale(0.5);
+
+  // Trajets du sang : veine → oreillette → valve AV → ventricule → valve sigmoïde → artère
+  const apex = k => C[k].add(C[k].subtract(k === 'vd' ? C.od : C.og).scale(0.35));
+  const P = (a) => V3(a[0], a[1], a[2]);
+  const ROUTES = {
+    droit: { starts: [P([0.0144, 1.374, 0.023]), P([0.011, 1.225, 0.017])], mid: [C.od, avTri.center, apex('vd'), slPu.center, P([-0.0293, 1.3446, 0.0296])],
+      ends: [P([0.0335, 1.3309, -0.007]), P([-0.062, 1.322, -0.014])], R: [0.004, 0.011, 0.004, 0.011, 0.003, 0.005, 0.004] },
+    gauche: { starts: [P([-0.0506, 1.2958, -0.0198]), P([-0.0541, 1.3143, -0.0093]), P([0.024, 1.2982, -0.0269]), P([0.034, 1.33, -0.004])], mid: [C.og, mitC, apex('vg'), slAo.center, P([-0.0058, 1.3602, 0.0286])],
+      ends: [P([-0.0193, 1.3604, -0.0333])], R: [0.003, 0.011, 0.004, 0.012, 0.003, 0.006, 0.006] },
+  };
+  const parts = [];
+  const mkFlow = (side, col, count) => {
+    // Une géométrie par flux : les instances fines sont stockées sur la géométrie
+    const mesh = BABYLON.MeshBuilder.CreateSphere('sang_' + side, { diameter: 0.0023, segments: 6 }, sc); const mt = new BABYLON.StandardMaterial('sm_' + side, sc);
+    mt.diffuseColor = H3(col); mt.emissiveColor = H3(col).scale(0.4); mt.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4); mesh.material = mt; mesh.isPickable = false;
+    const buf = new Float32Array(count * 16); const list = [];
+    const rt = ROUTES[side];
+    for (let i = 0; i < count; i++) {
+      const pts = [rt.starts[i % rt.starts.length], ...rt.mid, rt.ends[i % rt.ends.length]];
+      const off = V3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().scale(Math.sqrt(Math.random()));
+      list.push({ pts, off, s: Math.random() * 6, j: Math.random() });
+      BABYLON.Matrix.IdentityToRef(BABYLON.TmpVectors.Matrix[0]); BABYLON.TmpVectors.Matrix[0].copyToArray(buf, i * 16);
+    }
+    mesh.thinInstanceSetBuffer('matrix', buf, 16, false); mesh.alwaysSelectAsActiveMesh = true;
+    parts.push({ side, mesh, buf, list, R: rt.R });
+  };
+  mkFlow('droit', '#3f72e0', 110); mkFlow('gauche', '#ff4a3a', 110);
+
+  // Caméra face au plan de coupe, base du cœur en haut et pointe en bas
+  const up = perp(ba.negate(), n).normalize(); cam.upVector = up;
+  const q = new BABYLON.Quaternion(); BABYLON.Quaternion.FromUnitVectorsToRef(BABYLON.Vector3.UpReadOnly, up, q);
+  const loc = n.applyRotationQuaternion(BABYLON.Quaternion.Inverse(q));
+  cam.target = c0.clone(); cam.alpha = Math.atan2(loc.z, loc.x); cam.beta = Math.acos(clamp(loc.y, -1, 1)); cam.radius = hc.clientWidth < 520 ? 0.27 : 0.23;
+  cam.lowerBetaLimit = 0.05; cam.upperBetaLimit = Math.PI - 0.05;
+
+  // Étiquettes
+  const LABELS = [
+    ['Oreillette droite', C.od], ['Ventricule droit', apex('vd').add(C.vd).scale(0.5)], ['Oreillette gauche', C.og], ['Ventricule gauche', apex('vg').add(C.vg).scale(0.5)],
+    ['Valve tricuspide', avTri.center, 1], ['Valve mitrale', mitC, 1], ['Valve aortique', slAo.center, 1],
+    ['Aorte', P([-0.006, 1.362, 0.03])], ['Veine cave sup.', P([0.0144, 1.37, 0.023])],
+  ].map(([t, p, v]) => { const el = document.createElement('div'); el.className = 'lab' + (v ? ' v' : ''); el.textContent = t; labelBox.appendChild(el); return { el, p }; });
+
+  deep.sc = sc; deep.eng = eng; deep.cam = cam; deep.M = M; deep.C = C; deep.mats = mats; deep.valves = valves; deep.parts = parts; deep.labelsList = LABELS; deep.plane = plane; deep.vplane = vplane;
+  deep.avValves = [avTri, avMit]; deep.slValves = [slPu, slAo]; window.__deep = deep;
+}
+
+function setCut(on) {
+  deep.cut = on; $('cutBtn').classList.toggle('primary', on);
+  if (deep.mats) for (const [k, [, cut]] of Object.entries(HEART_PARTS)) if (deep.mats[k]) deep.mats[k].clipPlane = on ? (cut ? deep.plane : deep.vplane) : null;
+}
+function setLabels(on) { deep.labels = on; $('labBtn').classList.toggle('primary', on); labelBox.hidden = !on; }
+
+// Panneau latéral de la plongée
+const phaseIdx = p => PHASES.findIndex(ph => p >= ph.a && p < ph.b);
+const phaseList = $('phaseList');
+phaseList.innerHTML = PHASES.map((ph, i) => `<li data-i="${i}" style="--c:${ph.c}"><i></i><span>${ph.t}</span><span>${ph.ecg}</span></li>`).join('');
+phaseList.querySelectorAll('li').forEach(li => li.onclick = () => { deep.p = PHASES[+li.dataset.i].a + 0.001; });
+function updateDeepText(i) {
+  const ph = PHASES[i];
+  $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`;
+  $('phaseTitle').textContent = ph.t; $('phaseText').textContent = ph.d;
+  phaseList.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === i));
+  const av = avOpen(deep.p), sl = slOpen(deep.p);
+  $('valves').innerHTML = [['Tricuspide', av], ['Mitrale', av], ['Pulmonaire', sl], ['Aortique', sl]]
+    .map(([n, o]) => `<div class="valve ${o ? 'open' : 'shut'}"><span>${n}</span><b>${o ? 'ouverte' : 'fermée'}</b></div>`).join('');
+}
+
+const tmpM = BABYLON.Matrix.Identity(); const tmpV = V3(0, 0, 0);
+function catmull(pts, s, out) {
+  const i = Math.min(pts.length - 2, Math.floor(s)); const t = s - i; const g = k => pts[clamp(k, 0, pts.length - 1)];
+  return BABYLON.Vector3.CatmullRomToRef ? BABYLON.Vector3.CatmullRomToRef(g(i - 1), g(i), g(i + 1), g(i + 2), t, out) : out.copyFrom(BABYLON.Vector3.CatmullRom(g(i - 1), g(i), g(i + 1), g(i + 2), t));
+}
+
+function drawHeartDeep(dt) {
+  if (!deep.sc) return;
+  if (deep.playing) deep.p = (deep.p + dt * deep.speed * state.bpm / 60) % 1;
+  const p = deep.p; const v = ventContract(p), a = atrContract(p);
+  const i = phaseIdx(p);
+  if (i !== deep.lastPhase) {
+    if (i === 1) { deep.flash = 1; deep.flashTxt = '« toum »'; } if (i === 3) { deep.flash = 1; deep.flashTxt = '« ta »'; }
+    deep.lastPhase = i; updateDeepText(i);
+  }
+  const { M, C } = deep;
+  // Cavités
+  M.vg.scaling.setAll(1 - 0.075 * v); M.vd.scaling.setAll(1 - 0.07 * v);
+  const fillA = slOpen(p) ? 0.03 : 0; M.og.scaling.setAll(1 - 0.09 * a + fillA); M.od.scaling.setAll(1 - 0.09 * a + fillA);
+  deep.mats.vg.emissiveColor.set(0.35 * v, 0.04 * v, 0.03 * v); deep.mats.vd.emissiveColor.set(0.3 * v, 0.04 * v, 0.05 * v);
+  deep.mats.og.emissiveColor.set(0.3 * a, 0.05 * a, 0.03 * a); deep.mats.od.emissiveColor.set(0.28 * a, 0.05 * a, 0.05 * a);
+  // Valves : ouverture lissée
+  const k = deep.playing ? 1 - Math.exp(-dt * deep.speed * 40) : 1 - Math.exp(-dt * 20);
+  for (const vv of deep.valves) {
+    const target = vv.kind === 'av' ? (avOpen(p) ? 1 : 0) : (slOpen(p) ? 1 : 0);
+    vv.s += (target - vv.s) * k; const ang = vv.shutA + (vv.openA - vv.shutA) * vv.s;
+    for (const lf of vv.leaves) BABYLON.Quaternion.RotationAxisToRef(lf.axis, ang, lf.m.rotationQuaternion);
+  }
+  // Sang : il attend derrière une valve fermée
+  const beat = 60 / state.bpm; const kk = deep.playing ? dt * deep.speed / beat : 0;
+  for (const fl of deep.parts) {
+    const { list, buf, R } = fl;
+    for (let n = 0; n < list.length; n++) {
+      const q = list[n];
+      let sp; if (q.s < 1) sp = 1.0; else if (q.s < 2) sp = a > 0 ? 4 : 1.4; else if (q.s < 4) sp = slOpen(p) ? 9 : 1.4; else sp = 6;
+      let ns = q.s + sp * kk;
+      if (!avOpen(p) && q.s <= 2 && ns > 2 - q.j * 0.8) ns = Math.max(q.s, 2 - q.j * 0.8);
+      if (!slOpen(p) && q.s >= 2 && q.s <= 4 && ns > 3.95 - q.j * 1.6) ns = Math.max(q.s, 3.95 - q.j * 1.6);
+      q.s = ns; if (q.s >= 6) { q.s = Math.random() * 0.15; q.j = Math.random(); }
+      catmull(q.pts, q.s, tmpV);
+      const ii = Math.min(5, Math.floor(q.s)), t = q.s - ii; const rad = R[ii] + (R[ii + 1] - R[ii]) * t;
+      tmpV.addInPlace(q.off.scale(rad));
+      const o = n * 16; buf[o] = buf[o + 5] = buf[o + 10] = 1; buf[o + 12] = tmpV.x; buf[o + 13] = tmpV.y; buf[o + 14] = tmpV.z; buf[o + 15] = 1;
+    }
+    fl.mesh.thinInstanceBufferUpdated('matrix');
+  }
+  deep.sc.render();
+  // Étiquettes projetées
+  const w = hc.clientWidth, h = hc.clientHeight;
+  if (deep.labels) {
+    const tm = deep.sc.getTransformMatrix(); const vp = deep.cam.viewport.toGlobal(w, h);
+    for (const L of deep.labelsList) {
+      const s = BABYLON.Vector3.Project(L.p, BABYLON.Matrix.IdentityReadOnly, tm, vp);
+      const vis = s.z > 0 && s.z < 1 && s.x > 0 && s.x < w && s.y > 0 && s.y < h;
+      L.el.style.display = vis ? '' : 'none'; if (vis) L.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px)`;
+    }
+  }
+  // Bruits du cœur
+  if (deep.flash > 0) { deep.flash = Math.max(0, deep.flash - dt / 0.9); flashEl.textContent = deep.flashTxt; flashEl.style.opacity = deep.flash.toFixed(2); }
+  drawDeepEcg(p);
+}
+
+function drawDeepEcg(p) {
+  const w = deepEcgC.clientWidth, h = deepEcgC.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (deepEcgC.width !== Math.round(w * dpr) || deepEcgC.height !== Math.round(h * dpr)) { deepEcgC.width = Math.round(w * dpr); deepEcgC.height = Math.round(h * dpr); }
+  dx.setTransform(dpr, 0, 0, dpr, 0, 0); dx.clearRect(0, 0, w, h);
+  const gx = 14, gw = w - 28, H = h - 22;
+  PHASES.forEach(ph => { dx.fillStyle = ph.c; dx.globalAlpha = 0.16; dx.fillRect(gx + ph.a * gw, 4, (ph.b - ph.a) * gw, H - 4); dx.globalAlpha = 1; dx.fillRect(gx + ph.a * gw, H + 2, (ph.b - ph.a) * gw - 2, 4); });
+  dx.strokeStyle = '#ff6a5c'; dx.lineWidth = 2; dx.beginPath();
+  for (let n = 0; n <= 300; n++) { const pp = n / 300; const x = gx + pp * gw; const y = 4 + (H - 4) * 0.8 - ecgAt(pp) * (H - 4) * 0.68; n ? dx.lineTo(x, y) : dx.moveTo(x, y); }
+  dx.stroke();
+  const cx = gx + p * gw; dx.strokeStyle = '#ece5d5'; dx.lineWidth = 1.5; dx.beginPath(); dx.moveTo(cx, 0); dx.lineTo(cx, H + 6); dx.stroke();
+  dx.fillStyle = '#a9b1b8'; dx.font = '11px "IBM Plex Mono", monospace'; dx.textAlign = 'left';
+  dx.fillText(`ECG · un battement = ${(60 / state.bpm).toFixed(2).replace('.', ',')} s à ${state.bpm} BPM`, gx, h - 3);
+}
+
+async function openDeep() {
+  state.deepOpen = 'coeur'; $('deep').hidden = false; deep.lastPhase = -1; tip.hidden = true;
+  if (reduceMotion) setSpeed(0.25);
+  if (!deep.sc) {
+    $('deepLoad').hidden = false;
+    try { deep.loading = deep.loading || initHeart3D(); await deep.loading; setCut(deep.cut); setLabels(deep.labels); }
+    catch (e) { console.error(e); $('deepLoad').textContent = "Le cœur 3D n'a pas pu se charger."; return; }
+    $('deepLoad').hidden = true;
+  }
+  deep.eng.resize();
+}
+function setSpeed(s) { deep.speed = s; document.querySelectorAll('#speed button').forEach(b => b.classList.toggle('primary', +b.dataset.s === s)); }
+document.querySelectorAll('#speed button').forEach(b => b.onclick = () => setSpeed(+b.dataset.s));
+setSpeed(0.5);
+$('playBtn').onclick = () => { deep.playing = !deep.playing; $('playBtn').textContent = deep.playing ? 'Pause' : 'Lecture'; };
+$('stepBtn').onclick = () => { const i = phaseIdx(deep.p); deep.p = PHASES[(i + 1) % 5].a + 0.001; };
+$('cutBtn').onclick = () => setCut(!deep.cut);
+$('labBtn').onclick = () => setLabels(!deep.labels);
+$('closeDeep').onclick = () => { state.deepOpen = false; $('deep').hidden = true; last = performance.now(); };
+window.addEventListener('resize', () => { if (deep.eng) deep.eng.resize(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (state.deepOpen === 'coeur') $('closeDeep').click(); else if (state.deepOpen === 'poumons') closeLungDeep(); else if (state.deepOpen === 'cerveau') closeBrainDeep(); else if (state.selected) select(null); } });
+
+/* ------------------------------------------------------------------ */
+/* Plongée 3D : respirer, des poumons à l'alvéole (trois échelles)     */
+/* ------------------------------------------------------------------ */
+const lung = { b: 0.05, speed: 1, playing: true, level: 0, sc: null, loading: null, lastKey: '', camAnim: null };
+const lc = $('lungCanvas'); const lgC = $('lGraph'); const lgx = lgC.getContext('2d'); const lLabels = $('lLabels');
+const LUNG_PATHS = [[0.0002,1.4581,0.0087,0.0003,1.4499,0.0069,0.0004,1.4417,0.005,0.0005,1.4334,0.0031,0.0005,1.4252,0.0012,0.0006,1.4169,-0.0007,0.0007,1.4087,-0.0025,0.0007,1.4005,-0.0044,0.0008,1.3922,-0.0063,0.0009,1.384,-0.0082,0.001,1.3758,-0.0101,-0.0008,1.3681,-0.0118,-0.0059,1.3615,-0.0131,-0.0109,1.3548,-0.0144,-0.016,1.3482,-0.0158,-0.0213,1.3418,-0.0171,-0.0269,1.3356,-0.0184,-0.0328,1.3297,-0.0196,-0.0392,1.3243,-0.0208,-0.0459,1.3192,-0.0212,-0.0531,1.3148,-0.0209,-0.0598,1.3097,-0.0202,-0.0651,1.3032,-0.0198,-0.0691,1.2958,-0.0192,-0.0735,1.2889,-0.0174,-0.0782,1.284,-0.0139,-0.0835,1.2797,-0.009,-0.0887,1.2743,-0.0053,-0.0937,1.2681,-0.0023,-0.0984,1.2618,0.0007,-0.1029,1.2554,0.004,-0.107,1.2488,0.0073,-0.1108,1.2421,0.0107,-0.1145,1.2354,0.0142,-0.1177,1.2284,0.0176,-0.1203,1.221,0.0208,-0.1221,1.2133,0.024,-0.1235,1.2056,0.0271,-0.1243,1.1978,0.0301,-0.125,1.1899,0.0331],[0.0002,1.4581,0.0087,0.0003,1.4504,0.007,0.0004,1.4428,0.0052,0.0004,1.4351,0.0035,0.0005,1.4274,0.0017,0.0006,1.4197,-0.0,0.0006,1.412,-0.0018,0.0007,1.4043,-0.0036,0.0008,1.3966,-0.0053,0.0008,1.3889,-0.0071,0.0009,1.3812,-0.0088,0.001,1.3735,-0.0106,-0.0018,1.3668,-0.012,-0.0066,1.3606,-0.0133,-0.0113,1.3544,-0.0145,-0.016,1.3482,-0.0158,-0.021,1.3422,-0.017,-0.0262,1.3364,-0.0182,-0.0316,1.3308,-0.0194,-0.0375,1.3257,-0.0205,-0.0436,1.3207,-0.0212,-0.0503,1.3166,-0.0211,-0.0569,1.3122,-0.0206,-0.0626,1.3069,-0.0199,-0.0667,1.3002,-0.0196,-0.0706,1.2934,-0.0187,-0.0747,1.2869,-0.017,-0.0793,1.2829,-0.0129,-0.0843,1.2798,-0.0076,-0.0893,1.2765,-0.0024,-0.0938,1.2729,0.0028,-0.098,1.2689,0.0082,-0.1018,1.2645,0.0136,-0.1046,1.2597,0.0192,-0.1063,1.2548,0.025,-0.1075,1.2497,0.0309,-0.1078,1.2444,0.0368,-0.1076,1.2391,0.0427,-0.1075,1.2339,0.0485,-0.1075,1.2286,0.0544],[0.0002,1.4581,0.0087,0.0003,1.4499,0.0069,0.0004,1.4418,0.005,0.0005,1.4336,0.0031,0.0005,1.4254,0.0013,0.0006,1.4172,-0.0006,0.0007,1.409,-0.0025,0.0007,1.4009,-0.0043,0.0008,1.3927,-0.0062,0.0009,1.3845,-0.0081,0.0009,1.3763,-0.0099,-0.0004,1.3686,-0.0117,-0.0055,1.362,-0.013,-0.0105,1.3554,-0.0143,-0.0155,1.3489,-0.0157,-0.0208,1.3424,-0.017,-0.0263,1.3363,-0.0182,-0.0321,1.3304,-0.0195,-0.0384,1.3249,-0.0207,-0.045,1.3198,-0.0212,-0.0522,1.3154,-0.021,-0.0589,1.3105,-0.0203,-0.0645,1.3043,-0.0198,-0.0685,1.2969,-0.0193,-0.0728,1.29,-0.0177,-0.0768,1.2827,-0.0168,-0.08,1.275,-0.0175,-0.0829,1.2673,-0.0192,-0.0864,1.2599,-0.0212,-0.0904,1.2529,-0.0233,-0.0946,1.2461,-0.0258,-0.0986,1.2391,-0.0284,-0.1022,1.232,-0.0311,-0.1054,1.2248,-0.0338,-0.1078,1.2172,-0.0364,-0.1095,1.2093,-0.0385,-0.1101,1.2011,-0.0402,-0.1099,1.193,-0.0426,-0.1087,1.1854,-0.0459,-0.1072,1.1779,-0.0493],[0.0002,1.4581,0.0087,0.0003,1.4492,0.0067,0.0004,1.4402,0.0047,0.0005,1.4313,0.0026,0.0006,1.4223,0.0006,0.0006,1.4134,-0.0015,0.0007,1.4044,-0.0035,0.0008,1.3954,-0.0056,0.0009,1.3865,-0.0076,0.0009,1.3775,-0.0097,-0.0001,1.3689,-0.0116,-0.0057,1.3618,-0.013,-0.0112,1.3545,-0.0145,-0.0167,1.3474,-0.016,-0.0226,1.3404,-0.0174,-0.0287,1.3337,-0.0188,-0.0353,1.3275,-0.0202,-0.0424,1.3217,-0.0211,-0.05,1.3167,-0.0211,-0.0577,1.3116,-0.0205,-0.064,1.305,-0.0198,-0.0684,1.297,-0.0193,-0.0732,1.2894,-0.0176,-0.0737,1.2884,-0.0175,-0.0692,1.2953,-0.0197,-0.067,1.2917,-0.0279,-0.0648,1.2881,-0.036,-0.0623,1.2834,-0.0435,-0.0594,1.2779,-0.0503,-0.0565,1.2716,-0.0562,-0.0547,1.2639,-0.0609,-0.0547,1.2551,-0.0633,-0.0546,1.2462,-0.0657,-0.0553,1.2372,-0.0672,-0.0569,1.2282,-0.0684,-0.0591,1.2194,-0.0701,-0.0618,1.2108,-0.0714,-0.0647,1.2021,-0.0717,-0.0679,1.1935,-0.071,-0.0714,1.1851,-0.0698],[0.0002,1.4581,0.0087,0.0003,1.4502,0.0069,0.0004,1.4422,0.0051,0.0005,1.4343,0.0033,0.0005,1.4264,0.0015,0.0006,1.4184,-0.0003,0.0007,1.4105,-0.0021,0.0007,1.4025,-0.004,0.0008,1.3946,-0.0058,0.0009,1.3866,-0.0076,0.0009,1.3787,-0.0094,0.001,1.3708,-0.0112,-0.0037,1.3643,-0.0125,-0.0086,1.3579,-0.0138,-0.0134,1.3515,-0.0151,-0.0184,1.3452,-0.0164,-0.0237,1.3391,-0.0176,-0.0292,1.3332,-0.0189,-0.0351,1.3277,-0.0201,-0.0413,1.3225,-0.021,-0.048,1.318,-0.0212,-0.0549,1.3136,-0.0207,-0.0612,1.3085,-0.0201,-0.0658,1.3019,-0.0197,-0.0697,1.2947,-0.019,-0.074,1.2881,-0.0172,-0.0774,1.2808,-0.0175,-0.0805,1.2733,-0.0186,-0.0835,1.2658,-0.0198,-0.084,1.2585,-0.0227,-0.0834,1.2512,-0.0262,-0.0832,1.2441,-0.0301,-0.0837,1.2374,-0.0348,-0.0849,1.2315,-0.0402,-0.0866,1.2259,-0.0459,-0.0877,1.22,-0.0514,-0.0882,1.2139,-0.0568,-0.0889,1.2071,-0.0611,-0.0896,1.1996,-0.0642,-0.0904,1.1919,-0.0668],[0.0002,1.4581,0.0087,0.0003,1.4503,0.0069,0.0004,1.4424,0.0051,0.0005,1.4345,0.0033,0.0005,1.4267,0.0016,0.0006,1.4188,-0.0002,0.0007,1.4109,-0.002,0.0007,1.403,-0.0038,0.0008,1.3952,-0.0056,0.0009,1.3873,-0.0074,0.0009,1.3794,-0.0092,0.001,1.3716,-0.011,-0.0032,1.365,-0.0124,-0.008,1.3587,-0.0137,-0.0128,1.3523,-0.015,-0.0177,1.3461,-0.0162,-0.0229,1.34,-0.0175,-0.0283,1.3342,-0.0187,-0.0341,1.3286,-0.0199,-0.0402,1.3235,-0.0209,-0.0467,1.3188,-0.0212,-0.0535,1.3145,-0.0209,-0.0599,1.3096,-0.0202,-0.065,1.3034,-0.0198,-0.0688,1.2963,-0.0192,-0.073,1.2897,-0.0176,-0.0744,1.2872,-0.0171,-0.0703,1.2941,-0.0181,-0.0662,1.301,-0.019,-0.0621,1.3079,-0.02,-0.0609,1.3066,-0.0276,-0.0599,1.3051,-0.0355,-0.0598,1.304,-0.0435,-0.057,1.3061,-0.0505,-0.0524,1.3097,-0.0559,-0.0473,1.3146,-0.0597,-0.043,1.3208,-0.0625,-0.0403,1.3282,-0.0643,-0.0391,1.3361,-0.0642,-0.0378,1.3441,-0.0642],[0.0002,1.4581,0.0087,0.0003,1.4513,0.0072,0.0004,1.4444,0.0056,0.0004,1.4375,0.004,0.0005,1.4307,0.0025,0.0005,1.4238,0.0009,0.0006,1.417,-0.0007,0.0007,1.4101,-0.0022,0.0007,1.4032,-0.0038,0.0008,1.3964,-0.0054,0.0008,1.3895,-0.0069,0.0009,1.3827,-0.0085,0.001,1.3758,-0.0101,0.0001,1.3692,-0.0115,-0.0042,1.3637,-0.0126,-0.0084,1.3582,-0.0138,-0.0126,1.3527,-0.0149,-0.0168,1.3472,-0.016,-0.0213,1.3419,-0.0171,-0.0259,1.3367,-0.0181,-0.0308,1.3317,-0.0192,-0.0359,1.327,-0.0203,-0.0413,1.3225,-0.021,-0.0471,1.3226,-0.0201,-0.0532,1.3253,-0.0182,-0.0589,1.329,-0.0163,-0.0634,1.3341,-0.0146,-0.0661,1.3404,-0.0132,-0.067,1.3445,-0.0097,-0.0665,1.3451,-0.0027,-0.0659,1.3449,0.0043,-0.0652,1.3439,0.0112,-0.0644,1.3423,0.018,-0.0635,1.3402,0.0247,-0.0622,1.3378,0.0312,-0.0605,1.3354,0.0376,-0.0584,1.3327,0.0438,-0.0559,1.33,0.0497,-0.053,1.3271,0.0555,-0.0496,1.3241,0.0608],[0.0002,1.4581,0.0087,0.0003,1.4511,0.0071,0.0004,1.4441,0.0055,0.0004,1.437,0.0039,0.0005,1.43,0.0023,0.0005,1.423,0.0007,0.0006,1.4159,-0.0009,0.0007,1.4089,-0.0025,0.0007,1.4019,-0.0041,0.0008,1.3948,-0.0057,0.0009,1.3878,-0.0073,0.0009,1.3808,-0.0089,0.001,1.3737,-0.0105,-0.0013,1.3675,-0.0119,-0.0057,1.3618,-0.013,-0.0099,1.3561,-0.0142,-0.0143,1.3505,-0.0153,-0.0187,1.3449,-0.0165,-0.0234,1.3395,-0.0176,-0.0282,1.3343,-0.0186,-0.0333,1.3293,-0.0197,-0.0387,1.3246,-0.0207,-0.0444,1.3211,-0.021,-0.0506,1.3242,-0.019,-0.0568,1.3273,-0.017,-0.0619,1.332,-0.0153,-0.0653,1.3381,-0.0136,-0.0673,1.3449,-0.0127,-0.0679,1.3521,-0.0125,-0.0676,1.3593,-0.0126,-0.0664,1.3664,-0.0123,-0.0648,1.3734,-0.0114,-0.063,1.3802,-0.0101,-0.0608,1.387,-0.0089,-0.0585,1.3937,-0.0075,-0.0558,1.4002,-0.0063,-0.053,1.4068,-0.0055,-0.0501,1.4134,-0.0055,-0.0464,1.4196,-0.0047,-0.0417,1.4242,-0.002],[0.0002,1.4581,0.0087,0.0003,1.4495,0.0068,0.0004,1.4408,0.0048,0.0005,1.4322,0.0028,0.0005,1.4235,0.0008,0.0006,1.4149,-0.0011,0.0007,1.4062,-0.0031,0.0008,1.3976,-0.0051,0.0008,1.389,-0.0071,0.0009,1.3803,-0.009,0.001,1.3717,-0.011,-0.0036,1.3645,-0.0125,-0.0089,1.3575,-0.0139,-0.0142,1.3506,-0.0153,-0.0196,1.3437,-0.0167,-0.0255,1.3372,-0.018,-0.0316,1.3309,-0.0194,-0.0382,1.3251,-0.0207,-0.0452,1.3216,-0.0207,-0.0529,1.3252,-0.0183,-0.06,1.3299,-0.016,-0.0649,1.3369,-0.0139,-0.0677,1.3433,-0.0122,-0.0716,1.3362,-0.0087,-0.0755,1.3291,-0.0051,-0.0794,1.322,-0.0015,-0.0834,1.3149,0.0021,-0.0876,1.3083,0.0063,-0.0918,1.3018,0.0106,-0.0947,1.2944,0.0144,-0.0962,1.2862,0.0175,-0.0973,1.2795,0.023,-0.098,1.2745,0.0303,-0.0982,1.2709,0.0384,-0.0975,1.2675,0.0465,-0.0962,1.2641,0.0546,-0.0939,1.2611,0.0626,-0.0908,1.2581,0.0704,-0.0869,1.2552,0.0778,-0.0828,1.2524,0.0851],[0.0002,1.4581,0.0087,0.0003,1.4503,0.0069,0.0004,1.4424,0.0052,0.0005,1.4345,0.0034,0.0005,1.4267,0.0016,0.0006,1.4188,-0.0002,0.0007,1.411,-0.002,0.0007,1.4031,-0.0038,0.0008,1.3952,-0.0056,0.0009,1.3874,-0.0074,0.0009,1.3795,-0.0092,0.001,1.3717,-0.011,-0.0031,1.3651,-0.0124,-0.008,1.3588,-0.0136,-0.0127,1.3524,-0.0149,-0.0176,1.3462,-0.0162,-0.0228,1.3401,-0.0174,-0.0282,1.3342,-0.0186,-0.034,1.3287,-0.0199,-0.0401,1.3235,-0.0209,-0.0466,1.3223,-0.0203,-0.0536,1.3255,-0.0181,-0.06,1.3299,-0.016,-0.0645,1.3362,-0.014,-0.0671,1.3437,-0.0128,-0.0706,1.3381,-0.0096,-0.0741,1.3317,-0.0064,-0.0777,1.3252,-0.0031,-0.0812,1.3187,0.0002,-0.0846,1.313,0.0043,-0.087,1.3095,0.0111,-0.088,1.307,0.0187,-0.0882,1.3046,0.0264,-0.0884,1.3021,0.034,-0.0886,1.2992,0.0416,-0.0876,1.2965,0.0491,-0.0846,1.2942,0.0561,-0.08,1.2922,0.0624,-0.0744,1.2906,0.0679,-0.0689,1.289,0.0736],[0.0002,1.4581,0.0087,0.0003,1.4514,0.0072,0.0004,1.4446,0.0057,0.0004,1.4379,0.0041,0.0005,1.4311,0.0026,0.0005,1.4244,0.001,0.0006,1.4176,-0.0005,0.0007,1.4109,-0.0021,0.0007,1.4041,-0.0036,0.0008,1.3973,-0.0051,0.0008,1.3906,-0.0067,0.0009,1.3838,-0.0082,0.0009,1.3771,-0.0098,0.001,1.3703,-0.0113,0.0044,1.3645,-0.0129,0.0078,1.3587,-0.0146,0.0111,1.3528,-0.016,0.0146,1.3469,-0.0172,0.018,1.341,-0.0184,0.0214,1.335,-0.0192,0.0247,1.329,-0.0199,0.0282,1.323,-0.0206,0.0317,1.3173,-0.0209,0.0345,1.314,-0.0155,0.0373,1.3105,-0.0102,0.04,1.3069,-0.005,0.0425,1.3033,0.0004,0.0463,1.2995,0.0047,0.0506,1.2956,0.0084,0.0549,1.2917,0.0121,0.0595,1.2885,0.0153,0.0663,1.2898,0.0147,0.0731,1.2911,0.0142,0.0799,1.2924,0.0137,0.0867,1.2938,0.0135,0.0935,1.295,0.0132,0.1004,1.2954,0.0125,0.1071,1.2947,0.011,0.1134,1.2934,0.0086,0.1195,1.2918,0.0057],[0.0002,1.4581,0.0087,0.0003,1.4515,0.0072,0.0004,1.4449,0.0057,0.0004,1.4382,0.0042,0.0005,1.4316,0.0027,0.0005,1.425,0.0012,0.0006,1.4183,-0.0003,0.0006,1.4117,-0.0019,0.0007,1.4051,-0.0034,0.0008,1.3984,-0.0049,0.0008,1.3918,-0.0064,0.0009,1.3852,-0.0079,0.0009,1.3785,-0.0094,0.001,1.3719,-0.011,0.0036,1.366,-0.0125,0.0069,1.3602,-0.0141,0.0102,1.3545,-0.0156,0.0135,1.3487,-0.0169,0.0169,1.3429,-0.018,0.0202,1.337,-0.0189,0.0235,1.3311,-0.0196,0.0268,1.3252,-0.0203,0.0303,1.3194,-0.0211,0.0333,1.3154,-0.0177,0.0361,1.312,-0.0125,0.0388,1.3085,-0.0073,0.0414,1.305,-0.0021,0.0438,1.3015,0.0032,0.046,1.2981,0.0086,0.048,1.2943,0.0139,0.0499,1.2906,0.0193,0.0519,1.2869,0.0247,0.0539,1.2834,0.0301,0.0559,1.28,0.0357,0.058,1.2773,0.0415,0.06,1.2751,0.0477,0.0625,1.2742,0.0539,0.0665,1.2745,0.0593,0.0715,1.2757,0.0638,0.0765,1.2771,0.0682],[0.0002,1.4581,0.0087,0.0003,1.4491,0.0067,0.0004,1.4401,0.0046,0.0005,1.4311,0.0026,0.0006,1.4221,0.0005,0.0006,1.4131,-0.0015,0.0007,1.4041,-0.0036,0.0008,1.3951,-0.0056,0.0009,1.3861,-0.0077,0.0009,1.3771,-0.0098,0.0021,1.3684,-0.0118,0.0066,1.3607,-0.014,0.0111,1.3529,-0.016,0.0157,1.345,-0.0176,0.0202,1.3371,-0.0189,0.0247,1.3291,-0.0199,0.0293,1.3211,-0.0209,0.0345,1.3136,-0.0219,0.0393,1.3059,-0.0234,0.0431,1.2977,-0.0255,0.0458,1.2891,-0.0272,0.0477,1.2806,-0.0302,0.0494,1.2729,-0.0349,0.0508,1.2657,-0.0405,0.0525,1.2585,-0.046,0.0513,1.2635,-0.0437,0.0495,1.2715,-0.0394,0.0476,1.2795,-0.0351,0.0458,1.2875,-0.0309,0.044,1.2955,-0.0266,0.0477,1.2913,-0.0233,0.0531,1.2845,-0.0203,0.0597,1.2793,-0.0164,0.0669,1.2759,-0.0119,0.075,1.2735,-0.0081,0.0837,1.2716,-0.0057,0.0926,1.2705,-0.0037,0.1015,1.2696,-0.0013,0.1104,1.2688,0.001,0.1193,1.2681,0.0033],[0.0002,1.4581,0.0087,0.0003,1.4487,0.0066,0.0004,1.4392,0.0044,0.0005,1.4297,0.0023,0.0006,1.4203,0.0001,0.0007,1.4108,-0.0021,0.0007,1.4014,-0.0042,0.0008,1.3919,-0.0064,0.0009,1.3824,-0.0086,0.001,1.373,-0.0107,0.0044,1.3644,-0.0129,0.0092,1.3563,-0.0152,0.0139,1.348,-0.017,0.0187,1.3397,-0.0186,0.0234,1.3313,-0.0196,0.0282,1.3229,-0.0206,0.0336,1.3149,-0.0217,0.0387,1.3068,-0.0232,0.0429,1.2984,-0.0253,0.0458,1.2893,-0.0271,0.0478,1.2804,-0.0303,0.0495,1.2723,-0.0353,0.051,1.2648,-0.0413,0.0528,1.2572,-0.047,0.0511,1.2649,-0.0417,0.0495,1.2728,-0.0363,0.0478,1.2806,-0.0308,0.0527,1.279,-0.0304,0.0604,1.2734,-0.0321,0.0682,1.268,-0.0339,0.0759,1.2625,-0.036,0.0831,1.2563,-0.038,0.0897,1.2494,-0.0398,0.0956,1.2419,-0.0417,0.101,1.2339,-0.043,0.1058,1.2256,-0.0431,0.1098,1.2169,-0.0414,0.1127,1.2082,-0.0382,0.1152,1.1998,-0.0341,0.1175,1.1915,-0.0296],[0.0002,1.4581,0.0087,0.0003,1.45,0.0069,0.0004,1.4419,0.005,0.0005,1.4338,0.0032,0.0005,1.4256,0.0013,0.0006,1.4175,-0.0005,0.0007,1.4094,-0.0024,0.0007,1.4013,-0.0042,0.0008,1.3932,-0.0061,0.0009,1.385,-0.008,0.0009,1.3769,-0.0098,0.0018,1.369,-0.0117,0.0058,1.362,-0.0136,0.0099,1.355,-0.0155,0.014,1.3479,-0.0171,0.0181,1.3408,-0.0184,0.0222,1.3336,-0.0193,0.0262,1.3263,-0.0202,0.0305,1.3192,-0.0211,0.0353,1.3125,-0.022,0.0395,1.3055,-0.0235,0.043,1.2982,-0.0254,0.0455,1.2904,-0.0269,0.0473,1.2826,-0.0292,0.0489,1.2754,-0.033,0.0501,1.2688,-0.038,0.0515,1.2624,-0.0431,0.0517,1.2568,-0.046,0.0462,1.2551,-0.04,0.0406,1.2533,-0.0341,0.035,1.2516,-0.0282,0.0294,1.2499,-0.0222,0.0282,1.2533,-0.0205,0.0308,1.261,-0.0223,0.0332,1.269,-0.0224,0.0351,1.277,-0.0215,0.0356,1.2853,-0.0208,0.0359,1.2936,-0.0206,0.0364,1.3019,-0.0214,0.0372,1.3101,-0.0226],[0.0002,1.4581,0.0087,0.0003,1.4509,0.0071,0.0004,1.4437,0.0055,0.0004,1.4365,0.0038,0.0005,1.4293,0.0022,0.0006,1.4221,0.0005,0.0006,1.4149,-0.0011,0.0007,1.4077,-0.0028,0.0007,1.4005,-0.0044,0.0008,1.3933,-0.0061,0.0009,1.3861,-0.0077,0.0009,1.3789,-0.0094,0.001,1.3717,-0.011,0.0039,1.3653,-0.0127,0.0075,1.3591,-0.0144,0.0111,1.3528,-0.016,0.0148,1.3466,-0.0173,0.0184,1.3403,-0.0185,0.022,1.3339,-0.0193,0.0256,1.3274,-0.0201,0.0293,1.3211,-0.0209,0.0335,1.3151,-0.0217,0.0375,1.309,-0.0227,0.041,1.3027,-0.0242,0.0438,1.296,-0.0259,0.0458,1.2891,-0.0272,0.0474,1.2822,-0.0294,0.0488,1.2758,-0.0328,0.0499,1.2699,-0.0371,0.0511,1.2643,-0.0417,0.0525,1.2585,-0.0461,0.0516,1.2516,-0.0476,0.0502,1.2444,-0.0481,0.048,1.2374,-0.0479,0.0451,1.2306,-0.0471,0.0422,1.2239,-0.0463,0.0394,1.2171,-0.0457,0.0365,1.2103,-0.0451,0.0345,1.2032,-0.0447,0.0335,1.1959,-0.0447],[0.0002,1.4581,0.0087,0.0003,1.4488,0.0066,0.0004,1.4395,0.0045,0.0005,1.4301,0.0023,0.0006,1.4208,0.0002,0.0006,1.4115,-0.0019,0.0007,1.4021,-0.0041,0.0008,1.3928,-0.0062,0.0009,1.3834,-0.0083,0.001,1.3741,-0.0105,0.0038,1.3655,-0.0126,0.0085,1.3575,-0.0149,0.0131,1.3493,-0.0167,0.0179,1.3412,-0.0183,0.0226,1.3329,-0.0194,0.0272,1.3246,-0.0204,0.0323,1.3165,-0.0215,0.0377,1.3088,-0.0228,0.042,1.3005,-0.0248,0.0452,1.2917,-0.0267,0.0473,1.2827,-0.0291,0.0491,1.2745,-0.0337,0.0505,1.267,-0.0395,0.0522,1.2595,-0.0453,0.0579,1.2602,-0.0496,0.0655,1.2648,-0.0533,0.073,1.2694,-0.057,0.0806,1.274,-0.0606,0.0881,1.2785,-0.0643,0.0957,1.2831,-0.068,0.0941,1.2881,-0.0687,0.0861,1.2929,-0.0669,0.0779,1.2958,-0.063,0.0702,1.2978,-0.0577,0.0634,1.2997,-0.0513,0.0577,1.3034,-0.0445,0.051,1.3077,-0.0392,0.0439,1.3116,-0.0342,0.0375,1.3152,-0.028,0.0315,1.3184,-0.0213],[0.0002,1.4581,0.0087,0.0003,1.4524,0.0074,0.0003,1.4466,0.0061,0.0004,1.4408,0.0048,0.0004,1.4351,0.0035,0.0005,1.4293,0.0022,0.0005,1.4235,0.0008,0.0006,1.4177,-0.0005,0.0006,1.412,-0.0018,0.0007,1.4062,-0.0031,0.0007,1.4004,-0.0044,0.0008,1.3947,-0.0058,0.0008,1.3889,-0.0071,0.0009,1.3831,-0.0084,0.0009,1.3774,-0.0097,0.001,1.3716,-0.011,0.0033,1.3664,-0.0124,0.0062,1.3615,-0.0138,0.009,1.3565,-0.0151,0.0119,1.3514,-0.0163,0.0158,1.3489,-0.0168,0.0215,1.3504,-0.0161,0.0272,1.3516,-0.016,0.0321,1.3524,-0.014,0.0364,1.3528,-0.01,0.0405,1.3532,-0.0057,0.0429,1.3533,-0.0004,0.0439,1.3532,0.0055,0.044,1.3531,0.0113,0.0435,1.3529,0.0172,0.0422,1.3525,0.023,0.0411,1.3519,0.0288,0.0401,1.3512,0.0346,0.0396,1.3494,0.04,0.0411,1.3457,0.0442,0.0435,1.3412,0.0473,0.046,1.3368,0.0503,0.0484,1.3323,0.0533,0.0509,1.3278,0.0561,0.0535,1.3232,0.0589],[0.0002,1.4581,0.0087,0.0003,1.4529,0.0075,0.0003,1.4476,0.0063,0.0004,1.4424,0.0051,0.0004,1.4371,0.0039,0.0005,1.4319,0.0027,0.0005,1.4266,0.0015,0.0006,1.4213,0.0003,0.0006,1.4161,-0.0009,0.0007,1.4108,-0.0021,0.0007,1.4056,-0.0033,0.0007,1.4003,-0.0045,0.0008,1.3951,-0.0057,0.0008,1.3898,-0.0069,0.0009,1.3845,-0.0081,0.0009,1.3793,-0.0093,0.001,1.374,-0.0105,0.0018,1.369,-0.0117,0.0044,1.3644,-0.0129,0.007,1.3599,-0.0142,0.0097,1.3554,-0.0154,0.0123,1.3508,-0.0164,0.016,1.3489,-0.0168,0.0212,1.3503,-0.0161,0.0264,1.3515,-0.0159,0.0306,1.3539,-0.0164,0.0326,1.3589,-0.0168,0.0347,1.3639,-0.0171,0.0361,1.3689,-0.0175,0.0359,1.3743,-0.018,0.0357,1.3797,-0.0185,0.0358,1.385,-0.0188,0.0363,1.3904,-0.0189,0.0369,1.3958,-0.019,0.0375,1.4011,-0.0192,0.0378,1.4065,-0.0196,0.0378,1.4118,-0.0202,0.0377,1.4171,-0.0215,0.0374,1.4218,-0.0239,0.0367,1.4246,-0.0284],[0.0002,1.4581,0.0087,0.0003,1.4527,0.0075,0.0003,1.4473,0.0063,0.0004,1.4419,0.005,0.0004,1.4365,0.0038,0.0005,1.4311,0.0026,0.0005,1.4257,0.0013,0.0006,1.4203,0.0001,0.0006,1.4149,-0.0011,0.0007,1.4095,-0.0024,0.0007,1.404,-0.0036,0.0008,1.3986,-0.0048,0.0008,1.3932,-0.0061,0.0009,1.3878,-0.0073,0.0009,1.3824,-0.0086,0.0009,1.377,-0.0098,0.001,1.3716,-0.011,0.0031,1.3668,-0.0123,0.0058,1.3621,-0.0136,0.0085,1.3574,-0.0149,0.0112,1.3527,-0.016,0.014,1.3483,-0.017,0.0193,1.3499,-0.0164,0.0247,1.3511,-0.0159,0.0301,1.3522,-0.0164,0.0353,1.353,-0.0181,0.0402,1.3534,-0.0207,0.0445,1.3541,-0.024,0.0485,1.3548,-0.0278,0.052,1.3554,-0.0321,0.055,1.3559,-0.0367,0.0579,1.3571,-0.0413,0.0608,1.3597,-0.0452,0.0635,1.3632,-0.0484,0.0656,1.368,-0.0503,0.0675,1.3731,-0.0512,0.0695,1.3783,-0.0513,0.0711,1.3835,-0.0503,0.0723,1.3888,-0.0491,0.0732,1.3941,-0.0478]];
+const inspOf = b => b < 0.4 ? smooth(0, 0.4, b) : 1 - smooth(0.4, 1, b);
+const O2C = '#f2c94c', CO2C = '#b48ad8';
+const satOf = u => 0.75 + 0.23 * (1 - Math.exp(-Math.max(0, u) / 0.11));
+const po2Of = u => 40 + 60 * (1 - Math.exp(-Math.max(0, u) / 0.11));
+const pco2Of = u => 46 - 6 * (1 - Math.exp(-Math.max(0, u) / 0.12));
+const lerpCol = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const BLUE_RGB = [0.25, 0.38, 0.8], RED_RGB = [0.86, 0.17, 0.14];
+const OFF1 = V3(10, 0, 0), OFF2 = V3(20, 0, 0);
+
+const LUNG_LEVELS = [
+  { nom: 'Poumons', sous: 'la mécanique', c: '#e79a9f' },
+  { nom: 'Bronchioles', sous: '23 divisions', c: '#efe2cf' },
+  { nom: 'Alvéole', sous: "l'échange des gaz", c: '#f2c94c' },
+];
+const LUNG_TEXT = {
+  '0i': ['Inspiration (active)', "Le diaphragme se contracte et descend d'environ 1,5 cm, les muscles intercostaux externes soulèvent les côtes. Le thorax s'agrandit et la plèvre entraîne les poumons avec lui : la pression dans les alvéoles passe à environ −1 cmH₂O, juste sous celle de l'air extérieur, et l'air entre (≈ 500 mL au repos)."],
+  '0e': ['Expiration (passive)', "Les muscles se relâchent. Les fibres élastiques du poumon et la tension de surface des alvéoles le font se rétracter, comme un ballon qui se dégonfle. La pression alvéolaire monte à environ +1 cmH₂O et l'air ressort. À l'effort, les abdominaux et les intercostaux internes accélèrent la sortie."],
+  '1i': ["L'arbre bronchique", "De la trachée aux alvéoles, les voies aériennes se divisent en deux environ 23 fois. Les 16 premières générations ne font que conduire l'air : elles le réchauffent à 37 °C, l'humidifient et le filtrent (le mucus piège les poussières, les cils les remontent vers la gorge). À partir de la 17e, des alvéoles s'ouvrent sur les parois : c'est la zone respiratoire."],
+  '1e': ["L'arbre bronchique", "À l'expiration, l'air chargé de CO₂ remonte le même chemin. Environ 150 mL de chaque respiration restent dans les voies de conduction sans jamais atteindre une alvéole : c'est l'« espace mort ». Respirer lentement et profondément est donc plus efficace que respirer vite et superficiellement."],
+  '2': ["L'alvéole : l'échange des gaz", "Chaque alvéole (≈ 0,2 mm) est enveloppée d'un filet de capillaires. Les gaz traversent une paroi de 0,5 µm par simple diffusion, du plus concentré vers le moins concentré : l'O₂ passe de l'air (104 mmHg) au sang (40 mmHg) et se fixe sur l'hémoglobine des globules rouges ; le CO₂ fait le chemin inverse (46 → 40 mmHg). Un globule met ≈ 0,75 s à longer l'alvéole mais il est plein dès 0,25 s : c'est la réserve qui permet l'effort."],
+};
+
+function lcg(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+const qFromTo = (from, to) => { const q = new BABYLON.Quaternion(); BABYLON.Quaternion.FromUnitVectorsToRef(from, to, q); return q; };
+function polyInfo(pts) { const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + BABYLON.Vector3.Distance(pts[i - 1], pts[i])); return { pts, cum, len: cum[cum.length - 1] }; }
+function polyAt(pi, frac, out) {
+  const d = clamp(frac, 0, 1) * pi.len; let i = 1; while (i < pi.cum.length - 1 && pi.cum[i] < d) i++;
+  const a = pi.pts[i - 1], b = pi.pts[i]; const seg = pi.cum[i] - pi.cum[i - 1] || 1; const t = (d - pi.cum[i - 1]) / seg;
+  out.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t); return out;
+}
+function lungMat(sc, name, hex, o = {}) {
+  const m = new BABYLON.StandardMaterial(name, sc); m.diffuseColor = BABYLON.Color3.FromHexString(hex);
+  m.specularColor = new BABYLON.Color3(0.3, 0.28, 0.28); m.specularPower = o.sp || 40; m.backFaceCulling = false; m.twoSidedLighting = true;
+  if (o.em) m.emissiveColor = BABYLON.Color3.FromHexString(o.em);
+  if (o.alpha != null) {
+    m.alpha = o.alpha; m.separateCullingPass = true;
+    m.opacityFresnelParameters = new BABYLON.FresnelParameters(); m.opacityFresnelParameters.leftColor = BABYLON.Color3.White(); m.opacityFresnelParameters.rightColor = new BABYLON.Color3(o.alpha, o.alpha, o.alpha); m.opacityFresnelParameters.power = 2.2;
+  }
+  return m;
+}
+function dotsMesh(sc, name, hex, count, d, em = 0.6) {
+  const m = BABYLON.MeshBuilder.CreateSphere(name, { diameter: d, segments: 5 }, sc);
+  const mt = new BABYLON.StandardMaterial(name + 'M', sc); mt.diffuseColor = BABYLON.Color3.FromHexString(hex); mt.emissiveColor = BABYLON.Color3.FromHexString(hex).scale(em); mt.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+  m.material = mt; m.isPickable = false; m.alwaysSelectAsActiveMesh = true;
+  const buf = new Float32Array(count * 16); m.thinInstanceSetBuffer('matrix', buf, 16, false);
+  return { m, buf, count };
+}
+const putDot = (buf, i, p, s) => { const o = i * 16; buf.fill(0, o, o + 16); buf[o] = buf[o + 5] = buf[o + 10] = s; buf[o + 12] = p.x; buf[o + 13] = p.y; buf[o + 14] = p.z; buf[o + 15] = 1; };
+
+async function initLung3D() {
+  const eng = new BABYLON.Engine(lc, true, { stencil: true, antialias: true }, true);
+  eng.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+  const sc = new BABYLON.Scene(eng); sc.clearColor = new BABYLON.Color4(0.035, 0.07, 0.105, 1); sc.skipPointerMovePicking = true;
+  const cam = new BABYLON.ArcRotateCamera('lc', Math.PI / 2, 1.45, 0.6, V3(0, 1.3, 0), sc);
+  cam.attachControl(lc, true); cam.minZ = 0.004; cam.maxZ = 200; cam.fov = 0.6; cam.wheelDeltaPercentage = 0.01; cam.pinchDeltaPercentage = 0.004; cam.panningSensibility = 0; cam.inertia = 0.85;
+  const hemi = new BABYLON.HemisphericLight('lh', V3(0, 1, 0.4), sc); hemi.intensity = 0.65; hemi.groundColor = new BABYLON.Color3(0.18, 0.12, 0.14);
+  const key = new BABYLON.DirectionalLight('lk', V3(-0.3, -0.5, -1), sc); key.intensity = 0.9;
+  const rim = new BABYLON.DirectionalLight('lr', V3(0.6, 0.3, 1), sc); rim.intensity = 0.4; rim.diffuse = BABYLON.Color3.FromHexString('#9fc3ff');
+  sc.onBeforeRenderObservable.add(() => { key.direction = cam.target.subtract(cam.position).normalize().add(V3(0.15, -0.35, 0)); });
+  const L = { sc, eng, cam, roots: [], labels: [] };
+
+  /* --- Échelle 1 : les vrais poumons --- */
+  const r0 = new BABYLON.TransformNode('niv0', sc); L.roots.push(r0);
+  const glb = await fetchModel('poumons3d.txt', () => {});
+  const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, sc, null, '.glb');
+  const M = {};
+  for (const m of res.meshes) {
+    const n = (m.name || '').replace(/_primitive\d+$/, ''); if (!m.getTotalVertices || !m.getTotalVertices()) continue;
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices(); m.refreshBoundingInfo(); m.isPickable = false; m.parent = r0; M[n] = m;
+  }
+  res.meshes.forEach(m => { if (m.name === '__root__') m.dispose(); });
+  const lobeMat = lungMat(sc, 'lobes', '#e79a9f', { alpha: 0.2, em: '#2a1012' });
+  for (const k of ['lobe_sd', 'lobe_md', 'lobe_id', 'lobe_sg', 'lobe_ig']) { M[k].material = lobeMat; M[k].alphaIndex = 10; }
+  M.trachee.material = M.bronches.material = lungMat(sc, 'cartilage', '#efe2cf', { alpha: 0.4, em: '#1a1612' }); M.trachee.material.opacityFresnelParameters = null; M.trachee.alphaIndex = M.bronches.alphaIndex = 12;
+  M.art_pulm.material = lungMat(sc, 'artp', '#4d6fc4'); M.vei_pulm.material = lungMat(sc, 'veip', '#d0473f');
+  M.diaphragme.material = lungMat(sc, 'diaph', '#b0544c', { alpha: 0.3 }); M.diaphragme.alphaIndex = 8;
+  const bbOf = keys => { let mn = V3(1e9, 1e9, 1e9), mx = V3(-1e9, -1e9, -1e9); for (const k of keys) { const b = M[k].getBoundingInfo().boundingBox; mn = BABYLON.Vector3.Minimize(mn, b.minimumWorld); mx = BABYLON.Vector3.Maximize(mx, b.maximumWorld); } return { mn, mx, c: mn.add(mx).scale(0.5) }; };
+  const bR = bbOf(['lobe_sd', 'lobe_md', 'lobe_id']), bL = bbOf(['lobe_sg', 'lobe_ig']), bAll = bbOf(['lobe_sd', 'lobe_md', 'lobe_id', 'lobe_sg', 'lobe_ig']);
+  for (const k of ['lobe_sd', 'lobe_md', 'lobe_id']) M[k].setPivotPoint(V3(bR.c.x, bR.mx.y, bR.c.z));
+  for (const k of ['lobe_sg', 'lobe_ig']) M[k].setPivotPoint(V3(bL.c.x, bL.mx.y, bL.c.z));
+  const dbb = M.diaphragme.getBoundingInfo().boundingBox; M.diaphragme.setPivotPoint(V3(dbb.centerWorld.x, dbb.maximumWorld.y, dbb.centerWorld.z));
+  L.M = M; L.c0 = bAll.c; L.r0size = bAll.mx.subtract(bAll.mn).length();
+  // Air dans les bronches : vrais trajets Z-Anatomy, de la trachée aux bronches segmentaires
+  const paths0 = LUNG_PATHS.map(a => { const pts = []; for (let i = 0; i < a.length; i += 3) pts.push(V3(a[i], a[i + 1], a[i + 2])); return polyInfo(pts); });
+  const rnd = lcg(11);
+  const mkAir = (paths, count, d, root, rad) => {
+    const inn = dotsMesh(sc, 'airIn' + root.name, O2C, count, d), out = dotsMesh(sc, 'airOut' + root.name, CO2C, count, d);
+    inn.m.parent = out.m.parent = root;
+    const list = []; for (let i = 0; i < count; i++) list.push({ pi: paths[i % paths.length], j: rnd(), off: V3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).scale(rad) });
+    return { inn, out, list };
+  };
+  L.air0 = mkAir(paths0, 300, 0.0042, r0, 0.004); L.air0.inn.m.renderingGroupId = L.air0.out.m.renderingGroupId = 1;
+  L.labels.push(['Trachée', 0, () => paths0[0].pts[3]], ['Bronche souche droite', 0, () => paths0[12].pts[17]], ['Bronche souche gauche', 0, () => paths0[0].pts[19]],
+    ['Poumon droit', 0, () => V3(bR.mn.x + (bR.mx.x - bR.mn.x) * 0.75, bR.c.y + 0.03, bR.mx.z)], ['Poumon gauche', 0, () => V3(bL.mn.x + (bL.mx.x - bL.mn.x) * 0.25, bL.c.y + 0.03, bL.mx.z)],
+    ['Diaphragme', 0, () => V3(dbb.centerWorld.x, dbb.maximumWorld.y - 0.01 + M.diaphragme.position.y, dbb.maximumWorld.z - 0.02)]);
+
+  /* --- Échelle 2 : des bronchioles aux sacs alvéolaires (modèle schématique) --- */
+  const r1 = new BABYLON.TransformNode('niv1', sc); r1.position.copyFrom(OFF1); L.roots.push(r1);
+  const tr = lcg(7); const branches = [], leaves = [];
+  const grow = (a, dir, len, r, depth, path) => {
+    const b = a.add(dir.scale(len)); branches.push({ a, b, r, depth }); const p2 = [...path, b];
+    if (depth === 6) { leaves.push({ b, dir, path: p2 }); return; }
+    let side = BABYLON.Vector3.Cross(dir, Math.abs(dir.y) < 0.9 ? BABYLON.Axis.Y : BABYLON.Axis.X).normalize();
+    side = side.applyRotationQuaternion(BABYLON.Quaternion.RotationAxis(dir, depth * Math.PI / 2 + (tr() - 0.5) * 0.7));
+    for (const sg of [-1, 1]) { const a2 = (0.6 - depth * 0.025) * (0.85 + tr() * 0.3); grow(b, dir.scale(Math.cos(a2)).add(side.scale(sg * Math.sin(a2))).normalize(), len * 0.8, r * 0.74, depth + 1, p2); }
+  };
+  grow(V3(0, 3.4, 0), V3(0, -1, 0), 1.25, 0.17, 0, [V3(0, 3.4, 0)]);
+  const tube = (name, hex, list) => {
+    const m = BABYLON.MeshBuilder.CreateCylinder(name, { height: 1, diameter: 1, tessellation: 12, cap: BABYLON.Mesh.NO_CAP }, sc); m.material = lungMat(sc, name + 'M', hex, { em: '#1a1410' }); m.parent = r1; m.isPickable = false;
+    const buf = new Float32Array(list.length * 16); const mat = new BABYLON.Matrix();
+    list.forEach((br, i) => { const d = br.b.subtract(br.a); const len = d.length(); BABYLON.Matrix.ComposeToRef(V3(br.r * 2, len * 1.04, br.r * 2), qFromTo(BABYLON.Axis.Y, d.normalize()), br.a.add(d.scale(0.5)), mat); mat.copyToArray(buf, i * 16); });
+    m.thinInstanceSetBuffer('matrix', buf, 16, true); return m;
+  };
+  tube('conduction', '#efe2cf', branches.filter(b => b.depth < 4)); tube('respiratoire', '#e8b0a8', branches.filter(b => b.depth >= 4));
+  // Joints sphériques aux embranchements
+  const joints = BABYLON.MeshBuilder.CreateSphere('joints', { diameter: 1, segments: 8 }, sc); joints.parent = r1; joints.material = lungMat(sc, 'jointsM', '#ecd8c4', { em: '#1a1410' });
+  { const buf = new Float32Array(branches.length * 16); const mat = new BABYLON.Matrix(); branches.forEach((br, i) => { BABYLON.Matrix.ComposeToRef(V3(br.r * 2.1, br.r * 2.1, br.r * 2.1), BABYLON.Quaternion.Identity(), br.b, mat); mat.copyToArray(buf, i * 16); }); joints.thinInstanceSetBuffer('matrix', buf, 16, true); }
+  // Alvéoles : sur les parois de la zone respiratoire et en grappes au bout
+  const alv = []; const ar = lcg(3);
+  const randUnit = () => V3(ar() - 0.5, ar() - 0.5, ar() - 0.5).normalize();
+  for (const br of branches) if (br.depth >= 4) for (let k = 0; k < (br.depth - 3) * 2; k++) { const t = 0.2 + ar() * 0.7; const p = BABYLON.Vector3.Lerp(br.a, br.b, t); const d = br.b.subtract(br.a).normalize(); const u = perp(randUnit(), d).normalize(); alv.push([p.add(u.scale(br.r * 1.1)), br.r * 0.85]); }
+  for (const lf of leaves) { const c = lf.b.add(lf.dir.scale(0.17)); for (let k = 0; k < 9; k++) alv.push([c.add(randUnit().scale(0.11 + ar() * 0.04)), 0.075 + ar() * 0.02]); }
+  const alvM = BABYLON.MeshBuilder.CreateSphere('alveoles', { diameter: 1, segments: 10 }, sc); alvM.parent = r1; alvM.material = lungMat(sc, 'alvM', '#f2aaa8', { alpha: 0.6, em: '#3a1416' });
+  { const buf = new Float32Array(alv.length * 16); const mat = new BABYLON.Matrix(); alv.forEach(([p, r], i) => { BABYLON.Matrix.ComposeToRef(V3(r * 2, r * 2, r * 2), BABYLON.Quaternion.Identity(), p, mat); mat.copyToArray(buf, i * 16); }); alvM.thinInstanceSetBuffer('matrix', buf, 16, true); }
+  L.alv1 = alvM;
+  const paths1 = leaves.map(lf => polyInfo([...lf.path, lf.b.add(lf.dir.scale(0.17))]));
+  L.air1 = mkAir(paths1, 320, 0.075, r1, 0.12);
+  const pick = (d, f) => branches.filter(b => b.depth === d).reduce((m, b) => f(b) > f(m) ? b : m);
+  const midOf = b => BABYLON.Vector3.Lerp(b.a, b.b, 0.5);
+  const bT = pick(3, b => b.b.x + b.b.z), bR2 = pick(5, b => -b.b.x + b.b.z), lS = leaves.reduce((m, l) => l.b.x - l.b.y > m.b.x - m.b.y ? l : m);
+  L.labels.push(['Bronchiole (conduction)', 1, () => OFF1.add(midOf(branches[0]))], ['Bronchiole terminale', 1, () => OFF1.add(midOf(bT))],
+    ['Bronchiole respiratoire', 1, () => OFF1.add(midOf(bR2))], ['Sac alvéolaire', 1, () => OFF1.add(lS.b.add(lS.dir.scale(0.3)))]);
+  { let mn = V3(1e9, 1e9, 1e9), mx = V3(-1e9, -1e9, -1e9); for (const b of branches) { mn = BABYLON.Vector3.Minimize(mn, b.b); mx = BABYLON.Vector3.Maximize(mx, b.b); } mx = BABYLON.Vector3.Maximize(mx, V3(0, 3.4, 0)); L.c1 = OFF1.add(mn.add(mx).scale(0.5)); L.r1 = mx.subtract(mn).length(); }
+
+  /* --- Échelle 3 : une alvéole et ses capillaires --- */
+  const r2 = new BABYLON.TransformNode('niv2', sc); r2.position.copyFrom(OFF2); L.roots.push(r2);
+  const memb = lungMat(sc, 'membrane', '#f0b0b0', { alpha: 0.2, em: '#2a0e10' }); const membN = lungMat(sc, 'membraneN', '#f0b0b0', { alpha: 0.07, em: '#1a0a0c' });
+  const main = BABYLON.MeshBuilder.CreateSphere('alveole', { diameter: 2, segments: 32 }, sc); main.parent = r2; main.material = memb; main.alphaIndex = 5;
+  const neigh = [];
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + 0.4; const s = BABYLON.MeshBuilder.CreateSphere('voisine' + k, { diameter: 1.7, segments: 20 }, sc); s.parent = r2; s.position.set(Math.cos(a) * 1.75, Math.sin(a) * 1.75, -0.9); s.material = membN; s.alphaIndex = 4; neigh.push(s); }
+  const duct = BABYLON.MeshBuilder.CreateCylinder('canal', { height: 1.6, diameter: 0.7, tessellation: 24, cap: BABYLON.Mesh.NO_CAP }, sc); duct.parent = r2; duct.position.set(0.5, 1.3, -0.35); duct.rotation.z = -0.4; duct.material = membN;
+  L.alvMain = main; L.alvNeigh = neigh;
+  // Capillaires : bandes qui enlacent la face avant de l'alvéole, du côté veineux (gauche) au côté artériel (droit)
+  const CAP_R = 1.07, LON0 = -2.25, LON1 = 2.25;
+  const capPt = (k, u) => { const lon = LON0 + (LON1 - LON0) * u; const lat = -0.75 + 0.37 * k + 0.12 * Math.sin(2.2 * lon + k * 1.7); return V3(-Math.cos(lat) * Math.sin(lon) * CAP_R, Math.sin(lat) * CAP_R, Math.cos(lat) * Math.cos(lon) * CAP_R); };
+  const caps = [];
+  for (let k = 0; k < 5; k++) {
+    const pts = []; for (let i = 0; i <= 60; i++) pts.push(capPt(k, -0.06 + i / 60 * 1.12));
+    const t = BABYLON.MeshBuilder.CreateTube('cap' + k, { path: pts, radius: 0.085, tessellation: 14, cap: BABYLON.Mesh.NO_CAP, updatable: false }, sc); t.parent = r2;
+    const P = t.getVerticesData('position'); const col = new Float32Array(P.length / 3 * 4);
+    for (let i = 0; i < P.length / 3; i++) { const lon = Math.atan2(-P[i * 3], P[i * 3 + 2]); const u = (lon - LON0) / (LON1 - LON0); const c = lerpCol(BLUE_RGB, RED_RGB, clamp((satOf(u) - 0.75) / 0.23, 0, 1)); col.set([c[0], c[1], c[2], 1], i * 4); }
+    t.setVerticesData('color', col); const tm = lungMat(sc, 'capM' + k, '#ffffff', { alpha: 0.55 }); tm.opacityFresnelParameters = null; t.material = tm; t.useVertexColors = true; t.alphaIndex = 6;
+    caps.push(t);
+  }
+  // Globules rouges : disques aplatis, couleur selon leur saturation en O₂
+  const rbc = BABYLON.MeshBuilder.CreateSphere('globules', { diameter: 0.15, segments: 10 }, sc); rbc.parent = r2;
+  const rm = new BABYLON.StandardMaterial('rbcM', sc); rm.diffuseColor = BABYLON.Color3.White(); rm.specularColor = new BABYLON.Color3(0.35, 0.3, 0.3); rm.emissiveColor = new BABYLON.Color3(0.15, 0.05, 0.05); rbc.material = rm; rbc.alwaysSelectAsActiveMesh = true;
+  const cells = []; for (let k = 0; k < 5; k++) for (let i = 0; i < 6; i++) cells.push({ k, u: i / 6 + (k * 0.07) % 0.17 - 0.05 });
+  const rbcBuf = new Float32Array(cells.length * 16), rbcCol = new Float32Array(cells.length * 4);
+  rbc.thinInstanceSetBuffer('matrix', rbcBuf, 16, false); rbc.thinInstanceSetBuffer('color', rbcCol, 4, false);
+  L.cells = cells; L.rbc = rbc; L.rbcBuf = rbcBuf; L.rbcCol = rbcCol; L.capPt = capPt;
+  // Gaz : O₂ (jaune) qui entre dans le sang, CO₂ (violet) qui en sort
+  L.o2 = dotsMesh(sc, 'o2', O2C, 160, 0.05, 0.7); L.co2 = dotsMesh(sc, 'co2', CO2C, 160, 0.05, 0.7); L.o2.m.parent = L.co2.m.parent = r2;
+  L.o2.list = []; L.co2.list = [];
+  L.bg = dotsMesh(sc, 'o2air', O2C, 70, 0.04, 0.5); L.bg.m.parent = r2; L.bg.list = []; const br = lcg(5);
+  for (let i = 0; i < 70; i++) { const p = V3(br() - 0.5, br() - 0.5, br() - 0.5).normalize().scale(Math.cbrt(br()) * 0.82); L.bg.list.push({ p, v: V3(br() - 0.5, br() - 0.5, br() - 0.5).scale(0.25) }); }
+  L.track = cells[12];
+  L.labels.push(['Alvéole (air)', 2, () => OFF2.add(V3(0.15, 0.25, -0.2))], ['Capillaire', 2, () => OFF2.add(capPt(0, 0.1))], ['Sang pauvre en O₂', 2, () => OFF2.add(capPt(4, 0.0).add(V3(0.2, 0.25, 0)))],
+    ['Sang riche en O₂', 2, () => OFF2.add(capPt(4, 1).add(V3(-0.2, 0.25, 0)))], ['Globule suivi', 2, () => OFF2.add(capPt(L.track.k, L.track.u).scale(1.06)), 'v'], ['Canal alvéolaire', 2, () => OFF2.add(V3(0.85, 1.95, -0.35))]);
+  L.c2 = OFF2.clone();
+
+  // Étiquettes HTML
+  L.labels = L.labels.map(([t, lvl, pos, cls]) => { const el = document.createElement('div'); el.className = 'lab' + (cls ? ' ' + cls : ''); el.textContent = t; lLabels.appendChild(el); return { el, lvl, pos }; });
+  Object.assign(lung, L); window.__lung = lung;
+}
+
+/* Interface de la plongée poumons */
+const lSteps = $('lSteps');
+lSteps.innerHTML = LUNG_LEVELS.map((l, i) => `<li data-i="${i}" style="--c:${l.c}"><i></i><span>${i + 1} · ${l.nom}</span><span>${l.sous}</span></li>`).join('');
+lSteps.querySelectorAll('li').forEach(li => li.onclick = () => setLungLevel(+li.dataset.i));
+document.querySelectorAll('#lLevels button').forEach(b => b.onclick = () => setLungLevel(+b.dataset.l));
+function lungPreset(i) {
+  const mob = lc.clientWidth < 520;
+  if (i === 0) return { t: lung.c0.add(V3(0, lung.r0size * 0.08, 0)), r: lung.r0size * (mob ? 1.65 : 1.45), a: Math.PI / 2, b: 1.42, lo: lung.r0size * 0.3, hi: lung.r0size * 4 };
+  if (i === 1) return { t: lung.c1.clone(), r: lung.r1 * (mob ? 1.9 : 1.35), a: Math.PI / 2 - 0.3, b: 1.4, lo: 2, hi: 20 };
+  return { t: lung.c2.clone(), r: mob ? 6.6 : 5.2, a: Math.PI / 2, b: 1.5, lo: 1.6, hi: 12 };
+}
+function setLungLevel(i, instant) {
+  lung.level = i; lung.lastKey = '';
+  lSteps.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === i));
+  document.querySelectorAll('#lLevels button').forEach(b => b.classList.toggle('primary', +b.dataset.l === i));
+  setLungSpeed(i === 2 ? 0.25 : 1);
+  if (!lung.sc) return;
+  lung.roots.forEach((r, k) => r.setEnabled(k === i));
+  const p = lungPreset(i); const cam = lung.cam;
+  cam.lowerRadiusLimit = null; cam.upperRadiusLimit = null;
+  lung.camAnim = { s: performance.now(), dur: instant ? 0 : 900, fT: cam.target.clone(), fR: cam.radius, fA: cam.alpha, fB: cam.beta, p };
+  $('lHint').textContent = i === 0 ? "Les vrais poumons (Z-Anatomy), rendus transparents pour voir l'arbre bronchique, les artères pulmonaires (bleu, sang pauvre en O₂) et les veines pulmonaires (rouge). Jaune : air riche en O₂ qui entre ; violet : air chargé de CO₂ qui sort."
+    : i === 1 ? "Modèle schématique : seules 7 des 23 divisions sont dessinées. En crème, la zone de conduction ; en rose, la zone respiratoire où les alvéoles apparaissent."
+    : "Modèle schématique, très agrandi : une alvéole fait environ 0,2 mm. Jaune : O₂ ; violet : CO₂. La couleur des globules passe du bleu au rouge à mesure qu'ils se chargent en oxygène.";
+}
+function setLungSpeed(s) { lung.speed = s; document.querySelectorAll('#lSpeed button').forEach(b => b.classList.toggle('primary', +b.dataset.s === s)); }
+document.querySelectorAll('#lSpeed button').forEach(b => b.onclick = () => setLungSpeed(+b.dataset.s));
+$('lPlay').onclick = () => { lung.playing = !lung.playing; $('lPlay').textContent = lung.playing ? 'Pause' : 'Lecture'; };
+$('lNext').onclick = () => setLungLevel((lung.level + 1) % 3);
+function closeLungDeep() { state.deepOpen = false; $('deepLung').hidden = true; last = performance.now(); }
+$('lClose').onclick = closeLungDeep;
+window.addEventListener('resize', () => { if (lung.eng) lung.eng.resize(); });
+
+async function openLungDeep() {
+  state.deepOpen = 'poumons'; $('deepLung').hidden = false; tip.hidden = true;
+  if (!lung.sc) {
+    $('lLoad').hidden = false; setLungLevel(0);
+    try { lung.loading = lung.loading || initLung3D(); await lung.loading; }
+    catch (e) { console.error(e); $('lLoad').textContent = "Les poumons 3D n'ont pas pu se charger."; return; }
+    $('lLoad').hidden = true; lung.eng.resize(); setLungLevel(lung.level, true);
+  }
+  lung.eng.resize(); if (reduceMotion) setLungSpeed(0.25);
+}
+
+const lTmp = V3(0, 0, 0), lTmp2 = V3(0, 0, 0);
+function moveAir(air, insp, dir) {
+  const { inn, out, list } = air; const show = dir >= 0 ? inn : out, hide = dir >= 0 ? out : inn;
+  show.m.setEnabled(true); hide.m.setEnabled(false);
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i]; const s = clamp(insp * 1.55 - q.j * 0.55, 0, 1);
+    if (s <= 0.001) { putDot(show.buf, i, lTmp, 0); continue; }
+    polyAt(q.pi, s, lTmp); lTmp.addInPlace(q.off.scale(0.4 + 0.6 * s)); putDot(show.buf, i, lTmp, 1);
+  }
+  show.m.thinInstanceBufferUpdated('matrix');
+}
+
+function drawLungDeep(dt) {
+  if (!lung.sc) return;
+  const rr = respRate();
+  if (lung.playing) lung.b = (lung.b + dt * lung.speed * rr / 60) % 1;
+  const b = lung.b, insp = inspOf(b), dir = b < 0.4 ? 1 : -1; const L = lung;
+  const mdt = lung.playing ? dt * lung.speed : 0;
+  // Caméra
+  if (L.camAnim) {
+    const A = L.camAnim; const t = A.dur ? Math.min(1, (performance.now() - A.s) / A.dur) : 1; const e = 1 - Math.pow(1 - t, 3);
+    L.cam.target = BABYLON.Vector3.Lerp(A.fT, A.p.t, e); L.cam.radius = A.fR + (A.p.r - A.fR) * e; L.cam.alpha = A.fA + (A.p.a - A.fA) * e; L.cam.beta = A.fB + (A.p.b - A.fB) * e;
+    if (t >= 1) { L.cam.lowerRadiusLimit = A.p.lo; L.cam.upperRadiusLimit = A.p.hi; L.camAnim = null; }
+  }
+  if (L.level === 0) {
+    const M = L.M;
+    for (const k of ['lobe_sd', 'lobe_md', 'lobe_id', 'lobe_sg', 'lobe_ig']) M[k].scaling.set(1 + 0.045 * insp, 1 + 0.075 * insp, 1 + 0.045 * insp);
+    M.diaphragme.position.y = -0.015 * insp; M.diaphragme.scaling.y = 1 - 0.12 * insp;
+    moveAir(L.air0, insp, dir);
+  } else if (L.level === 1) {
+    moveAir(L.air1, insp, dir);
+    L.alv1.scaling.setAll(1);
+  } else {
+    L.alvMain.scaling.setAll(1 + 0.04 * insp); L.alvNeigh.forEach(s => s.scaling.setAll(1 + 0.04 * insp));
+    // Globules
+    const mat = new BABYLON.Matrix(); const q = new BABYLON.Quaternion();
+    for (let i = 0; i < L.cells.length; i++) {
+      const c = L.cells[i]; c.u += mdt / 0.75 * 0.85; if (c.u > 1.06) c.u -= 1.12;
+      const p = L.capPt(c.k, c.u), p2 = L.capPt(c.k, c.u + 0.01); const tg = p2.subtract(p).normalize(); const nrm = p.clone().normalize(); const side = BABYLON.Vector3.Cross(nrm, tg);
+      BABYLON.Quaternion.RotationQuaternionFromAxisToRef(side, nrm, tg, q);
+      BABYLON.Matrix.ComposeToRef(V3(1, 0.42, 1), q, p, mat); mat.copyToArray(L.rbcBuf, i * 16);
+      const col = lerpCol(BLUE_RGB, RED_RGB, clamp((satOf(c.u) - 0.75) / 0.23, 0, 1)); L.rbcCol.set([col[0], col[1], col[2], 1], i * 4);
+      // Échanges : surtout dans le premier tiers du trajet
+      if (c.u > 0 && c.u < 1 && mdt > 0) {
+        if (Math.random() < 14 * Math.exp(-c.u / 0.11) * mdt && L.o2.list.length < L.o2.count) L.o2.list.push({ c, from: p.scale(0.72).add(V3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).scale(0.25)), t: 0 });
+        if (Math.random() < 9 * Math.exp(-c.u / 0.12) * mdt && L.co2.list.length < L.co2.count) L.co2.list.push({ from: p.clone(), to: p.scale(0.55).add(V3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).scale(0.3)), t: 0 });
+      }
+    }
+    L.rbc.thinInstanceBufferUpdated('matrix'); L.rbc.thinInstanceBufferUpdated('color');
+    // O₂ : de l'air vers le globule (il le rattrape)
+    L.o2.list = L.o2.list.filter(g => (g.t += mdt / 0.3) < 1);
+    L.o2.buf.fill(0); L.o2.list.forEach((g, i) => { const to = L.capPt(g.c.k, g.c.u); putDot(L.o2.buf, i, BABYLON.Vector3.Lerp(g.from, to, smooth(0, 1, g.t)), 1); });
+    L.o2.m.thinInstanceBufferUpdated('matrix');
+    // CO₂ : du globule vers l'air, puis il s'efface (il sera expiré)
+    L.co2.list = L.co2.list.filter(g => (g.t += mdt / 1.6) < 1);
+    L.co2.buf.fill(0); L.co2.list.forEach((g, i) => { putDot(L.co2.buf, i, BABYLON.Vector3.Lerp(g.from, g.to, smooth(0, 0.3, g.t)), g.t < 0.75 ? 1 : (1 - g.t) * 4); });
+    L.co2.m.thinInstanceBufferUpdated('matrix');
+    // O₂ de l'air alvéolaire : agitation thermique
+    L.bg.list.forEach((g, i) => { g.p.addInPlace(g.v.scale(mdt)); if (g.p.length() > 0.85) { g.v.scaleInPlace(-1); g.p.scaleInPlace(0.98); } putDot(L.bg.buf, i, g.p, 1); });
+    L.bg.m.thinInstanceBufferUpdated('matrix');
+  }
+  L.sc.render();
+  // Étiquettes
+  const w = lc.clientWidth, h = lc.clientHeight; const tm = L.sc.getTransformMatrix(); const vp = L.cam.viewport.toGlobal(w, h);
+  for (const lb of L.labels) {
+    if (lb.lvl !== L.level || L.camAnim) { lb.el.style.display = 'none'; continue; }
+    const s = BABYLON.Vector3.Project(lb.pos(), BABYLON.Matrix.IdentityReadOnly, tm, vp);
+    const vis = s.z > 0 && s.z < 1 && s.x > 0 && s.x < w && s.y > 0 && s.y < h;
+    lb.el.style.display = vis ? '' : 'none'; if (vis) lb.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px)`;
+  }
+  updateLungSide(insp, dir);
+  drawLungGraph(b, insp);
+}
+
+function updateLungSide(insp, dir) {
+  const L = lung; const lv = L.level; const key = lv === 2 ? '2' : lv + (dir > 0 ? 'i' : 'e');
+  if (key !== L.lastKey) {
+    L.lastKey = key; const [t, d] = LUNG_TEXT[key];
+    $('lEyebrow').textContent = `Échelle ${lv + 1} sur 3 · ${LUNG_LEVELS[lv].nom}` + (lv < 2 ? (dir > 0 ? ' · inspiration' : ' · expiration') : '');
+    $('lTitle').textContent = t; $('lText').textContent = d;
+  }
+  const box = (n, v, on) => `<div class="valve ${on ? 'open' : 'shut'}"><span>${n}</span><b>${v}</b></div>`;
+  let html;
+  if (lv === 0) {
+    const flow = Math.abs(insp - inspOf((L.b + 0.995) % 1)) > 0.0004;
+    html = box('Volume', `${(2.5 + 0.5 * insp).toFixed(2).replace('.', ',')} L`, true) + box('Pression alvéolaire', flow ? (dir > 0 ? '−1 cmH₂O' : '+1 cmH₂O') : '0', flow)
+      + box('Diaphragme', dir > 0 ? 'se contracte' : 'se relâche', dir > 0) + box('Fréquence', `${respRate()} / min`, true);
+  } else if (lv === 1) {
+    html = box('Air', dir > 0 ? 'entre' : 'sort', dir > 0) + box('Divisions', '≈ 23', true) + box('Bronchiole terminale', '≈ 0,5 mm', true) + box('Alvéoles', '≈ 480 millions', true);
+  } else {
+    const u = clamp(L.track.u, 0, 1);
+    html = box('PO₂ du globule', `${Math.round(po2Of(u))} mmHg`, u > 0.3) + box('Saturation', `${Math.round(satOf(u) * 100)} %`, u > 0.3)
+      + box('Temps passé', `${(u * 0.75).toFixed(2).replace('.', ',')} s`, true) + box('PCO₂', `${Math.round(pco2Of(u))} mmHg`, u > 0.3);
+  }
+  if (html !== L.lastStats) { $('lStats').innerHTML = html; L.lastStats = html; }
+}
+
+function drawLungGraph(b, insp) {
+  const w = lgC.clientWidth, h = lgC.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (lgC.width !== Math.round(w * dpr) || lgC.height !== Math.round(h * dpr)) { lgC.width = Math.round(w * dpr); lgC.height = Math.round(h * dpr); }
+  const g = lgx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const gx = 14, gw = w - 28, H = h - 22;
+  g.font = '11px "IBM Plex Mono", monospace'; g.textAlign = 'left';
+  if (lung.level < 2) {
+    g.fillStyle = 'rgba(242,201,76,.12)'; g.fillRect(gx, 4, gw * 0.4, H - 4); g.fillStyle = 'rgba(180,138,216,.12)'; g.fillRect(gx + gw * 0.4, 4, gw * 0.6, H - 4);
+    g.fillStyle = O2C; g.fillRect(gx, H + 2, gw * 0.4 - 2, 4); g.fillStyle = CO2C; g.fillRect(gx + gw * 0.4, H + 2, gw * 0.6, 4);
+    g.strokeStyle = '#8fd3ff'; g.lineWidth = 2; g.beginPath();
+    for (let n = 0; n <= 200; n++) { const x = gx + n / 200 * gw; const y = H - 6 - inspOf(n / 200) * (H - 16); n ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+    const cx = gx + b * gw; g.strokeStyle = '#ece5d5'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, H + 6); g.stroke();
+    g.fillStyle = '#a9b1b8'; g.fillText(`Volume d'air dans les poumons · une respiration = ${(60 / respRate()).toFixed(1).replace('.', ',')} s · ≈ 0,5 L échangé`, gx, h - 3);
+  } else {
+    const yOf = v => H - 4 - (v - 30) / 80 * (H - 10);
+    g.strokeStyle = 'rgba(242,201,76,.6)'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(gx, yOf(104)); g.lineTo(gx + gw, yOf(104)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = O2C; g.fillText('air alvéolaire 104 mmHg', gx + gw - 170, yOf(104) - 4);
+    g.strokeStyle = '#ff6a5c'; g.lineWidth = 2; g.beginPath(); for (let n = 0; n <= 200; n++) { const x = gx + n / 200 * gw; const y = yOf(po2Of(n / 200)); n ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(143,209,158,.18)'; g.fillRect(gx, 4, gw / 3, H - 4);
+    const u = clamp(lung.track.u, 0, 1); const cx = gx + u * gw; g.strokeStyle = '#ece5d5'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, H + 6); g.stroke();
+    g.fillStyle = '#a9b1b8'; g.fillText(`PO₂ du globule suivi le long du capillaire (0 → 0,75 s) · plein d'O₂ dès 0,25 s`, gx, h - 3);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Plongée 3D : le cerveau, des aires à la synapse (trois échelles)    */
+/* ------------------------------------------------------------------ */
+const brain = { level: 0, speed: 1, playing: true, sc: null, loading: null, circuit: 0, nt: 0, t: 0, lastKey: '', camAnim: null, hist: [] };
+const bc = $('brainCanvas'); const bgC = $('bGraph'); const bgx = bgC.getContext('2d'); const bLabels = $('bLabels');
+const BOFF1 = V3(10, 0, 0), BOFF2 = V3(20, 0, 0);
+const AREAS = {
+  moteur: ['#e5735f', 'Cortex moteur', "Commande les mouvements volontaires, muscle par muscle."],
+  sensitif: ['#e9a14f', 'Cortex sensitif', 'Reçoit le toucher, la douleur, la position du corps.'],
+  broca: ['#c77dd9', 'Aire de Broca', 'Produit la parole (planifie les mots).'],
+  prefrontal: ['#6fa8dc', 'Cortex préfrontal', 'Décide, planifie, retient une information quelques secondes, freine les impulsions.'],
+  parietal: ['#7cc4a4', 'Cortex pariétal', "Situe les objets dans l'espace et guide la main vers eux."],
+  audition: ['#f2c94c', 'Cortex auditif et Wernicke', 'Entend les sons et comprend les mots.'],
+  temporal: ['#8fb3c9', 'Cortex temporal', 'Reconnaît les visages, les objets, le sens des mots.'],
+  hippocampe: ['#e98fb0', 'Hippocampe', 'Enregistre les nouveaux souvenirs et les lieux.'],
+  limbique: ['#b6a3e0', 'Cortex cingulaire', "Émotions, motivation, détection d'erreur."],
+  insula: ['#d7b98e', 'Insula', "Sensations internes : faim, dégoût, battements du cœur."],
+  vision: ['#5fc9d9', 'Cortex visuel', 'Analyse les images : contours, couleurs, mouvement.'],
+  amygdale: ['#ff6b6b', 'Amygdale', 'Détecte le danger et déclenche la peur.'],
+  striatum: ['#9ad36a', 'Striatum (noyau accumbens)', 'Choisit les actions, centre du plaisir et de la motivation.'],
+  thalamus: ['#5f8fe6', 'Thalamus', 'Gare de triage : relaie presque toutes les sensations vers le cortex.'],
+  hypothalamus: ['#f08c3c', 'Hypothalamus', 'Règle la faim, la soif, la température et les hormones (stress).'],
+  tronc: ['#c99f86', 'Tronc cérébral', 'Respiration, rythme cardiaque, éveil ; relie le cerveau à la moelle.'],
+  cervelet: ['#d8a6a0', 'Cervelet', 'Coordonne et ajuste les mouvements, équilibre.'],
+  sillons: ['#c9b8ad'], optique: ['#e8e0c8'], ventricules: ['#7fb0ff'],
+};
+const CORTEX = ['moteur', 'sensitif', 'broca', 'prefrontal', 'parietal', 'audition', 'temporal', 'limbique', 'insula', 'vision', 'sillons'];
+const CIRCUITS = [
+  { nom: 'Carte des aires', sous: 'qui fait quoi', steps: [], d: "Le cortex, la couche plissée de 2 à 4 mm qui recouvre le cerveau, est divisé en aires spécialisées. On regarde ici l'hémisphère gauche. Aucune aire ne travaille seule : chaque geste ou pensée active un réseau. Choisissez un circuit pour le voir s'allumer." },
+  { nom: 'Voir puis attraper', sous: 'vision → geste', steps: ['vision', 'parietal', 'prefrontal', 'moteur', 'cervelet', 'tronc'], d: "La lumière frappe la rétine ; l'image arrive au cortex visuel, à l'arrière. Le cortex pariétal calcule où est l'objet, le préfrontal décide de l'attraper, le cortex moteur envoie l'ordre, le cervelet ajuste la trajectoire et l'ordre descend par le tronc cérébral vers la moelle puis les muscles. Le tout prend environ 0,2 s." },
+  { nom: 'Entendre et répondre', sous: 'langage', steps: ['thalamus', 'audition', 'temporal', 'broca', 'moteur'], d: "Le son passe par le thalamus puis le cortex auditif. L'aire de Wernicke (arrière du lobe temporal) comprend les mots, le faisceau arqué transmet à l'aire de Broca (lobe frontal) qui prépare la réponse, puis le cortex moteur commande la bouche et le larynx. Chez 95 % des droitiers, ce circuit est à gauche." },
+  { nom: 'Récompense', sous: 'dopamine', steps: ['tronc', 'striatum', 'prefrontal', 'limbique'], d: "Quand quelque chose est meilleur que prévu (nourriture, réussite, like), des neurones du tronc cérébral (aire tegmentale ventrale) libèrent de la dopamine dans le noyau accumbens et le cortex préfrontal. Ce signal dit « refais-le » : il crée la motivation et l'apprentissage. Les drogues détournent précisément ce circuit." },
+  { nom: 'Peur', sous: 'amygdale', steps: ['thalamus', 'amygdale', 'hypothalamus', 'tronc', 'prefrontal'], d: "Un bruit soudain : le thalamus l'envoie directement à l'amygdale (voie rapide, ≈ 12 ms, avant même d'avoir compris). L'amygdale alerte l'hypothalamus (hormones du stress) et le tronc cérébral (cœur qui s'accélère). Plus lentement, le cortex préfrontal analyse et peut calmer l'alerte : « ce n'était qu'une porte »." },
+  { nom: 'Mémoire', sous: 'hippocampe', steps: ['temporal', 'hippocampe', 'hypothalamus', 'thalamus', 'limbique', 'hippocampe'], d: "Pour garder un souvenir, l'hippocampe relie les morceaux d'une expérience (lieu, visages, sons). L'information tourne dans le circuit de Papez (hippocampe, corps mamillaires, thalamus, cortex cingulaire) puis, surtout pendant le sommeil, est transférée vers le cortex pour le long terme." },
+];
+const AP_STEPS = [
+  ['Repos', '−70 mV', '#5f8fe6', "Au repos, l'intérieur du neurone est négatif (−70 mV). La pompe sodium-potassium garde beaucoup de Na⁺ dehors et de K⁺ dedans, comme un barrage chargé."],
+  ['Dépolarisation', '→ +40 mV', '#ff9f43', "Un stimulus fait passer le seuil (−55 mV) : les canaux Na⁺ s'ouvrent, le sodium s'engouffre et l'intérieur devient positif en moins d'une milliseconde. C'est tout ou rien."],
+  ['Repolarisation', '→ −70 mV', '#6ee7a8', "Les canaux Na⁺ se ferment, les canaux K⁺ s'ouvrent : le potassium sort et l'intérieur redevient négatif."],
+  ['Hyperpolarisation', '−80 mV', '#b6a3e0', "Les canaux K⁺ se ferment avec retard : la tension descend brièvement sous le repos. Pendant cette période réfractaire, le neurone ne peut pas refaire de pic, ce qui oblige l'influx à avancer dans un seul sens."],
+];
+const NTS = [
+  { nom: 'Glutamate', c: '#7ee081', sign: 1, ion: '#ff9f43', d: "Le principal messager excitateur du cerveau. Il ouvre des canaux qui laissent entrer le Na⁺ : le neurone suivant se rapproche de son seuil (PPSE). Indispensable à l'apprentissage ; en excès, il est toxique (AVC)." },
+  { nom: 'GABA', c: '#6fb6ff', sign: -1, ion: '#9be7ff', d: "Le principal frein du cerveau. Il ouvre des canaux à chlore (Cl⁻) : le neurone suivant s'éloigne de son seuil (PPSI). L'alcool et les anxiolytiques (benzodiazépines) renforcent son effet, d'où la somnolence." },
+  { nom: 'Dopamine', c: '#ffb347', sign: 0.45, ion: '#ff9f43', d: "Un modulateur : elle ne déclenche pas directement de pic mais change la sensibilité du neurone, via des récepteurs couplés aux protéines G. Motivation, récompense, mouvement (son manque cause la maladie de Parkinson). La cocaïne bloque sa recapture." },
+  { nom: 'Sérotonine', c: '#c38bff', sign: 0.3, ion: '#ff9f43', d: "Un modulateur de l'humeur, du sommeil et de l'appétit. Beaucoup d'antidépresseurs (ISRS) bloquent sa recapture : elle reste plus longtemps dans la fente. 90 % de la sérotonine du corps est en fait dans l'intestin." },
+];
+// Forme du potentiel d'action (temps ralenti, en secondes « modèle »)
+const apShape = d => d < 0 ? -70 : d < 0.04 ? -70 + 110 * smooth(0, 0.04, d) : d < 0.11 ? 40 - 120 * smooth(0.04, 0.11, d) : d < 0.4 ? -80 + 10 * smooth(0.11, 0.4, d) : -70;
+const apPhase = d => d < 0 || d >= 0.4 ? 0 : d < 0.04 ? 1 : d < 0.11 ? 2 : 3;
+
+async function initBrain3D() {
+  const eng = new BABYLON.Engine(bc, true, { stencil: true, antialias: true }, true);
+  eng.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+  const sc = new BABYLON.Scene(eng); sc.clearColor = new BABYLON.Color4(0.035, 0.07, 0.105, 1); sc.skipPointerMovePicking = true;
+  const cam = new BABYLON.ArcRotateCamera('bc', Math.PI, 1.35, 0.32, V3(0, 1.63, 0), sc);
+  cam.attachControl(bc, true); cam.minZ = 0.003; cam.maxZ = 200; cam.fov = 0.6; cam.wheelDeltaPercentage = 0.01; cam.pinchDeltaPercentage = 0.004; cam.panningSensibility = 0; cam.inertia = 0.85;
+  const hemi = new BABYLON.HemisphericLight('bh', V3(0, 1, 0.4), sc); hemi.intensity = 0.65; hemi.groundColor = new BABYLON.Color3(0.18, 0.12, 0.14);
+  const key = new BABYLON.DirectionalLight('bk', V3(-0.3, -0.5, -1), sc); key.intensity = 0.9;
+  const rim = new BABYLON.DirectionalLight('br', V3(0.6, 0.3, 1), sc); rim.intensity = 0.4; rim.diffuse = BABYLON.Color3.FromHexString('#9fc3ff');
+  sc.onBeforeRenderObservable.add(() => { key.direction = cam.target.subtract(cam.position).normalize().add(V3(0.15, -0.35, 0)); });
+  const B = { sc, eng, cam, roots: [], labels: [] };
+
+  /* --- Échelle 1 : le vrai cerveau, aires et circuits --- */
+  const r0 = new BABYLON.TransformNode('bniv0', sc); B.roots.push(r0);
+  const glb = await fetchModel('cerveau3d.txt', () => {});
+  const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, sc, null, '.glb');
+  const M = {}, MAT = {}, PT = {};
+  for (const m of res.meshes) {
+    const n = (m.name || '').replace(/_primitive\d+$/, ''); if (!AREAS[n] || !m.getTotalVertices()) continue;
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices(); m.refreshBoundingInfo(); m.isPickable = false; m.parent = r0; M[n] = m;
+    const mt = new BABYLON.StandardMaterial('bm_' + n, sc); mt.diffuseColor = BABYLON.Color3.FromHexString(AREAS[n][0]); mt.specularColor = new BABYLON.Color3(0.25, 0.22, 0.22); mt.specularPower = 32;
+    mt.backFaceCulling = false; mt.twoSidedLighting = true; mt.emissiveColor = new BABYLON.Color3(0, 0, 0); m.material = mt; MAT[n] = mt;
+    // Point de repère : centre de la partie gauche (sauf structures médianes)
+    const P = m.getVerticesData('position'); const c = V3(0, 0, 0); let k = 0; const mid = ['tronc', 'hypothalamus', 'cervelet', 'ventricules', 'optique'].includes(n);
+    for (let i = 0; i < P.length; i += 3) if (mid || P[i] < -0.004) { c.x += P[i]; c.y += P[i + 1]; c.z += P[i + 2]; k++; }
+    PT[n] = c.scale(1 / Math.max(1, k));
+  }
+  res.meshes.forEach(m => { if (m.name === '__root__') m.dispose(); });
+  PT.tronc = PT.tronc.add(V3(0, 0.012, 0.004));
+  if (M.ventricules) { MAT.ventricules.alpha = 0.6; }
+  if (M.sillons) { MAT.sillons.diffuseColor = BABYLON.Color3.FromHexString('#cdb9ad'); }
+  B.M = M; B.MAT = MAT; B.PT = PT;
+  let mn = V3(1e9, 1e9, 1e9), mx = V3(-1e9, -1e9, -1e9); for (const m of Object.values(M)) { const P = m.getVerticesData('position'); for (let i = 0; i < P.length; i += 3) { mn.minimizeInPlaceFromFloats(P[i], P[i + 1], P[i + 2]); mx.maximizeInPlaceFromFloats(P[i], P[i + 1], P[i + 2]); } }
+  B.c0 = mn.add(mx).scale(0.5); B.size0 = mx.subtract(mn).length();
+  // Influx : trois points lumineux qui suivent le circuit
+  B.pulse = dotsMesh(sc, 'influx', '#fff4c2', 3, 0.006, 1.2); B.pulse.m.parent = r0; B.pulse.m.renderingGroupId = 1;
+  B.trail = dotsMesh(sc, 'trainee', '#ffd36b', 24, 0.0035, 1); B.trail.m.parent = r0; B.trail.m.renderingGroupId = 1;
+  for (const n of Object.keys(AREAS)) if (AREAS[n][1] && PT[n]) B.labels.push([AREAS[n][1], 0, () => PT[n], n]);
+
+  /* --- Échelle 2 : un neurone et son potentiel d'action --- */
+  const r1 = new BABYLON.TransformNode('bniv1', sc); r1.position.copyFrom(BOFF1); B.roots.push(r1);
+  const mat = (n, hex, o = {}) => lungMat(sc, n, hex, o);
+  const axY = x => 0.15 * Math.sin(x * 0.6);
+  const axPath = (x0, x1, n = 40) => { const p = []; for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n; p.push(V3(x, axY(x), 0)); } return p; };
+  const soma = BABYLON.MeshBuilder.CreateSphere('soma', { diameter: 1.5, segments: 24 }, sc); soma.parent = r1; soma.position.set(-5.3, 0, 0); soma.scaling.set(1.15, 1, 1); soma.material = mat('somaM', '#e2a77f', { em: '#2a1408' });
+  const nucleus = BABYLON.MeshBuilder.CreateSphere('noyau', { diameter: 0.6, segments: 16 }, sc); nucleus.parent = r1; nucleus.position.set(-5.35, 0.05, 0.42); nucleus.material = mat('noyM', '#8a5bb0');
+  const hill = BABYLON.MeshBuilder.CreateCylinder('cone', { height: 0.75, diameterTop: 0.22, diameterBottom: 0.75, tessellation: 20 }, sc); hill.parent = r1; hill.rotation.z = Math.PI / 2; hill.position.set(-4.35, 0, 0); hill.material = soma.material;
+  const axon = BABYLON.MeshBuilder.CreateTube('axone', { path: axPath(-4.1, 6.6, 120), radius: 0.1, tessellation: 12, cap: BABYLON.Mesh.CAP_ALL }, sc); axon.parent = r1; axon.material = mat('axM', '#d9b48f', { em: '#1a1008' });
+  const NODES = []; for (let k = 0; k < 7; k++) NODES.push(-3.2 + k * 1.5);
+  const myelM = mat('myM', '#f3efe2', { em: '#1c1a14' });
+  const sheathEnds = [[-4.0, NODES[0] - 0.14], ...NODES.slice(0, -1).map((x, k) => [x + 0.14, NODES[k + 1] - 0.14]), [NODES[6] + 0.14, 6.0]];
+  sheathEnds.forEach(([a, b], k) => { const t = BABYLON.MeshBuilder.CreateTube('gaine' + k, { path: axPath(a, b, 16), radius: 0.3, tessellation: 18, cap: BABYLON.Mesh.CAP_ALL }, sc); t.parent = r1; t.material = myelM; });
+  const nodeMats = NODES.map((x, k) => { const t = BABYLON.MeshBuilder.CreateTorus('noeud' + k, { diameter: 0.3, thickness: 0.08, tessellation: 20 }, sc); t.parent = r1; t.rotation.z = Math.PI / 2; t.position.set(x, axY(x), 0); const m = mat('nM' + k, '#ffd36b'); t.material = m; return m; });
+  // Dendrites : arborescence courbée qui s'affine
+  const dr = lcg(21); const dendM = mat('dendM', '#e2a77f', { em: '#2a1408' });
+  const dend = (start, dir, len, r, depth) => {
+    const pts = [start]; let p = start.clone(), d = dir.clone();
+    for (let i = 0; i < 6; i++) { d = d.add(V3(dr() - 0.5, dr() - 0.5, dr() - 0.5).scale(0.5)).normalize(); p = p.add(d.scale(len / 6)); pts.push(p.clone()); }
+    const t = BABYLON.MeshBuilder.CreateTube('dend', { path: pts, radiusFunction: (i) => r * (1 - 0.45 * i / 6), tessellation: 8, cap: BABYLON.Mesh.CAP_END }, sc); t.parent = r1; t.material = dendM;
+    if (depth < 2) for (let k = 0; k < 2; k++) dend(p, d.add(V3(dr() - 0.5, dr() - 0.5, dr() - 0.5).scale(1.2)).normalize(), len * 0.62, r * 0.55, depth + 1);
+  };
+  for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const dir = V3(-0.8, Math.cos(a), Math.sin(a)).normalize(); dend(V3(-5.3, 0, 0).add(dir.scale(0.65)), dir, 2.2, 0.16, 0); }
+  // Terminaisons
+  const termEnds = [V3(7.6, 0.9, 0.5), V3(7.8, 0.2, -0.7), V3(7.5, -0.7, 0.4), V3(7.3, -1.1, -0.5)];
+  const axEnd = V3(6.6, axY(6.6), 0);
+  termEnds.forEach((e, k) => { const t = BABYLON.MeshBuilder.CreateTube('term' + k, { path: [axEnd, axEnd.add(e).scale(0.5).add(V3(0, 0.1, 0)), e], radius: 0.07, tessellation: 8 }, sc); t.parent = r1; t.material = axon.material;
+    const s = BABYLON.MeshBuilder.CreateSphere('bouton' + k, { diameter: 0.42, segments: 12 }, sc); s.parent = r1; s.position.copyFrom(e); s.material = mat('boutM' + k, '#e6b88a', { em: '#2a1408' }); });
+  B.neu = { NODES, nodeMats, axY, termEnds, axEnd, spikes: [], last: -9, hill };
+  B.neu.spark = dotsMesh(sc, 'pic', '#fff4c2', 1, 0.42, 1.4); B.neu.spark.m.parent = r1; B.neu.spark.m.renderingGroupId = 1;
+  B.neu.na = dotsMesh(sc, 'na', '#ff9f43', 140, 0.09, 0.8); B.neu.k = dotsMesh(sc, 'kp', '#6ee7a8', 140, 0.09, 0.8); B.neu.na.m.parent = B.neu.k.m.parent = r1; B.neu.na.list = []; B.neu.k.list = [];
+  B.labels.push(['Corps cellulaire', 1, () => BOFF1.add(V3(-5.3, 0.95, 0))], ['Dendrites', 1, () => BOFF1.add(V3(-7.2, 1.4, 0.2))], ['Gaine de myéline', 1, () => BOFF1.add(V3((NODES[1] + NODES[2]) / 2, 0.55, 0))],
+    ['Nœud de Ranvier', 1, () => BOFF1.add(V3(NODES[4], axY(NODES[4]) - 0.45, 0))], ['Axone', 1, () => BOFF1.add(V3(6.3, 0.35, 0))], ['Terminaisons', 1, () => BOFF1.add(V3(7.9, 1.35, 0.5))], ['Mesure', 1, () => BOFF1.add(V3(NODES[3], axY(NODES[3]) + 0.45, 0)), 'v']);
+
+  /* --- Échelle 3 : la synapse --- */
+  const r2 = new BABYLON.TransformNode('bniv2', sc); r2.position.copyFrom(BOFF2); B.roots.push(r2);
+  const pre = BABYLON.MeshBuilder.CreateSphere('pre', { diameter: 4, segments: 32 }, sc); pre.parent = r2; pre.position.y = 2.4; pre.material = mat('preM', '#e2b48a', { alpha: 0.13, em: '#2a1408' }); pre.material.opacityFresnelParameters.power = 4; pre.alphaIndex = 5;
+  const preAx = BABYLON.MeshBuilder.CreateCylinder('preAx', { height: 3, diameter: 0.9, tessellation: 24 }, sc); preAx.parent = r2; preAx.position.y = 5.6; preAx.material = pre.material;
+  const post = BABYLON.MeshBuilder.CreateSphere('post', { diameter: 2, segments: 40 }, sc); post.parent = r2; post.scaling.set(3.3, 0.9, 3.3); post.position.y = -0.95; post.material = mat('postM', '#c9a0d8', { alpha: 0.32, em: '#1a0c22' }); post.alphaIndex = 4;
+  const sr = lcg(9); const ves = [];
+  const vesM = BABYLON.MeshBuilder.CreateSphere('vesicules', { diameter: 0.34, segments: 10 }, sc); vesM.parent = r2; const vmat = mat('vesMat', '#f6e7c1', { alpha: 0.85 }); vmat.opacityFresnelParameters = null; vesM.material = vmat; vesM.alwaysSelectAsActiveMesh = true;
+  for (let i = 0; i < 40; i++) {
+    const docked = i < 7; let p;
+    if (docked) { const a = i / 7 * Math.PI * 2; p = V3(Math.cos(a) * 0.75 * (0.4 + sr() * 0.6), 0.62, Math.sin(a) * 0.75 * (0.4 + sr() * 0.6)); }
+    else { do { p = V3((sr() - 0.5) * 3, 0.9 + sr() * 2.2, (sr() - 0.5) * 3); } while (p.subtract(V3(0, 2.4, 0)).length() > 1.65); }
+    ves.push({ home: p, p: p.clone(), docked, s: 1 });
+  }
+  B.ves = ves; B.vesM = vesM; B.vesBuf = new Float32Array(ves.length * 16); vesM.thinInstanceSetBuffer('matrix', B.vesBuf, 16, false);
+  const recM = BABYLON.MeshBuilder.CreateCylinder('recepteurs', { height: 0.22, diameter: 0.2, tessellation: 10 }, sc); recM.parent = r2; recM.material = mat('recMat', '#ffffff', { em: '#101010' }); recM.alwaysSelectAsActiveMesh = true;
+  const recs = []; for (let i = 0; i < 18; i++) { const a = i * 2.39996; const rr = 0.25 + Math.sqrt(i / 18) * 1.15; recs.push({ p: V3(Math.cos(a) * rr, -0.02, Math.sin(a) * rr), g: 0 }); }
+  B.recs = recs; B.recM = recM; B.recBuf = new Float32Array(recs.length * 16); B.recCol = new Float32Array(recs.length * 4);
+  { const m = new BABYLON.Matrix(); recs.forEach((r, i) => { BABYLON.Matrix.ComposeToRef(V3(1, 1, 1), BABYLON.Quaternion.Identity(), r.p, m); m.copyToArray(B.recBuf, i * 16); }); }
+  recM.thinInstanceSetBuffer('matrix', B.recBuf, 16, true); recM.thinInstanceSetBuffer('color', B.recCol, 4, false);
+  const trM = BABYLON.MeshBuilder.CreateBox('transporteurs', { size: 0.22 }, sc); trM.parent = r2; trM.material = mat('trMat', '#9fd0ff', { em: '#0a1a2a' });
+  B.trans = [0, 1, 2, 3, 4].map(i => { const a = i / 5 * Math.PI * 2 + 0.3; return V3(Math.cos(a) * 1.45, 0.75, Math.sin(a) * 1.45); });
+  { const buf = new Float32Array(B.trans.length * 16); const m = new BABYLON.Matrix(); B.trans.forEach((p, i) => { BABYLON.Matrix.ComposeToRef(V3(1, 1, 1), BABYLON.Quaternion.Identity(), p, m); m.copyToArray(buf, i * 16); }); trM.thinInstanceSetBuffer('matrix', buf, 16, true); }
+  const caM = BABYLON.MeshBuilder.CreateCylinder('canauxCa', { height: 0.25, diameter: 0.16, tessellation: 8 }, sc); caM.parent = r2; caM.material = mat('caMat', '#7fe3ff', { em: '#0a2a33' });
+  B.caCh = [0, 1, 2, 3, 4, 5].map(i => { const a = i / 6 * Math.PI * 2; return V3(Math.cos(a) * 1.05, 0.5, Math.sin(a) * 1.05); });
+  { const buf = new Float32Array(6 * 16); const m = new BABYLON.Matrix(); B.caCh.forEach((p, i) => { BABYLON.Matrix.ComposeToRef(V3(1, 1, 1), BABYLON.Quaternion.Identity(), p, m); m.copyToArray(buf, i * 16); }); caM.thinInstanceSetBuffer('matrix', buf, 16, true); }
+  B.ntd = dotsMesh(sc, 'nt', '#7ee081', 260, 0.075, 0.9); B.ntd.m.parent = r2; B.ntd.list = [];
+  B.ca = dotsMesh(sc, 'ca', '#7fe3ff', 40, 0.07, 0.9); B.ca.m.parent = r2; B.ca.list = [];
+  B.ion = dotsMesh(sc, 'ionPost', '#ff9f43', 80, 0.07, 0.9); B.ion.m.parent = r2; B.ion.list = [];
+  B.apSyn = dotsMesh(sc, 'apSyn', '#fff4c2', 1, 0.5, 1.4); B.apSyn.m.parent = r2; B.apSyn.m.renderingGroupId = 1;
+  B.syn = { last: -9, cycle: 0, post: -70 };
+  B.labels.push(['Bouton présynaptique', 2, () => BOFF2.add(V3(-1.9, 3.4, 0))], ['Vésicules', 2, () => BOFF2.add(V3(0.9, 2.0, 0.9))], ['Fente synaptique (20 nm)', 2, () => BOFF2.add(V3(2.25, 0.2, 0))],
+    ['Récepteurs', 2, () => BOFF2.add(V3(-1.2, -0.25, 0.8))], ['Neurone suivant', 2, () => BOFF2.add(V3(0, -1.5, 2.4))], ['Recapture', 2, () => BOFF2.add(B.trans[0].add(V3(0.45, 0.2, 0)))], ['Canaux Ca²⁺', 2, () => BOFF2.add(B.caCh[3].add(V3(-0.3, -0.25, 0)))]);
+
+  B.labels = B.labels.map(([t, lvl, pos, key]) => { const el = document.createElement('div'); el.className = 'lab' + (key === 'v' ? ' v' : ''); el.textContent = t; bLabels.appendChild(el); return { el, lvl, pos, key }; });
+  Object.assign(brain, B); window.__brain = brain;
+  applyCircuit(brain.circuit); setNT(brain.nt);
+}
+
+/* Interface */
+const bList = $('bList');
+function renderBrainList() {
+  const lv = brain.level;
+  const items = lv === 0 ? CIRCUITS.map((c, i) => [c.nom, c.sous, i === 0 ? '#c9b8ad' : AREAS[c.steps[0]][0]]) : lv === 1 ? AP_STEPS.map(s => [s[0], s[1], s[2]]) : NTS.map(n => [n.nom, n.sign > 0.9 ? 'excitateur' : n.sign < 0 ? 'inhibiteur' : 'modulateur', n.c]);
+  bList.innerHTML = items.map(([a, b, c], i) => `<li data-i="${i}" style="--c:${c}"><i></i><span>${a}</span><span>${b}</span></li>`).join('');
+  bList.querySelectorAll('li').forEach(li => li.onclick = () => { const i = +li.dataset.i; if (brain.level === 0) applyCircuit(i); else if (brain.level === 2) setNT(i); else fireSpike(); });
+  markBrainList();
+}
+function markBrainList(i) {
+  const on = brain.level === 0 ? brain.circuit : brain.level === 2 ? brain.nt : i;
+  bList.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === on));
+}
+function applyCircuit(i) {
+  brain.circuit = i; brain.lastKey = ''; brain.pulseS = 0;
+  if (brain.MAT) {
+    const steps = CIRCUITS[i].steps;
+    for (const [n, mt] of Object.entries(brain.MAT)) {
+      const inC = steps.includes(n); const cortex = CORTEX.includes(n);
+      if (i === 0) { mt.alpha = n === 'ventricules' ? 0.6 : 1; }
+      else mt.alpha = cortex ? (inC ? 0.92 : 0.1) : (inC ? 1 : (n === 'cervelet' || n === 'tronc' ? 0.35 : 0.5));
+      const base = BABYLON.Color3.FromHexString(AREAS[n][0]);
+      mt.diffuseColor = i === 0 || inC ? base : BABYLON.Color3.Lerp(base, BABYLON.Color3.FromHexString('#c9b8ad'), 0.7);
+      mt.emissiveColor.set(0, 0, 0);
+    }
+    if (i > 0) { const pts = steps.map(s => brain.PT[s]); brain.curve = polyInfo(BABYLON.Curve3.CreateCatmullRomSpline(pts, 14, false).getPoints()); brain.stepIdx = -1; }
+  }
+  markBrainList(); $('bReplay').hidden = i === 0 || brain.level !== 0;
+}
+function setNT(i) {
+  brain.nt = i; brain.lastKey = '';
+  if (brain.ntd) {
+    const c = BABYLON.Color3.FromHexString(NTS[i].c); brain.ntd.m.material.diffuseColor = c; brain.ntd.m.material.emissiveColor = c.scale(0.9);
+    const ic = BABYLON.Color3.FromHexString(NTS[i].ion); brain.ion.m.material.diffuseColor = ic; brain.ion.m.material.emissiveColor = ic.scale(0.9);
+    brain.ntd.list.length = 0; brain.hist.length = 0;
+  }
+  markBrainList();
+}
+function fireSpike() { if (brain.neu) brain.neu.spikes.push(brain.t); }
+function brainPreset(i) {
+  const mob = bc.clientWidth < 520;
+  if (i === 0) return { t: brain.c0.clone(), r: brain.size0 * (mob ? 2.1 : 1.45), a: Math.PI + 0.25, b: 1.3, lo: brain.size0 * 0.6, hi: brain.size0 * 5 };
+  if (i === 1) return { t: BOFF1.add(V3(0.4, 0, 0)), r: mob ? 36 : 19.5, a: -Math.PI / 2 - 0.25, b: 1.25, lo: 3, hi: 40 };
+  return { t: BOFF2.add(V3(0, 1.5, 0)), r: mob ? 16 : 12, a: -Math.PI / 2 - 0.35, b: 1.3, lo: 3, hi: 25 };
+}
+function setBrainLevel(i, instant) {
+  brain.level = i; brain.lastKey = '';
+  document.querySelectorAll('#bLevels button').forEach(b => b.classList.toggle('primary', +b.dataset.l === i));
+  $('bReplay').hidden = !(i === 0 && brain.circuit > 0); $('bFire').hidden = i === 0;
+  renderBrainList();
+  if (!brain.sc) return;
+  brain.roots.forEach((r, k) => r.setEnabled(k === i));
+  const p = brainPreset(i); const cam = brain.cam; cam.lowerRadiusLimit = null; cam.upperRadiusLimit = null;
+  brain.camAnim = { s: performance.now(), dur: instant ? 0 : 900, fT: cam.target.clone(), fR: cam.radius, fA: cam.alpha, fB: cam.beta, p };
+  $('bHint').textContent = i === 0 ? "Le vrai cerveau (Z-Anatomy), hémisphère gauche vu de côté. Faites-le tourner pour voir l'intérieur ; dans un circuit, le reste du cortex devient transparent."
+    : i === 1 ? "Modèle schématique d'un neurone myélinisé, ralenti environ mille fois. Orange : ions Na⁺ qui entrent ; vert : ions K⁺ qui sortent. L'influx saute d'un nœud de Ranvier à l'autre (conduction saltatoire)."
+    : "Modèle schématique très agrandi : la fente synaptique ne mesure que 20 nanomètres. Bleu clair : ions calcium ; points colorés : le neurotransmetteur choisi ; cubes bleus : transporteurs de recapture.";
+}
+function setBrainSpeed(s) { brain.speed = s; document.querySelectorAll('#bSpeed button').forEach(b => b.classList.toggle('primary', +b.dataset.s === s)); }
+document.querySelectorAll('#bSpeed button').forEach(b => b.onclick = () => setBrainSpeed(+b.dataset.s));
+document.querySelectorAll('#bLevels button').forEach(b => b.onclick = () => setBrainLevel(+b.dataset.l));
+$('bPlay').onclick = () => { brain.playing = !brain.playing; $('bPlay').textContent = brain.playing ? 'Pause' : 'Lecture'; };
+$('bNext').onclick = () => setBrainLevel((brain.level + 1) % 3);
+$('bReplay').onclick = () => { brain.pulseS = 0; brain.stepIdx = -1; };
+$('bFire').onclick = () => { if (brain.level === 1) fireSpike(); else if (brain.syn) brain.syn.last = -9; };
+function closeBrainDeep() { state.deepOpen = false; $('deepBrain').hidden = true; last = performance.now(); }
+$('bClose').onclick = closeBrainDeep;
+window.addEventListener('resize', () => { if (brain.eng) brain.eng.resize(); });
+setBrainSpeed(1);
+
+async function openBrainDeep() {
+  state.deepOpen = 'cerveau'; $('deepBrain').hidden = false; tip.hidden = true;
+  if (!brain.sc) {
+    $('bLoad').hidden = false; setBrainLevel(0);
+    try { brain.loading = brain.loading || initBrain3D(); await brain.loading; }
+    catch (e) { console.error(e); $('bLoad').textContent = "Le cerveau 3D n'a pas pu se charger."; return; }
+    $('bLoad').hidden = true; brain.eng.resize(); setBrainLevel(brain.level, true);
+  }
+  brain.eng.resize(); if (reduceMotion) setBrainSpeed(0.5);
+}
+
+const bTmp = V3(0, 0, 0);
+function drawBrainDeep(dt) {
+  if (!brain.sc) return;
+  const B = brain; const mdt = B.playing ? dt * B.speed : 0; B.t += mdt;
+  if (B.camAnim) {
+    const A = B.camAnim; const t = A.dur ? Math.min(1, (performance.now() - A.s) / A.dur) : 1; const e = 1 - Math.pow(1 - t, 3);
+    B.cam.target = BABYLON.Vector3.Lerp(A.fT, A.p.t, e); B.cam.radius = A.fR + (A.p.r - A.fR) * e; B.cam.alpha = A.fA + (A.p.a - A.fA) * e; B.cam.beta = A.fB + (A.p.b - A.fB) * e;
+    if (t >= 1) { B.cam.lowerRadiusLimit = A.p.lo; B.cam.upperRadiusLimit = A.p.hi; B.camAnim = null; }
+  }
+  let liveStep = 0;
+  if (B.level === 0) {
+    const C = CIRCUITS[B.circuit];
+    for (const [n, mt] of Object.entries(B.MAT)) { const e = mt.emissiveColor; e.scaleInPlace(Math.exp(-mdt * 2.5)); }
+    if (B.circuit > 0 && B.curve) {
+      const n = C.steps.length; B.pulseS = (B.pulseS || 0) + mdt * 0.55; if (B.pulseS > n + 0.8) { B.pulseS = 0; B.stepIdx = -1; }
+      const s = Math.min(B.pulseS, n - 1); const idx = Math.min(n - 1, Math.round(s));
+      if (Math.abs(s - idx) < 0.12 && idx !== B.stepIdx && B.pulseS <= n - 1 + 0.12) { B.stepIdx = idx; const mt = B.MAT[C.steps[idx]]; mt.emissiveColor.copyFrom(BABYLON.Color3.FromHexString(AREAS[C.steps[idx]][0]).scale(0.85)); }
+      const f = s / (n - 1); const vis = B.pulseS <= n - 1 + 0.3;
+      for (let k = 0; k < 3; k++) { polyAt(B.curve, clamp(f - k * 0.012, 0, 1), bTmp); putDot(B.pulse.buf, k, bTmp, vis ? 1 - k * 0.25 : 0); }
+      for (let k = 0; k < 24; k++) { polyAt(B.curve, clamp(f - 0.03 - k * 0.012, 0, 1), bTmp); putDot(B.trail.buf, k, bTmp, vis && f - 0.03 - k * 0.012 > 0 ? 1 - k / 24 : 0); }
+      liveStep = Math.max(0, B.stepIdx);
+    } else { B.pulse.buf.fill(0); B.trail.buf.fill(0); }
+    B.pulse.m.thinInstanceBufferUpdated('matrix'); B.trail.m.thinInstanceBufferUpdated('matrix');
+  } else if (B.level === 1) {
+    const N = B.neu; const DT = 0.16;
+    if (B.t - N.last > 2.2) { N.spikes.push(B.t); }
+    if (N.spikes.length) N.last = N.spikes[N.spikes.length - 1];
+    N.spikes = N.spikes.filter(t0 => B.t - t0 < 2.2);
+    N.nodeMats.forEach(m => m.emissiveColor.set(0, 0, 0));
+    let spark = null;
+    for (const t0 of N.spikes) {
+      const d = B.t - t0;
+      N.NODES.forEach((x, k) => {
+        const tk = 0.12 + k * DT; const g = Math.exp(-Math.pow((d - tk) / 0.05, 2)); const m = N.nodeMats[k]; m.emissiveColor.r += 1.0 * g; m.emissiveColor.g += 0.75 * g; m.emissiveColor.b += 0.3 * g;
+        if (d >= tk && d - mdt < tk && mdt > 0) { // ouverture des canaux à ce nœud
+          for (let i = 0; i < 9; i++) { const a = Math.random() * Math.PI * 2; N.na.list.push({ x, a, t: 0, dir: -1 }); }
+          for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2; N.k.list.push({ x, a, t: -0.07, dir: 1 }); }
+        }
+      });
+      if (d >= 0 && d < 0.12 + 6 * DT + 0.4) {
+        let x; if (d < 0.12) x = -4.4 + (N.NODES[0] + 4.4) * (d / 0.12);
+        else { const u = (d - 0.12) / DT; const k = Math.min(6, Math.floor(u)); const fr = u - k; x = k >= 6 ? N.NODES[6] + Math.min(1, fr / 1.5) * (6.6 - N.NODES[6]) : N.NODES[k] + (N.NODES[k + 1] - N.NODES[k]) * smooth(0.55, 0.8, fr); }
+        spark = V3(x, N.axY(x), 0);
+      }
+    }
+    putDot(N.spark.buf, 0, spark || bTmp, spark ? 1 : 0); N.spark.m.thinInstanceBufferUpdated('matrix');
+    const ionStep = (pool) => {
+      pool.list = pool.list.filter(g => (g.t += mdt / 0.22) < 1);
+      pool.buf.fill(0);
+      pool.list.forEach((g, i) => { if (i >= pool.count || g.t < 0) return; const u = smooth(0, 1, g.t); const r = g.dir < 0 ? 0.75 - 0.62 * u : 0.13 + 0.62 * u; putDot(pool.buf, i, V3(g.x + (g.dir < 0 ? 0 : 0.05), N.axY(g.x) + Math.cos(g.a) * r, Math.sin(g.a) * r), g.t > 0.85 ? (1 - g.t) / 0.15 : 1); });
+      pool.m.thinInstanceBufferUpdated('matrix');
+    };
+    ionStep(N.na); ionStep(N.k);
+    const d3 = N.spikes.length ? B.t - N.spikes[N.spikes.length - 1] - (0.12 + 3 * DT) : 9;
+    B.v = apShape(d3); liveStep = apPhase(d3);
+    B.hist.push([B.t, B.v]); while (B.hist.length && B.t - B.hist[0][0] > 3) B.hist.shift();
+  } else {
+    // Synapse : un cycle toutes les 3 s (temps modèle)
+    const S = B.syn; if (B.t - S.last > 3.2) { S.last = B.t; S.fired = false; }
+    const d = B.t - S.last; const nt = NTS[B.nt];
+    // Potentiel d'action qui descend l'axone jusqu'au bouton
+    putDot(B.apSyn.buf, 0, V3(0, 7 - 6.2 * smooth(0, 0.45, d), 0), d < 0.5 ? 1 : 0); B.apSyn.m.thinInstanceBufferUpdated('matrix');
+    // Entrée de calcium
+    if (d > 0.45 && d - mdt <= 0.45 && mdt > 0) for (let i = 0; i < 24; i++) { const c = B.caCh[i % 6]; B.ca.list.push({ from: c.add(V3(0, -0.25, 0)), to: c.add(V3((Math.random() - 0.5) * 0.6, 0.5 + Math.random() * 0.5, (Math.random() - 0.5) * 0.6)), t: -Math.random() * 0.15 }); }
+    B.ca.list = B.ca.list.filter(g => (g.t += mdt / 0.5) < 1); B.ca.buf.fill(0);
+    B.ca.list.forEach((g, i) => { if (g.t >= 0) putDot(B.ca.buf, i, BABYLON.Vector3.Lerp(g.from, g.to, smooth(0, 0.6, g.t)), g.t > 0.8 ? (1 - g.t) * 5 : 1); }); B.ca.m.thinInstanceBufferUpdated('matrix');
+    // Vésicules : les vésicules amarrées fusionnent et libèrent leur contenu
+    const mtx = new BABYLON.Matrix();
+    B.ves.forEach((v, i) => {
+      if (v.docked) {
+        if (d < 0.6) { v.s = Math.min(1, v.s + mdt * 2); v.p.copyFrom(v.home); }
+        else if (d < 0.95) { const u = smooth(0.6, 0.95, d); v.p.set(v.home.x, v.home.y - 0.22 * u, v.home.z); v.s = 1 - 0.9 * smooth(0.8, 0.95, d);
+          if (d >= 0.9 && !v.rel) { v.rel = true; for (let k = 0; k < 30; k++) B.ntd.list.push({ p: V3(v.home.x, 0.36, v.home.z), v: V3((Math.random() - 0.5) * 1.6, -0.4 - Math.random() * 0.8, (Math.random() - 0.5) * 1.6), st: 0, t: 0, rec: null }); } }
+        else { v.s = 0.1 + 0.9 * smooth(2.4, 3.1, d); if (d > 2.4) v.rel = false; }
+      } else { v.p.set(v.home.x + 0.04 * Math.sin(B.t * 1.3 + i), v.home.y + 0.04 * Math.cos(B.t * 1.1 + i), v.home.z); }
+      BABYLON.Matrix.ComposeToRef(V3(v.s, v.s, v.s), BABYLON.Quaternion.Identity(), v.p, mtx); mtx.copyToArray(B.vesBuf, i * 16);
+    });
+    B.vesM.thinInstanceBufferUpdated('matrix');
+    // Neurotransmetteurs : diffusion → fixation → recapture
+    B.recs.forEach(r => r.g = Math.max(0, r.g - mdt * 1.2));
+    let bound = 0;
+    B.ntd.list = B.ntd.list.filter(g => {
+      g.t += mdt;
+      if (g.st === 0) {
+        g.p.addInPlace(g.v.scale(mdt)); g.v.addInPlace(V3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6).scale(mdt)); g.v.scaleInPlace(Math.exp(-mdt * 1.5));
+        if (g.p.y > 0.36) { g.p.y = 0.36; g.v.y = -Math.abs(g.v.y); } const rr = Math.hypot(g.p.x, g.p.z); if (rr > 1.9) { g.p.x *= 1.9 / rr; g.p.z *= 1.9 / rr; }
+        if (g.p.y < 0.05) { g.p.y = 0.05; g.v.y = Math.abs(g.v.y) * 0.5; const r = B.recs.find(r => Math.hypot(r.p.x - g.p.x, r.p.z - g.p.z) < 0.22 && !r.busy); if (r) { g.st = 1; g.rec = r; r.busy = true; g.t = 0; } }
+        if (g.t > 1.3) { g.st = 2; g.t = 0; g.from = g.p.clone(); g.to = B.trans[Math.floor(Math.random() * B.trans.length)].clone(); }
+      } else if (g.st === 1) {
+        g.p.set(g.rec.p.x, 0.12, g.rec.p.z); g.rec.g = 1; bound++;
+        if (g.t > 0.45) { g.rec.busy = false; g.st = 2; g.t = 0; g.from = g.p.clone(); g.to = B.trans[Math.floor(Math.random() * B.trans.length)].clone();
+          if (nt.sign !== 0) for (let k = 0; k < 2; k++) B.ion.list.push({ from: V3(g.rec.p.x, 0.3, g.rec.p.z), to: V3(g.rec.p.x + (Math.random() - 0.5) * 0.4, -0.75, g.rec.p.z + (Math.random() - 0.5) * 0.4), t: 0 }); }
+      } else { const u = smooth(0, 1, g.t / 0.7); g.p = BABYLON.Vector3.Lerp(g.from, g.to, u); if (g.t > 0.7) return false; }
+      return true;
+    });
+    B.ntd.buf.fill(0); B.ntd.list.forEach((g, i) => { if (i < B.ntd.count) putDot(B.ntd.buf, i, g.p, 1); }); B.ntd.m.thinInstanceBufferUpdated('matrix');
+    B.ion.list = B.ion.list.filter(g => (g.t += mdt / 0.6) < 1); B.ion.buf.fill(0); B.ion.list.forEach((g, i) => { if (i < B.ion.count) putDot(B.ion.buf, i, BABYLON.Vector3.Lerp(g.from, g.to, smooth(0, 1, g.t)), g.t > 0.8 ? (1 - g.t) * 5 : 1); }); B.ion.m.thinInstanceBufferUpdated('matrix');
+    const rc = BABYLON.Color3.FromHexString(nt.c);
+    B.recs.forEach((r, i) => { const g = r.g; B.recCol.set([0.75 + (rc.r - 0.75) * g + 0.3 * g, 0.75 + (rc.g - 0.75) * g + 0.3 * g, 0.78 + (rc.b - 0.78) * g + 0.3 * g, 1], i * 4); }); B.recM.thinInstanceBufferUpdated('color');
+    // Potentiel post-synaptique
+    const target = -70 + nt.sign * Math.min(bound, 12) * (nt.sign > 0 ? 1.4 : 0.9) * (Math.abs(nt.sign) < 0.9 ? 0.6 : 1);
+    S.post += (target - S.post) * (1 - Math.exp(-mdt * (target > S.post === nt.sign > 0 ? 9 : 2.5)));
+    B.v = S.post; B.hist.push([B.t, B.v]); while (B.hist.length && B.t - B.hist[0][0] > 4) B.hist.shift();
+    liveStep = d < 0.45 ? 0 : d < 0.9 ? 1 : d < 2 ? 2 : 3;
+  }
+  B.sc.render();
+  // Étiquettes
+  const w = bc.clientWidth, h = bc.clientHeight; const tm = B.sc.getTransformMatrix(); const vp = B.cam.viewport.toGlobal(w, h);
+  const steps = B.level === 0 ? CIRCUITS[B.circuit].steps : null;
+  for (const lb of B.labels) {
+    let show = lb.lvl === B.level && !B.camAnim;
+    if (show && B.level === 0) show = B.circuit === 0 ? ['moteur', 'sensitif', 'prefrontal', 'broca', 'parietal', 'audition', 'temporal', 'vision', 'cervelet'].includes(lb.key) : steps.includes(lb.key);
+    if (!show) { lb.el.style.display = 'none'; continue; }
+    const s = BABYLON.Vector3.Project(lb.pos(), BABYLON.Matrix.IdentityReadOnly, tm, vp);
+    const vis = s.z > 0 && s.z < 1 && s.x > 0 && s.x < w && s.y > 0 && s.y < h;
+    lb.el.style.display = vis ? '' : 'none'; if (vis) lb.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px)`;
+    if (B.level === 0 && B.circuit > 0) lb.el.classList.toggle('hot', steps[B.stepIdx] === lb.key);
+  }
+  updateBrainSide(liveStep);
+  drawBrainGraph(liveStep);
+}
+
+function updateBrainSide(step) {
+  const B = brain; const lv = B.level;
+  const key = lv + ':' + (lv === 0 ? B.circuit : lv === 1 ? step : B.nt);
+  if (key !== B.lastKey) {
+    B.lastKey = key;
+    if (lv === 0) { const c = CIRCUITS[B.circuit]; $('bEyebrow').textContent = `Échelle 1 sur 3 · Cerveau` + (B.circuit ? ` · circuit ${B.circuit} sur 5` : ''); $('bTitle').textContent = c.nom; $('bText').textContent = c.d; }
+    else if (lv === 1) { const s = AP_STEPS[step]; $('bEyebrow').textContent = `Échelle 2 sur 3 · Neurone · ${s[1]}`; $('bTitle').textContent = s[0]; $('bText').textContent = s[3]; markBrainList(step); }
+    else { const n = NTS[B.nt]; $('bEyebrow').textContent = `Échelle 3 sur 3 · Synapse · ${n.sign > 0.9 ? 'excitateur' : n.sign < 0 ? 'inhibiteur' : 'modulateur'}`; $('bTitle').textContent = n.nom; $('bText').textContent = n.d; }
+  }
+  const box = (n, v, on) => `<div class="valve ${on ? 'open' : 'shut'}"><span>${n}</span><b>${v}</b></div>`;
+  let html;
+  if (lv === 0) {
+    const c = CIRCUITS[B.circuit];
+    if (!B.circuit) html = box('Neurones', '≈ 86 milliards', true) + box('Connexions', '≈ 100 000 milliards', true) + box('Poids', '≈ 1,4 kg', true) + box('Énergie', '20 % du corps', true);
+    else { const a = AREAS[c.steps[Math.max(0, B.stepIdx)]]; html = box('Étape', `${Math.max(0, B.stepIdx) + 1} / ${c.steps.length}`, true) + `<div class="valve open" style="grid-column:1/-1;flex-direction:column;align-items:flex-start"><b style="color:${a[0]}">${a[1]}</b><span>${a[2]}</span></div>`; }
+  } else if (lv === 1) {
+    html = box('Tension au point de mesure', `${Math.round(B.v)} mV`, B.v > -55) + box('Canaux Na⁺', step === 1 ? 'ouverts' : 'fermés', step === 1) + box('Canaux K⁺', step === 2 || step === 3 ? 'ouverts' : 'fermés', step >= 2) + box('Vitesse réelle', "jusqu'à 120 m/s", true);
+  } else {
+    const n = NTS[B.nt]; html = box('Neurone suivant', `${Math.round(B.v)} mV`, Math.abs(B.v + 70) > 1) + box('Effet', n.sign > 0.9 ? 'excite' : n.sign < 0 ? 'freine' : 'module', true) + box('Molécules libres', `${B.ntd.list.length}`, true) + box('Délai synaptique', '≈ 0,5 ms', true);
+  }
+  if (html !== B.lastStats) { $('bStats').innerHTML = html; B.lastStats = html; }
+}
+
+function drawBrainGraph(step) {
+  const w = bgC.clientWidth, h = bgC.clientHeight; const dpr = Math.min(devicePixelRatio, 2);
+  if (bgC.width !== Math.round(w * dpr) || bgC.height !== Math.round(h * dpr)) { bgC.width = Math.round(w * dpr); bgC.height = Math.round(h * dpr); }
+  const g = bgx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const gx = 14, gw = w - 28, H = h - 22; g.font = '11px "IBM Plex Mono", monospace'; g.textAlign = 'left';
+  const B = brain;
+  if (B.level === 0) {
+    const c = CIRCUITS[B.circuit];
+    if (!B.circuit) { g.fillStyle = '#a9b1b8'; g.fillText('Choisissez un circuit dans la liste pour suivre un influx à travers le cerveau.', gx, H / 2 + 4); return; }
+    const n = c.steps.length; const bw = gw / n;
+    c.steps.forEach((s, i) => { const on = i === B.stepIdx; g.fillStyle = AREAS[s][0]; g.globalAlpha = on ? 0.9 : 0.25; g.fillRect(gx + i * bw + 2, 8, bw - 4, H - 12); g.globalAlpha = 1; g.fillStyle = on ? '#09121b' : '#ece5d5'; g.font = '600 12px "IBM Plex Sans", system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(AREAS[s][1].split(' (')[0], gx + i * bw + bw / 2, 8 + (H - 12) / 2 + 4, bw - 10); });
+    g.textAlign = 'left'; g.font = '11px "IBM Plex Mono", monospace'; g.fillStyle = '#a9b1b8'; g.fillText(`Parcours de l'influx · ${c.nom}`, gx, h - 3); return;
+  }
+  const lo = B.level === 1 ? -90 : -80, hi = B.level === 1 ? 50 : -55; const yOf = v => 6 + (hi - v) / (hi - lo) * (H - 10);
+  g.strokeStyle = 'rgba(169,177,184,.35)'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(gx, yOf(-70)); g.lineTo(gx + gw, yOf(-70)); g.stroke();
+  if (B.level === 1) { g.strokeStyle = 'rgba(255,159,67,.5)'; g.beginPath(); g.moveTo(gx, yOf(-55)); g.lineTo(gx + gw, yOf(-55)); g.stroke(); g.fillStyle = '#ff9f43'; g.fillText('seuil −55 mV', gx + gw - 92, yOf(-55) - 3); }
+  g.setLineDash([]); g.fillStyle = '#a9b1b8'; g.fillText('−70 mV', gx + 2, yOf(-70) - 3);
+  const span = B.level === 1 ? 3 : 4; const col = B.level === 1 ? '#ffd36b' : NTS[B.nt].c;
+  g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); B.hist.forEach(([t, v], i) => { const x = gx + gw - (B.t - t) / span * gw; const y = yOf(clamp(v, lo, hi)); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+  g.fillStyle = '#a9b1b8'; g.fillText(B.level === 1 ? "Potentiel de membrane au point de mesure (nœud 4) · ralenti ≈ ×1000" : `Potentiel du neurone suivant · ${NTS[B.nt].sign > 0.9 ? 'PPSE (excitation)' : NTS[B.nt].sign < 0 ? 'PPSI (inhibition)' : 'effet modulateur, plus faible et plus lent'}`, gx, h - 3);
+}
+
+
+loadBody().catch(err => { console.error(err); loaderEl.querySelector('span').textContent = "Le modèle 3D n'a pas pu se charger. Rechargez la page."; loaderEl.querySelector('b').textContent = ''; });
+renderHome(); setBpm(70);
+})();
+</script>
