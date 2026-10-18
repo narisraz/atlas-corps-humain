@@ -204,6 +204,11 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
 .phase-list li i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
 .phase-list li span:last-child { font: 11px var(--font-mono); }
 .phase-list li.on { background: var(--ink-3); color: var(--bone); }
+.phase-list li { cursor: pointer; }
+.phase-list li:hover { color: var(--bone); }
+.phase-list li.lu { outline: 1px solid var(--c); }
+.phase-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.phase-nav .btn { padding: 5px 10px; font-size: 12.5px; }
 .valves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .valve { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
 .valve b { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
@@ -294,17 +299,13 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
         <div class="stage-tools"><button class="btn primary" id="cutBtn">Coupe</button><button class="btn primary" id="labBtn">Étiquettes</button><span class="zoom-tools"><button class="btn" id="zoomOut" aria-label="Dézoomer">−</button><button class="btn" id="zoomIn" aria-label="Zoomer">+</button><button class="btn" id="zoomReset">Recentrer</button></span></div>
         <div id="deepLoad" hidden>Chargement du cœur 3D…</div><canvas id="deepEcg"></canvas></div>
       <div class="deep-side">
-        <div class="phase-card">
-          <div class="eyebrow" id="phaseEyebrow">Phase 1 sur 5</div>
-          <h3 id="phaseTitle"></h3>
-          <p id="phaseText"></p>
-        </div>
+        <div class="phase-card" id="phaseCard" aria-live="polite"></div>
+        <ol class="phase-list" id="phaseList"></ol>
         <div class="etat"><h3 class="eyebrow">État du corps</h3><div id="etat" class="etat"></div></div>
         <div>
           <h3 class="eyebrow" style="margin:0 0 8px">Valves</h3>
           <div class="valves" id="valves"></div>
         </div>
-        <ol class="phase-list" id="phaseList"></ol>
         <p class="hint">Coupe « 4 cavités » du vrai cœur (Z-Anatomy) : la droite du patient est à gauche de l'écran. Bleu : sang pauvre en oxygène, envoyé aux poumons. Rouge : sang riche en oxygène, envoyé au corps. Faites tourner le cœur avec la souris ou le doigt, zoomez à la molette ou en pinçant.</p>
       </div>
     </div>
@@ -1286,7 +1287,7 @@ function renderFrise(D) {
   el.querySelectorAll('span').forEach((s, i) => s.onclick = () => { annonce.file = [pas[i]]; annonce.t = 0; });
 }
 
-const deep = { p: 0.55, rr: 1, etat: null, speed: 0.5, playing: true, lastPhase: -1, flash: 0, flashTxt: '', cut: true, labels: window.innerWidth > 820, sc: null, loading: null };
+const deep = { focusPhase: null, p: 0.55, rr: 1, etat: null, speed: 0.5, playing: true, lastPhase: -1, flash: 0, flashTxt: '', cut: true, labels: window.innerWidth > 820, sc: null, loading: null };
 const hc = $('heartCanvas'); const deepEcgC = $('deepEcg'); const dx = deepEcgC.getContext('2d');
 const labelBox = $('deepLabels'); const flashEl = $('deepFlash');
 const H3 = h => BABYLON.Color3.FromHexString(h);
@@ -1524,22 +1525,36 @@ function setLabels(on) { deep.labels = on; $('labBtn').classList.toggle('primary
 const phaseIdx = p => PHASES.findIndex(ph => p >= ph.a && p < ph.b);
 const phaseList = $('phaseList');
 phaseList.innerHTML = PHASES.map((ph, i) => `<li data-i="${i}" style="--c:${ph.c}"><i></i><span>${ph.t}</span><span>${ph.ecg}</span></li>`).join('');
-phaseList.querySelectorAll('li').forEach(li => li.onclick = () => { deep.p = PHASES[+li.dataset.i].a + 0.001; });
-// La carte de phase garde la hauteur de son texte le plus long : sinon tout le panneau
-// (état du corps, recherche, curseurs) saute à chaque phase pendant l'animation
+phaseList.querySelectorAll('li').forEach(li => li.onclick = () => focusPhase(+li.dataset.i));
+// Lire sans courir après l'animation : en « cycle complet », le texte ne bouge pas ; en choisissant
+// une phase, le cœur rejoue cette phase seule, en boucle et au ralenti, et son texte reste affiché.
+function renderPhaseCard(i = deep.focusPhase) {
+  const card = $('phaseCard');
+  if (i == null) {
+    card.innerHTML = `<div class="eyebrow">Cycle complet · 5 phases</div><h3>Regarder le cœur battre</h3>
+      <p>Choisis une phase ci-dessous, ou « Phase suivante », pour la revoir seule, en boucle et au ralenti, avec son explication.</p>`;
+  } else {
+    const ph = PHASES[i];
+    card.innerHTML = `<div class="eyebrow">Phase ${i + 1} sur 5 · ECG : ${ph.ecg}</div><h3>${ph.t}</h3><p>${ph.d}</p>
+      <div class="phase-nav"><button class="btn" data-n="-1">‹ Précédente</button><button class="btn" data-n="1">Suivante ›</button><button class="btn" data-n="0">Tout le cycle</button></div>`;
+    card.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { const n = +b.dataset.n; focusPhase(n ? (i + n + 5) % 5 : null); });
+  }
+}
+function focusPhase(i) {
+  deep.focusPhase = i;
+  if (i != null) { deep.p = PHASES[i].a + 0.001; if (!deep.playing) $('playBtn').click(); }
+  renderPhaseCard(); deep.lastPhase = -1;
+  phaseList.querySelectorAll('li').forEach((li, k) => li.classList.toggle('lu', k === i));
+}
+// La carte garde la hauteur de son contenu le plus long : le panneau ne saute jamais
 function lockPhaseHeight() {
-  const card = $('phaseText').closest('.phase-card'); if (!card.offsetParent) return;
-  const keep = [$('phaseEyebrow').textContent, $('phaseTitle').textContent, $('phaseText').textContent];
+  const card = $('phaseCard'); if (!card.offsetParent) return;
   card.style.minHeight = ''; let h = 0;
-  PHASES.forEach((ph, i) => { $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`; $('phaseTitle').textContent = ph.t; $('phaseText').textContent = ph.d; h = Math.max(h, card.offsetHeight); });
-  [$('phaseEyebrow').textContent, $('phaseTitle').textContent, $('phaseText').textContent] = keep;
-  card.style.minHeight = h + 'px';
+  for (const i of [null, 0, 1, 2, 3, 4]) { renderPhaseCard(i); h = Math.max(h, card.offsetHeight); }
+  renderPhaseCard(); card.style.minHeight = h + 'px';
 }
 window.addEventListener('resize', () => { if (state.deepOpen === 'coeur') lockPhaseHeight(); });
 function updateDeepText(i) {
-  const ph = PHASES[i];
-  $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`;
-  $('phaseTitle').textContent = ph.t; $('phaseText').textContent = ph.d;
   phaseList.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === i));
   const av = avOpen(deep.p), sl = slOpen(deep.p);
   $('valves').innerHTML = [['Tricuspide', av], ['Mitrale', av], ['Pulmonaire', sl], ['Aortique', sl]]
@@ -1557,7 +1572,10 @@ function drawHeartDeep(dt) {
   const D = deep.etat; const bpmEff = clamp(state.bpm + (D ? D.bpm - 68 : 0), 35, 200);
   if (deep.playing) {
     if (deep.ralenti > 0) deep.ralenti -= dt;
-    deep.p += dt * deep.speed * (deep.ralenti > 0 ? 0.35 : 1) * bpmEff / 60 / deep.rr;
+    if (deep.focusPhase != null) { // une seule phase, étirée sur ~3 s à ×½, en boucle
+      const ph = PHASES[deep.focusPhase]; deep.p += dt * (ph.b - ph.a) / 3 * (deep.speed / 0.5);
+      if (deep.p >= ph.b || deep.p < ph.a) deep.p = ph.a + 0.001;
+    } else deep.p += dt * deep.speed * (deep.ralenti > 0 ? 0.35 : 1) * bpmEff / 60 / deep.rr;
     if (deep.p >= 1) { deep.p %= 1; deep.rr = deep.rr < 1 ? 1.45 : (D && Math.random() < D.ectopie ? 0.55 : 1); }
   }
   const p = deep.p; const v = ventContract(p), a = atrContract(p);
@@ -1662,7 +1680,7 @@ function setSpeed(s) { deep.speed = s; document.querySelectorAll('#speed button'
 document.querySelectorAll('#speed button').forEach(b => b.onclick = () => setSpeed(+b.dataset.s));
 setSpeed(0.5);
 $('playBtn').onclick = () => { deep.playing = !deep.playing; $('playBtn').textContent = deep.playing ? 'Pause' : 'Lecture'; };
-$('stepBtn').onclick = () => { const i = phaseIdx(deep.p); deep.p = PHASES[(i + 1) % 5].a + 0.001; };
+$('stepBtn').onclick = () => focusPhase(((deep.focusPhase ?? phaseIdx(deep.p)) + 1) % 5);
 $('cutBtn').onclick = () => setCut(!deep.cut);
 // Zoom par boutons : glissement doux vers le nouveau rayon
 const zoomBy = f => { if (deep.cam) deep.zoom = { r: clamp((deep.zoom ? deep.zoom.r : deep.cam.radius) * f, deep.cam.lowerRadiusLimit, deep.cam.upperRadiusLimit) }; };
