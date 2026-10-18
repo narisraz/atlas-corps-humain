@@ -1312,13 +1312,40 @@ async function initHeart3D() {
     M[k] = parts.length === 1 ? parts[0] : BABYLON.Mesh.MergeMeshes(parts, true, true, undefined, true, false);
     M[k].name = k; C[k] = meanOf(M[k]);
   }
+  // Coupe pleine (Blender, booléen appliqué) : les parois des cavités sont pleines, comme sur le rendu
+  const cutRes = await BABYLON.SceneLoader.ImportMeshAsync('', '', await fetchModel('coeur3d-coupe.txt', () => {}), sc, null, '.glb');
+  for (const g of cutRes.animationGroups) g.dispose();
+  const cutBy = {}, faces = {};
+  for (const m of cutRes.meshes) {
+    if (!m.getTotalVertices || !m.getTotalVertices()) continue;
+    const face = m.material && m.material.name === 'Coupe';
+    m.skeleton = null; for (const kd of ['matricesIndices', 'matricesWeights', 'color']) m.removeVerticesData(kd);
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices();
+    m.position.set(...HEART_OFFSET); m.bakeCurrentTransformIntoVertices(); m.isPickable = false;
+    (face ? faces : cutBy)[(m.name || '').replace(/_primitive\d+$/, '')] = m;
+  }
+  for (const n of cutRes.transformNodes) n.dispose();
+  const COUPE_K = ['og', 'od', 'vg', 'vd', 'piliers'];
   // Plan de coupe « 4 cavités » : contient l'axe droite-gauche et l'axe base-pointe
   const lr = C.og.add(C.vg).subtract(C.od.add(C.vd)).normalize();
   const ba = C.vg.add(C.vd).subtract(C.og.add(C.od)).normalize();
   let n = BABYLON.Vector3.Cross(lr, ba).normalize(); if (n.z < 0) n = n.negate();
   const c0 = C.og.add(C.vg).add(C.od).add(C.vd).scale(0.25);
-  const plane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.004))));
-  const vplane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.014))));
+  // Le plan de coupe est celui du modèle Blender : on le retrouve à partir de ses faces de coupe
+  let p0 = c0.add(n.scale(0.004)), pv = c0.add(n.scale(0.014));
+  const fl = Object.values(faces);
+  if (fl.length) {
+    const sN = V3(0, 0, 0), sP = V3(0, 0, 0); let cnt = 0, ref = null;
+    for (const f of fl) { const P = f.getVerticesData('position'), N = f.getVerticesData('normal');
+      for (let i = 0; i < P.length; i += 3) { const v = V3(N[i], N[i + 1], N[i + 2]); if (!ref) ref = v; if (BABYLON.Vector3.Dot(v, ref) < 0) v.scaleInPlace(-1); sN.addInPlace(v); sP.addInPlaceFromFloats(P[i], P[i + 1], P[i + 2]); cnt++; } }
+    n = sN.normalize(); const pc = sP.scale(1 / cnt);
+    // La moitié gardée doit être du côté négatif du plan (Babylon coupe le côté positif)
+    const kept = Object.values(cutBy).reduce((a, m) => a.add(meanOf(m)), V3(0, 0, 0)).scale(1 / Object.keys(cutBy).length);
+    if (BABYLON.Vector3.Dot(n, kept.subtract(pc)) > 0) n = n.negate();
+    p0 = pc.add(n.scale(0.0008)); pv = pc.add(n.scale(0.003));
+  }
+  const plane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, p0));
+  const vplane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, pv));
   const mats = {}, terr = {};
   for (const [k, [col, cut]] of Object.entries(HEART_PARTS)) {
     const m = M[k]; if (!m) continue;
@@ -1332,6 +1359,19 @@ async function initHeart3D() {
       m.material = mm;
     } else m.material = mt;
   }
+  // Parois pleines : enfants des cavités (elles battent avec elles), affichées seulement en mode coupe
+  const faceMat = new BABYLON.StandardMaterial('m_coupe', sc); faceMat.diffuseColor = H3('#94564e');
+  faceMat.specularColor = new BABYLON.Color3(0.04, 0.03, 0.03); faceMat.backFaceCulling = false; faceMat.twoSidedLighting = true;
+  const pleins = {};
+  for (const k of COUPE_K) {
+    if (!M[k]) continue; const names = HEART_SRC[k]; pleins[k] = [];
+    const ps = names.map(nm => cutBy[nm]).filter(Boolean);
+    if (ps.length) { const m = ps.length === 1 ? ps[0] : BABYLON.Mesh.MergeMeshes(ps, true, true, undefined, true, false);
+      m.material = ps.length === names.length ? M[k].material : mats[k]; m.parent = M[k]; pleins[k].push(m); }
+    const fs = names.map(nm => faces[nm]).filter(Boolean);
+    if (fs.length) { const f = fs.length === 1 ? fs[0] : BABYLON.Mesh.MergeMeshes(fs, true, true); f.material = faceMat; f.parent = M[k]; pleins[k].push(f); }
+  }
+  for (const m of [...Object.values(cutBy), ...Object.values(faces)]) if (!m.isDisposed() && !m.parent) m.dispose();
   // Infarctus : le territoire privé d'oxygène pâlit (gris violacé), la contraction y faiblit
   const PALE = H3('#bfa6a9');
   const zoneIsch = isch => { for (const k in terr) for (const c of terr[k]) BABYLON.Color3.LerpToRef(c.metadata.base, PALE, clamp(isch[c.metadata.t] || 0, 0, 1) * 0.85, c.diffuseColor); };
@@ -1396,12 +1436,14 @@ async function initHeart3D() {
   // Étiquettes
   const LABELS = [
     ['Oreillette droite', C.od], ['Ventricule droit', apex('vd').add(C.vd).scale(0.5)], ['Oreillette gauche', C.og], ['Ventricule gauche', apex('vg').add(C.vg).scale(0.5)],
-    ['Valve tricuspide', avTri.center, 1], ['Valve mitrale', mitC, 1], ['Valve aortique', slAo.center, 1],
-    ['Aorte', P([-0.006, 1.362, 0.03])], ['Veine cave sup.', P([0.0144, 1.37, 0.023])],
-    ['Artère pulmonaire gauche', (() => { const T = M.tronc_pulm.getVerticesData('position'); const s = V3(0, 0, 0); let c = 0; for (let i = 0; i < T.length; i += 3) if (T[i] < C.og.x - 0.04) { s.addInPlaceFromFloats(T[i], T[i + 1], T[i + 2]); c++; } return c ? s.scale(1 / c) : C.tronc_pulm; })()],
-  ].map(([t, p, v]) => { const el = document.createElement('div'); el.className = 'lab' + (v ? ' v' : ''); el.textContent = t; labelBox.appendChild(el); return { el, p }; });
+    ['Valve tricuspide', avTri.center, 1], ['Valve mitrale', mitC, 1], ['Valve aortique', slAo.center, 1, 'h'],
+    ['Aorte', P([-0.006, 1.362, 0.03]), 0, 'h'], ['Veine cave sup.', P([0.0144, 1.37, 0.023]), 0, 'h'],
+    ['Septum interventriculaire', apex('vg').add(apex('vd')).scale(0.5).scale(0.8).add(C.vg.add(C.vd).scale(0.5).scale(0.2)), 0, 'c'],
+    ['Septum interauriculaire', C.og.add(C.od).scale(0.5).add(ba.scale(-0.016)), 0, 'c'],
+    ['Artère pulmonaire gauche', (() => { const T = M.tronc_pulm.getVerticesData('position'); const s = V3(0, 0, 0); let c = 0; for (let i = 0; i < T.length; i += 3) if (T[i] < C.og.x - 0.04) { s.addInPlaceFromFloats(T[i], T[i + 1], T[i + 2]); c++; } return c ? s.scale(1 / c) : C.tronc_pulm; })(), 0, 'h'],
+  ].map(([t, p, v, mode]) => { const el = document.createElement('div'); el.className = 'lab' + (v ? ' v' : ''); el.textContent = t; labelBox.appendChild(el); return { el, p, mode }; });
 
-  deep.sc = sc; deep.eng = eng; deep.cam = cam; deep.M = M; deep.C = C; deep.mats = mats; deep.valves = valves; deep.parts = parts; deep.labelsList = LABELS; deep.plane = plane; deep.vplane = vplane; deep.terr = terr; deep.zoneIsch = zoneIsch; deep.c0 = c0;
+  deep.sc = sc; deep.eng = eng; deep.cam = cam; deep.M = M; deep.C = C; deep.mats = mats; deep.valves = valves; deep.parts = parts; deep.labelsList = LABELS; deep.plane = plane; deep.vplane = vplane; deep.terr = terr; deep.zoneIsch = zoneIsch; deep.c0 = c0; deep.pleins = pleins;
   deep.avValves = [avTri, avMit]; deep.slValves = [slPu, slAo]; window.__deep = deep;
 }
 
@@ -1411,6 +1453,10 @@ function setCut(on) {
     if (deep.mats[k]) deep.mats[k].clipPlane = on ? (cut ? deep.plane : deep.vplane) : null;
     for (const c of deep.terr[k] || []) c.clipPlane = on ? deep.plane : null;
   }
+  // En coupe, les cavités pleines remplacent la découpe à l'affichage
+  if (deep.pleins) for (const k in deep.pleins) if (deep.pleins[k].length) { deep.M[k].isVisible = !on; for (const m of deep.pleins[k]) m.setEnabled(on); }
+  // Comme sur le rendu : le tronc pulmonaire et les valves sigmoïdes sont dans la moitié retirée
+  if (deep.pleins) for (const k of ['tronc_pulm', 'aorte', 'ao_lc', 'ao_nc', 'ao_rc', 'pu_ant', 'pu_l', 'pu_r']) if (deep.M[k]) deep.M[k].isVisible = !on;
 }
 function setLabels(on) { deep.labels = on; $('labBtn').classList.toggle('primary', on); labelBox.hidden = !on; }
 
@@ -1478,7 +1524,9 @@ function drawHeartDeep(dt) {
       catmull(q.pts, q.s, tmpV);
       const ii = Math.min(5, Math.floor(q.s)), t = q.s - ii; const rad = R[ii] + (R[ii + 1] - R[ii]) * t;
       tmpV.addInPlace(q.off.scale(rad));
-      const o = n * 16; buf[o] = buf[o + 5] = buf[o + 10] = 1; buf[o + 12] = tmpV.x; buf[o + 13] = tmpV.y; buf[o + 14] = tmpV.z; buf[o + 15] = 1;
+      // En coupe, le sang est ramené juste derrière le plan, dans les cavités visibles
+      if (deep.cut && deep.pleins) { const d = deep.plane.signedDistanceTo(tmpV) + 0.003 + 0.004 * q.j; if (d > 0) tmpV.subtractInPlace(deep.plane.normal.scale(d)); }
+      const o = n * 16; buf[o] = buf[o + 5] = buf[o + 10] = deep.cut && deep.pleins && q.s > 5 ? 0 : 1; buf[o + 12] = tmpV.x; buf[o + 13] = tmpV.y; buf[o + 14] = tmpV.z; buf[o + 15] = 1;
     }
     fl.mesh.thinInstanceBufferUpdated('matrix');
   }
@@ -1499,7 +1547,7 @@ function drawHeartDeep(dt) {
     const tm = deep.sc.getTransformMatrix(); const vp = deep.cam.viewport.toGlobal(w, h);
     for (const L of deep.labelsList) {
       const s = BABYLON.Vector3.Project(L.p, BABYLON.Matrix.IdentityReadOnly, tm, vp);
-      const vis = s.z > 0 && s.z < 1 && s.x > 0 && s.x < w && s.y > 0 && s.y < h;
+      const vis = s.z > 0 && s.z < 1 && s.x > 0 && s.x < w && s.y > 0 && s.y < h && !(L.mode === 'h' && deep.cut) && !(L.mode === 'c' && !deep.cut);
       L.el.style.display = vis ? '' : 'none'; if (vis) L.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px)`;
     }
   }

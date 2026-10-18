@@ -11,7 +11,7 @@ Version en ligne : GitHub Pages de ce dépôt. En local, servir le dossier (par 
 ## Contenu
 
 - `index.html` : toute l'application (Babylon.js 7.54 via CDN).
-- `corps.txt`, `coeur3d.txt`, `poumons3d.txt`, `cerveau3d.txt` : modèles GLB compressés (gzip + base64), décodés dans le navigateur.
+- `corps.txt`, `coeur3d.txt` (cœur entier), `coeur3d-coupe.txt` (coupe 4 cavités à parois pleines), `poumons3d.txt`, `cerveau3d.txt` : modèles GLB compressés (gzip + base64), décodés dans le navigateur.
 - `medicaments.txt` : médicaments commercialisés en France et leurs principes actifs (gzip + base64), tirés de la base de données publique des médicaments.
 - `trajets.json` : trajets réels des vaisseaux, nerfs et uretères.
 - `outils/` : scripts d'export Blender (Z-Anatomy → GLB) et sources JS ; `assemble.py` construit `index.html`.
