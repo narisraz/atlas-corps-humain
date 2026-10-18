@@ -1,0 +1,441 @@
+{
+  "fichier": "coeur-web-atlas.glb",
+  "unite": "metre (coeur ~12 cm)",
+  "axe_haut": "+Y (glTF)",
+  "orientation": {
+    "anterieur_patient": "+Z",
+    "gauche_patient": "+X"
+  },
+  "noeuds": [
+    {
+      "nom": "Oreillettes"
+    },
+    {
+      "nom": "Ventricules"
+    },
+    {
+      "nom": "Racine"
+    },
+    {
+      "nom": "Anterior interventricular artery",
+      "mesh": "Anterior interventricular artery",
+      "categorie": "coronaires",
+      "nom_fr": "Artère interventriculaire antérieure (IVA)"
+    },
+    {
+      "nom": "Anterior papillary muscle of right ventricle",
+      "mesh": "Anterior papillary muscle of right ventricle",
+      "categorie": "papillaires",
+      "nom_fr": "Pilier antérieur du ventricule droit"
+    },
+    {
+      "nom": "Anterior semilunar leaflet of pulmonary valve",
+      "mesh": "Anterior semilunar leaflet of pulmonary valve",
+      "categorie": "valves",
+      "nom_fr": "Valve pulmonaire, valvule antérieure"
+    },
+    {
+      "nom": "Aortic arch",
+      "mesh": "Aortic arch",
+      "categorie": "arteres",
+      "nom_fr": "Crosse de l'aorte"
+    },
+    {
+      "nom": "Ascending aorta",
+      "mesh": "Ascending aorta",
+      "categorie": "arteres",
+      "nom_fr": "Aorte ascendante"
+    },
+    {
+      "nom": "Bifurcation of pulmonary trunk",
+      "mesh": "Bifurcation of pulmonary trunk",
+      "categorie": "arteres_pulm",
+      "nom_fr": "Bifurcation du tronc pulmonaire"
+    },
+    {
+      "nom": "Brachiocephalic trunk",
+      "mesh": "Brachiocephalic trunk",
+      "categorie": "arteres",
+      "nom_fr": "Tronc brachiocéphalique"
+    },
+    {
+      "nom": "Circumflex artery of heart",
+      "mesh": "Circumflex artery of heart",
+      "categorie": "coronaires",
+      "nom_fr": "Artère circonflexe"
+    },
+    {
+      "nom": "Coronary sinus",
+      "mesh": "Coronary sinus",
+      "categorie": "veines_card",
+      "nom_fr": "Sinus coronaire"
+    },
+    {
+      "nom": "Great cardiac vein",
+      "mesh": "Great cardiac vein",
+      "categorie": "veines_card",
+      "nom_fr": "Grande veine du cœur"
+    },
+    {
+      "nom": "Inferior leaflet of right atrioventricular valve",
+      "mesh": "Inferior leaflet of right atrioventricular valve",
+      "categorie": "valves",
+      "nom_fr": "Valve tricuspide, feuillet inférieur"
+    },
+    {
+      "nom": "Inferior papillary muscle of left ventricle",
+      "mesh": "Inferior papillary muscle of left ventricle",
+      "categorie": "papillaires",
+      "nom_fr": "Pilier inférieur du ventricule gauche"
+    },
+    {
+      "nom": "Inferior papillary muscle of right ventricle",
+      "mesh": "Inferior papillary muscle of right ventricle",
+      "categorie": "papillaires",
+      "nom_fr": "Pilier inférieur du ventricule droit"
+    },
+    {
+      "nom": "Inferior vein of left ventricle",
+      "mesh": "Inferior vein of left ventricle",
+      "categorie": "veines_card",
+      "nom_fr": "Veine inférieure du ventricule gauche"
+    },
+    {
+      "nom": "Inferior vena cava (thoracic part)",
+      "mesh": "Inferior vena cava (thoracic part)",
+      "categorie": "veines_caves",
+      "nom_fr": "Veine cave inférieure (partie thoracique)"
+    },
+    {
+      "nom": "Left atrium",
+      "mesh": "Left atrium",
+      "categorie": "myocarde_a",
+      "nom_fr": "Oreillette gauche"
+    },
+    {
+      "nom": "Left common carotid artery",
+      "mesh": "Left common carotid artery",
+      "categorie": "arteres",
+      "nom_fr": "Artère carotide commune gauche"
+    },
+    {
+      "nom": "Left coronary artery",
+      "mesh": "Left coronary artery",
+      "categorie": "coronaires",
+      "nom_fr": "Tronc commun de la coronaire gauche"
+    },
+    {
+      "nom": "Left coronary leaflet",
+      "mesh": "Left coronary leaflet",
+      "categorie": "valves",
+      "nom_fr": "Valve aortique, valvule coronaire gauche"
+    },
+    {
+      "nom": "Left inferior pulmonary vein",
+      "mesh": "Left inferior pulmonary vein",
+      "categorie": "veines_pulm",
+      "nom_fr": "Veine pulmonaire inférieure gauche"
+    },
+    {
+      "nom": "Left pulmonary artery",
+      "mesh": "Left pulmonary artery",
+      "categorie": "arteres_pulm",
+      "nom_fr": "Artère pulmonaire gauche"
+    },
+    {
+      "nom": "Left semilunar leaflet of pulmonary valve",
+      "mesh": "Left semilunar leaflet of pulmonary valve",
+      "categorie": "valves",
+      "nom_fr": "Valve pulmonaire, valvule gauche"
+    },
+    {
+      "nom": "Left subclavian artery",
+      "mesh": "Left subclavian artery",
+      "categorie": "arteres",
+      "nom_fr": "Artère subclavière gauche"
+    },
+    {
+      "nom": "Left superior pulmonary vein",
+      "mesh": "Left superior pulmonary vein",
+      "categorie": "veines_pulm",
+      "nom_fr": "Veine pulmonaire supérieure gauche"
+    },
+    {
+      "nom": "Left ventricle - LAD",
+      "mesh": "Left ventricle - LAD",
+      "categorie": "myocarde_v",
+      "nom_fr": "Ventricule gauche, territoire interventriculaire antérieure",
+      "territoire": "interventriculaire antérieure"
+    },
+    {
+      "nom": "Left ventricle - LCx",
+      "mesh": "Left ventricle - LCx",
+      "categorie": "myocarde_v",
+      "nom_fr": "Ventricule gauche, territoire circonflexe",
+      "territoire": "circonflexe"
+    },
+    {
+      "nom": "Left ventricle - RCA",
+      "mesh": "Left ventricle - RCA",
+      "categorie": "myocarde_v",
+      "nom_fr": "Ventricule gauche, territoire coronaire droite",
+      "territoire": "coronaire droite"
+    },
+    {
+      "nom": "Middle cardiac vein",
+      "mesh": "Middle cardiac vein",
+      "categorie": "veines_card",
+      "nom_fr": "Veine moyenne du cœur"
+    },
+    {
+      "nom": "Non-coronary leaflet",
+      "mesh": "Non-coronary leaflet",
+      "categorie": "valves",
+      "nom_fr": "Valve aortique, valvule non coronaire"
+    },
+    {
+      "nom": "Posterior leaflet of left atrioventricular valve",
+      "mesh": "Posterior leaflet of left atrioventricular valve",
+      "categorie": "valves",
+      "nom_fr": "Valve mitrale, feuillet postérieur"
+    },
+    {
+      "nom": "Posterior vein of left ventricle",
+      "mesh": "Posterior vein of left ventricle",
+      "categorie": "veines_card",
+      "nom_fr": "Veine postérieure du ventricule gauche"
+    },
+    {
+      "nom": "Pulmonary trunk",
+      "mesh": "Pulmonary trunk",
+      "categorie": "arteres_pulm",
+      "nom_fr": "Tronc pulmonaire"
+    },
+    {
+      "nom": "Right atrium",
+      "mesh": "Right atrium",
+      "categorie": "myocarde_a",
+      "nom_fr": "Oreillette droite"
+    },
+    {
+      "nom": "Right coronary artery",
+      "mesh": "Right coronary artery",
+      "categorie": "coronaires",
+      "nom_fr": "Artère coronaire droite"
+    },
+    {
+      "nom": "Right coronary leaflet",
+      "mesh": "Right coronary leaflet",
+      "categorie": "valves",
+      "nom_fr": "Valve aortique, valvule coronaire droite"
+    },
+    {
+      "nom": "Right inferior pulmonary vein",
+      "mesh": "Right inferior pulmonary vein",
+      "categorie": "veines_pulm",
+      "nom_fr": "Veine pulmonaire inférieure droite"
+    },
+    {
+      "nom": "Right inferolateral branch of right coronary artery",
+      "mesh": "Right inferolateral branch of right coronary artery",
+      "categorie": "coronaires",
+      "nom_fr": "Branche inférolatérale de la coronaire droite"
+    },
+    {
+      "nom": "Right pulmonary artery",
+      "mesh": "Right pulmonary artery",
+      "categorie": "arteres_pulm",
+      "nom_fr": "Artère pulmonaire droite"
+    },
+    {
+      "nom": "Right semilunar leaflet of pulmonary valve",
+      "mesh": "Right semilunar leaflet of pulmonary valve",
+      "categorie": "valves",
+      "nom_fr": "Valve pulmonaire, valvule droite"
+    },
+    {
+      "nom": "Right superior pulmonary vein",
+      "mesh": "Right superior pulmonary vein",
+      "categorie": "veines_pulm",
+      "nom_fr": "Veine pulmonaire supérieure droite"
+    },
+    {
+      "nom": "Right ventricle - LAD",
+      "mesh": "Right ventricle - LAD",
+      "categorie": "myocarde_v",
+      "nom_fr": "Ventricule droit, territoire interventriculaire antérieure",
+      "territoire": "interventriculaire antérieure"
+    },
+    {
+      "nom": "Right ventricle - RCA",
+      "mesh": "Right ventricle - RCA",
+      "categorie": "myocarde_v",
+      "nom_fr": "Ventricule droit, territoire coronaire droite",
+      "territoire": "coronaire droite"
+    },
+    {
+      "nom": "Septal branches of anterior interventricular artery",
+      "mesh": "Septal branches of anterior interventricular artery",
+      "categorie": "coronaires",
+      "nom_fr": "Branches septales de l'IVA"
+    },
+    {
+      "nom": "Septal leaflet of right atrioventricular valve",
+      "mesh": "Septal leaflet of right atrioventricular valve",
+      "categorie": "valves",
+      "nom_fr": "Valve tricuspide, feuillet septal"
+    },
+    {
+      "nom": "Septal papillary muscle of right ventricle",
+      "mesh": "Septal papillary muscle of right ventricle",
+      "categorie": "papillaires",
+      "nom_fr": "Pilier septal du ventricule droit"
+    },
+    {
+      "nom": "Superior vena cava",
+      "mesh": "Superior vena cava",
+      "categorie": "veines_caves",
+      "nom_fr": "Veine cave supérieure"
+    },
+    {
+      "nom": "Thoracic aorta",
+      "mesh": "Thoracic aorta",
+      "categorie": "arteres",
+      "nom_fr": "Aorte thoracique descendante"
+    },
+    {
+      "nom": "Battement"
+    },
+    {
+      "nom": "Coeur"
+    }
+  ],
+  "meshes": [
+    "Anterior interventricular artery",
+    "Anterior papillary muscle of right ventricle",
+    "Anterior semilunar leaflet of pulmonary valve",
+    "Aortic arch",
+    "Ascending aorta",
+    "Bifurcation of pulmonary trunk",
+    "Brachiocephalic trunk",
+    "Circumflex artery of heart",
+    "Coronary sinus",
+    "Great cardiac vein",
+    "Inferior leaflet of right atrioventricular valve",
+    "Inferior papillary muscle of left ventricle",
+    "Inferior papillary muscle of right ventricle",
+    "Inferior vein of left ventricle",
+    "Inferior vena cava (thoracic part)",
+    "Left atrium",
+    "Left common carotid artery",
+    "Left coronary artery",
+    "Left coronary leaflet",
+    "Left inferior pulmonary vein",
+    "Left pulmonary artery",
+    "Left semilunar leaflet of pulmonary valve",
+    "Left subclavian artery",
+    "Left superior pulmonary vein",
+    "Left ventricle - LAD",
+    "Left ventricle - LCx",
+    "Left ventricle - RCA",
+    "Middle cardiac vein",
+    "Non-coronary leaflet",
+    "Posterior leaflet of left atrioventricular valve",
+    "Posterior vein of left ventricle",
+    "Pulmonary trunk",
+    "Right atrium",
+    "Right coronary artery",
+    "Right coronary leaflet",
+    "Right inferior pulmonary vein",
+    "Right inferolateral branch of right coronary artery",
+    "Right pulmonary artery",
+    "Right semilunar leaflet of pulmonary valve",
+    "Right superior pulmonary vein",
+    "Right ventricle - LAD",
+    "Right ventricle - RCA",
+    "Septal branches of anterior interventricular artery",
+    "Septal leaflet of right atrioventricular valve",
+    "Septal papillary muscle of right ventricle",
+    "Superior vena cava",
+    "Thoracic aorta"
+  ],
+  "materiaux": [
+    "Coronaires",
+    "Piliers",
+    "Valves",
+    "Aorte et branches",
+    "Artères pulmonaires",
+    "Veines cardiaques",
+    "Veines caves",
+    "Myocarde oreillettes",
+    "Veines pulmonaires",
+    "Territoire IVA",
+    "Territoire circonflexe",
+    "Territoire coronaire droite"
+  ],
+  "os": [
+    "Racine",
+    "Oreillettes",
+    "Ventricules"
+  ],
+  "morph_targets": [],
+  "animations": [
+    {
+      "nom": "Battement",
+      "canaux": [
+        [
+          "Racine",
+          "translation"
+        ],
+        [
+          "Racine",
+          "rotation"
+        ],
+        [
+          "Racine",
+          "scale"
+        ],
+        [
+          "Oreillettes",
+          "translation"
+        ],
+        [
+          "Oreillettes",
+          "rotation"
+        ],
+        [
+          "Oreillettes",
+          "scale"
+        ],
+        [
+          "Ventricules",
+          "translation"
+        ],
+        [
+          "Ventricules",
+          "rotation"
+        ],
+        [
+          "Ventricules",
+          "scale"
+        ]
+      ]
+    }
+  ],
+  "territoires_coronaires": {
+    "interventriculaire antérieure": [
+      "Left ventricle - LAD",
+      "Right ventricle - LAD"
+    ],
+    "circonflexe": [
+      "Left ventricle - LCx"
+    ],
+    "coronaire droite": [
+      "Left ventricle - RCA",
+      "Right ventricle - RCA"
+    ]
+  },
+  "extensions": [
+    "KHR_materials_clearcoat"
+  ]
+}
