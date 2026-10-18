@@ -17,7 +17,7 @@ licence **CC BY-SA 4.0**. Tous les fichiers dérivés de ce dossier (rendus, vid
 | `coeur-z-anatomy-tour.mp4` | Tour complet en 4 s (4 battements), EEVEE 800×800 |
 | `coeur-web.glb` | Version web : Draco, 61 641 triangles, 44 pièces, clip « Battement » |
 | `coeur-web-atlas.glb` | Version Atlas : sans Draco, ventricules découpés en territoires coronaires (47 pièces) |
-| `coeur-web-coupe.glb` (ici `../blender/coeur-web-coupe.glb`) | Atlas coupé selon le plan 4 cavités v2 : coupe appliquée à la géométrie, faces de coupe pleines (matériau « Coupe »), mêmes noms, origine, échelle et battement que `coeur-web-atlas.glb` (pièces entièrement antérieures retirées) |
+| `coeur-web-coupe.glb` | Atlas coupé selon le plan 4 cavités v2 : coupe appliquée à la géométrie, faces de coupe pleines (matériau « Coupe »), mêmes noms, origine, échelle et battement que `coeur-web-atlas.glb` (pièces entièrement antérieures retirées) |
 | `coeur.blend` | Scène complète (matériaux, graisse, battement, coupe, curseurs) |
 | `coeur_build.py` | Construit `coeur.blend` depuis la source ; bloc `REGLAGES` en tête |
 | `coeur_render.py` | Rendus : `fixe`, `coupe`, `battement`, `tour` |
