@@ -123,9 +123,74 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
 .lab { position: absolute; left: 0; top: 0; translate: -50% -50%; font: 600 12px var(--font-body); color: #ece5d5; background: rgba(9,18,27,.7); border: 1px solid rgba(236,229,213,.22); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .lab.hot { background: #ffd36b; color: #09121b; border-color: #ffd36b; }
 .lab.v { color: #e6c35c; font-weight: 500; }
-#deepFlash { position: absolute; top: 52px; left: 0; right: 0; text-align: center; font: italic 600 40px Spectral, Georgia, serif; color: #e6c35c; opacity: 0; pointer-events: none; }
+#deepFlash { position: absolute; top: 104px; left: 0; right: 0; text-align: center; font: italic 600 40px Spectral, Georgia, serif; color: #e6c35c; opacity: 0; pointer-events: none; }
 .stage-tools { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
 .stage-tools .btn { white-space: nowrap; pointer-events: auto; }
+.etat { display: flex; flex-direction: column; gap: 12px; }
+.etat > h3 { margin: 0; }
+.etat-vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.etat-vitals div { background: rgba(236,229,213,.06); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; display: flex; flex-direction: column; min-width: 0; }
+.etat-vitals span, .etat-vitals small { font-size: 11px; color: var(--bone-dim); }
+.etat-vitals b { font: 500 17px var(--font-mono); color: var(--bone); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.etat-cat h4 { margin: 4px 0 6px; font: 600 11px var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--bone-dim); }
+.etat-cas { display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto; column-gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); cursor: pointer; }
+.etat-nom { font-size: 13.5px; color: var(--bone); display: flex; flex-direction: column; }
+.etat-nom small { font-size: 11.5px; color: var(--bone-dim); }
+.etat-cas output { grid-column: 2; grid-row: 1; font: 500 12px var(--font-mono); color: var(--bone-dim); text-align: right; align-self: center; }
+.etat-cas input { grid-column: 1 / -1; width: 100%; accent-color: #e2574c; margin: 4px 0 0; }
+.etat-cas.on .etat-nom { color: #ffd36b; }
+.etat-cas.on output { color: #ffd36b; }
+.etat-fiche { background: rgba(255,211,107,.08); border: 1px solid rgba(255,211,107,.3); border-radius: 12px; padding: 10px 12px; }
+.etat-fiche h4 { margin: 0 0 4px; font-size: 14px; color: #ffd36b; }
+.etat-fiche p { margin: 0 0 6px; font-size: 13px; line-height: 1.5; color: var(--bone); }
+.etat-fiche .src { font-size: 11.5px; color: var(--bone-dim); margin: 0; }
+.etat-fiche a { color: #9fc3ff; }
+@media (max-width: 820px) { .etat-vitals { grid-template-columns: repeat(2, 1fr); } }
+.etat-vitals .chg b { color: #ffd36b; }
+.etat-search { position: relative; }
+.etat-search input { width: 100%; box-sizing: border-box; font: 15px var(--font-body); color: var(--bone); background: rgba(236,229,213,.06); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.etat-search input:focus { outline: 2px solid #e2574c; outline-offset: 1px; }
+.etat-res { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); background: #102030; border: 1px solid var(--line); border-radius: 12px; max-height: 320px; overflow-y: auto; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.etat-res button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 12px; color: var(--bone); cursor: pointer; font: 14px var(--font-body); }
+.etat-res button:hover, .etat-res button:focus { background: rgba(226,87,76,.15); }
+.etat-res small { color: var(--bone-dim); font-size: 11.5px; }
+.etat-res p { margin: 0; padding: 10px 12px; color: var(--bone-dim); font-size: 13px; }
+.etat-sugg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.etat-sugg span { font-size: 12px; color: var(--bone-dim); }
+.chip-s { font: 12.5px var(--font-body); color: var(--bone); background: rgba(236,229,213,.05); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip-s:hover { border-color: #e2574c; }
+.etat-actifs { display: flex; flex-wrap: wrap; gap: 6px; }
+.etat-actifs:empty { display: none; }
+.pastille { display: inline-flex; border-radius: 999px; background: rgba(255,211,107,.12); border: 1px solid rgba(255,211,107,.4); overflow: hidden; }
+.pastille.on { background: rgba(255,211,107,.28); }
+.pastille button { background: none; border: 0; color: #ffd36b; font: 600 12.5px var(--font-body); padding: 4px 4px 4px 10px; cursor: pointer; }
+.pastille button + button { padding: 4px 9px 4px 6px; font-size: 14px; }
+.etat-carte { background: rgba(255,211,107,.06); border: 1px solid rgba(255,211,107,.3); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.etat-carte p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--bone); }
+.etat-carte .eyebrow { font-size: 11px; color: var(--bone-dim); }
+.etat-carte h5 { margin: 4px 0 2px; font: 600 13px var(--font-body); color: #ffd36b; }
+.carte-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.carte-tete h4 { margin: 0; font-size: 16px; color: var(--bone); }
+.carte-tete .btn { padding: 4px 10px; font-size: 12px; }
+.dose { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+.dose span { font-size: 12px; color: var(--bone-dim); }
+.dose output { font: 500 12.5px var(--font-mono); color: #ffd36b; }
+.dose input { grid-column: 1 / -1; width: 100%; accent-color: #e2574c; }
+.etat-effet { background: rgba(9,18,27,.5); border-radius: 10px; padding: 8px 10px; }
+.compo { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.compo span { color: var(--bone-dim); font-family: var(--font-mono); font-size: 12px; }
+.compo em { display: block; font-style: normal; font-size: 11.5px; color: #9fc3ff; }
+.pa { border-top: 1px solid var(--line); padding-top: 6px; }
+.etat-carte .src { font-size: 11.5px; color: var(--bone-dim); }
+.etat-carte a { color: #9fc3ff; }
+#frise { position: absolute; left: 10px; right: 10px; top: 52px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; pointer-events: none; }
+#frise span { pointer-events: auto; cursor: pointer; font: 600 12.5px var(--font-body); color: #ece5d5; background: rgba(9,18,27,.78); border: 1px solid rgba(255,211,107,.45); border-radius: 999px; padding: 3px 10px; opacity: 0; animation: friseIn .4s ease forwards; }
+#frise i { font-style: normal; color: #ffd36b; font-size: 13px; }
+@keyframes friseIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+#annonce { position: absolute; left: 0; right: 0; bottom: calc(var(--ecg-h) + 16px); text-align: center; font: 600 22px var(--font-body); color: #ffd36b; text-shadow: 0 2px 12px rgba(0,0,0,.8); opacity: 0; pointer-events: none; padding-inline: 16px; }
+#deepEcg.vu { box-shadow: inset 0 0 0 2px #ffd36b; transition: box-shadow .3s; }
+@media (prefers-reduced-motion: reduce) { #frise span { animation: none; opacity: 1; } }
+@media (max-width: 820px) { #annonce { font-size: 17px; } #frise span { font-size: 11px; } }
 #deepLoad, .dload { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bone-dim); font-size: 14px; }
 .deep-side { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 .phase-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -222,7 +287,7 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
       </div>
     </div>
     <div class="deep-body">
-      <div class="deep-stage"><canvas id="heartCanvas" aria-label="Cœur en 3D, ouvert en coupe"></canvas><div id="deepLabels"></div><div id="deepFlash"></div>
+      <div class="deep-stage"><canvas id="heartCanvas" aria-label="Cœur en 3D, ouvert en coupe"></canvas><div id="deepLabels"></div><div id="deepFlash"></div><div id="frise" aria-live="polite"></div><div id="annonce" aria-live="polite"></div>
         <div class="stage-tools"><button class="btn primary" id="cutBtn">Coupe</button><button class="btn primary" id="labBtn">Étiquettes</button></div>
         <div id="deepLoad" hidden>Chargement du cœur 3D…</div><canvas id="deepEcg"></canvas></div>
       <div class="deep-side">
@@ -231,6 +296,7 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
           <h3 id="phaseTitle"></h3>
           <p id="phaseText"></p>
         </div>
+        <div class="etat"><h3 class="eyebrow">État du corps</h3><div id="etat" class="etat"></div></div>
         <div>
           <h3 class="eyebrow" style="margin:0 0 8px">Valves</h3>
           <div class="valves" id="valves"></div>
@@ -906,7 +972,275 @@ const slOpen = p => p >= 0.2 && p < 0.45;
 /* ------------------------------------------------------------------ */
 /* Plongée 3D : le vrai cœur (Z-Anatomy) ouvert en coupe 4 cavités     */
 /* ------------------------------------------------------------------ */
-const deep = { p: 0.55, speed: 0.5, playing: true, lastPhase: -1, flash: 0, flashTxt: '', cut: true, labels: window.innerWidth > 820, sc: null, loading: null };
+/* ------------------------------------------------------------------ */
+/* État du corps : causes (carences, substances, médicaments, maladies,*/
+/* situations) → variables physiologiques → cœur 3D et ECG.            */
+/* Ajouter un cas = ajouter une fiche dans CAS ou PRINCIPES, sans      */
+/* toucher au rendu. Les organes futurs liront et écriront ce même     */
+/* état : c'est ce qui donnera les réactions en chaîne.                */
+/* Modèle pédagogique simplifié, pas un avis médical.                  */
+/* ------------------------------------------------------------------ */
+const ETAT_BASE = () => ({
+  k: 4.2,          // potassium sanguin (mmol/L), normal 3,5–5,0
+  hb: 14.5,        // hémoglobine (g/dL), normal ≈ 12–17
+  dFc: 0,          // battements/min ajoutés (sympathique, caféine…)
+  fcMul: 1,        // freins du rythme (bêtabloquants…)
+  dPas: 0, dPad: 0,// pression artérielle ajoutée (mmHg)
+  cafeine: 0,      // tasses de café équivalentes
+  effort: 0,       // 0 repos → 1 effort maximal
+  ischemie: { iva: 0, cx: 0, cd: 0 }, // 0 artère libre → 1 artère bouchée
+});
+const fr = (v, d = 1) => v.toFixed(d).replace('.', ',');
+const BDPM = 'https://base-donnees-publique.medicaments.gouv.fr';
+
+// Une fiche = une cause, avec un niveau x de 0 à 1.
+const CAS = [
+  { id: 'k_bas', cat: 'Minéraux', nom: 'Potassium bas', sous: 'hypokaliémie', cles: 'potassium kaliemie hypokaliemie mineral',
+    val: x => `${fr(4.2 - 1.9 * x)} mmol/L`, organes: 'cœur (repolarisation), muscles',
+    agit: (e, x) => { e.k -= 1.9 * x; },
+    fiche: "Le potassium règle le retour au repos des cellules du cœur (repolarisation). Quand il manque (vomissements, diarrhée, diurétiques), l'onde T s'aplatit, une onde U apparaît et le segment ST s'abaisse. Sous 3 mmol/L, des battements en trop (extrasystoles) surviennent, et le risque d'arythmie grave augmente.",
+    source: ['Manuel MSD, « Hypokaliémie »', 'https://www.msdmanuals.com/fr/professional/troubles-endocriniens-et-métaboliques/troubles-électrolytiques/hypokaliémie'] },
+  { id: 'fer', cat: 'Carences', nom: 'Manque de fer', sous: 'anémie ferriprive', cles: 'fer anemie carence vitamine fatigue',
+    val: x => `Hb ${fr(14.5 - 7 * x)} g/dL`, organes: 'moelle osseuse, sang, cœur',
+    agit: (e, x) => { e.hb -= 7 * x; },
+    fiche: "Sans fer, la moelle fabrique moins d'hémoglobine : le sang transporte moins d'oxygène et devient plus pâle. Pour compenser, le cœur bat plus vite et éjecte plus fort. Une anémie sévère et durable peut fatiguer le cœur et provoquer un souffle.",
+    source: ['Manuel MSD, « Anémie ferriprive »', 'https://www.msdmanuals.com/fr/professional/hématologie-et-oncologie/anémies-dues-à-un-déficit-de-l-érythropoïèse/anémie-ferriprive'] },
+  { id: 'cafe', cat: 'Aliments et boissons', nom: 'Café', sous: 'caféine', cles: 'cafe caffeine cafeine boisson expresso',
+    val: x => { const n = Math.round(x * 5); return `${n} tasse${n > 1 ? 's' : ''}`; }, organes: 'cerveau, cœur',
+    agit: (e, x) => { e.cafeine += Math.round(x * 5); },
+    fiche: "La caféine bloque les récepteurs de l'adénosine, un frein naturel du cœur et du cerveau. Le rythme et la pression montent un peu, surtout chez qui en boit rarement. Jusqu'à environ 400 mg par jour (4 tasses) n'est pas jugé risqué chez l'adulte en bonne santé. Au-delà, palpitations et extrasystoles deviennent plus fréquentes.",
+    source: ['EFSA, avis scientifique sur la sécurité de la caféine (2015)', 'https://www.efsa.europa.eu/fr/efsajournal/pub/4102'] },
+  { id: 'iva', cat: 'Maladies', nom: 'Infarctus antérieur', sous: 'artère interventriculaire antérieure', cles: 'infarctus crise cardiaque coronaire iva artere bouchee',
+    val: x => x < 0.05 ? 'artère libre' : x < 0.7 ? `rétrécie à ${Math.round(x * 100)} %` : 'bouchée', organes: 'avant du ventricule gauche, cloison',
+    agit: (e, x) => { e.ischemie.iva = Math.max(e.ischemie.iva, x); },
+    fiche: "L'interventriculaire antérieure nourrit l'avant du ventricule gauche et la cloison. Si une plaque la bouche, le muscle en aval manque d'oxygène : il pâlit, se contracte moins bien, et le segment ST s'élève à l'ECG. Chaque minute compte : on rouvre l'artère au plus vite (angioplastie).",
+    source: ['ESC, recommandations sur les syndromes coronariens aigus (2023)', 'https://www.escardio.org/Guidelines/Clinical-Practice-Guidelines/Acute-Coronary-Syndromes-ACS-Guidelines'] },
+  { id: 'effort', cat: 'Situations', nom: 'Effort physique', sous: 'marche → sprint', cles: 'effort sport course marche exercice',
+    val: x => ['repos', 'marche', 'footing', 'course', 'sprint'][Math.min(4, Math.round(x * 4))], organes: 'muscles, cœur, poumons',
+    agit: (e, x) => { e.effort = Math.max(e.effort, x); },
+    fiche: "À l'effort, les muscles réclament plus d'oxygène. Le système nerveux sympathique accélère le cœur et renforce chaque contraction. Le débit cardiaque peut passer de 5 à plus de 20 L/min. La fréquence maximale se situe autour de 220 moins l'âge.",
+    source: ["Manuel MSD, « Revue de l'exercice et de la forme physique »", 'https://www.msdmanuals.com/fr/accueil/problèmes-de-santé-de-l-enfant/sport-et-santé'] },
+];
+
+// Principes actifs : motif sur le nom de substance de la BDPM → effet sur l'état.
+// Pour un médicament, x = 0,5 correspond à une prise habituelle ; l'effet reçoit 2x (1 = prise habituelle).
+const PA_DOSE = x => x <= 0 ? 'aucune prise' : x < 0.35 ? 'demi-dose' : x < 0.7 ? 'une prise habituelle' : x < 0.9 ? 'dose forte' : 'surdosage';
+const SRC_HTA = ["Manuel MSD, « Traitement médicamenteux de l'hypertension »", 'https://www.msdmanuals.com/fr/professional/troubles-cardiovasculaires/hypertension/traitement-médicamenteux-de-l-hypertension'];
+const PRINCIPES = [
+  { m: /PARAC[ÉE]TAMOL/, nom: 'Paracétamol', classe: 'antalgique et antifièvre', organes: 'cerveau (douleur, fièvre), foie (élimination)',
+    agit: () => {}, effet: "Aucun effet visible sur le cœur. Il agit dans le cerveau, où il baisse la fièvre et atténue la douleur. Il est éliminé par le foie, qui sature en cas de surdosage : au-delà de 4 g par jour chez l'adulte, il peut détruire le foie.",
+    source: ['ANSM, « Paracétamol : attention au risque pour le foie »', 'https://ansm.sante.fr/dossiers-thematiques/medicaments-contenant-du-paracetamol'] },
+  { m: /IBUPROF[ÈE]NE/, nom: 'Ibuprofène', classe: 'anti-inflammatoire (AINS)', organes: 'tissus enflammés, estomac, reins',
+    agit: (e, x) => { e.dPas += 6 * x; e.dPad += 3 * x; }, effet: "Il bloque les enzymes COX, qui fabriquent les prostaglandines de l'inflammation et de la douleur. Ces mêmes prostaglandines protègent l'estomac et aident les reins à éliminer le sel : la tension peut monter un peu, surtout en prise prolongée.",
+    source: ['Manuel MSD, « Anti-inflammatoires non stéroïdiens »', 'https://www.msdmanuals.com/fr/professional/sujets-spéciaux/médicaments-non-opiacés-contre-la-douleur/anti-inflammatoires-non-stéroïdiens-ains'] },
+  { m: /SALBUTAMOL/, nom: 'Salbutamol', classe: 'bronchodilatateur bêta-2', organes: 'bronches, cœur, potassium',
+    agit: (e, x) => { e.dFc += 18 * x; e.k -= 0.5 * x; }, effet: "Il stimule les récepteurs bêta-2 des bronches, qui se relâchent et s'ouvrent en quelques minutes. Une partie touche aussi le cœur : le pouls accélère, parfois avec des palpitations. Il fait entrer le potassium dans les cellules, donc le potassium sanguin baisse un peu.",
+    source: ['Vidal, « Salbutamol »', 'https://www.vidal.fr/medicaments/substances/salbutamol-3133.html'] },
+  { m: /BISOPROLOL|AT[ÉE]NOLOL|M[ÉE]TOPROLOL|PROPRANOLOL|N[ÉE]BIVOLOL/, nom: 'Bêtabloquant', classe: 'bêtabloquant', organes: 'cœur (nœud sinusal, muscle)',
+    agit: (e, x) => { e.fcMul *= 1 - 0.3 * x; e.dPas -= 14 * x; e.dPad -= 8 * x; }, effet: "Il bloque les récepteurs bêta du cœur, là où l'adrénaline appuie sur l'accélérateur. Le cœur bat plus lentement et moins fort, et la tension baisse. Il limite aussi l'accélération à l'effort et sous caféine.",
+    source: SRC_HTA },
+  { m: /HYDROCHLOROTHIAZIDE|IND[ÁA]PAMIDE|FUROS[ÉE]MIDE|BUM[ÉE]TANIDE|CHLORTALIDONE/, nom: 'Diurétique', classe: 'diurétique', organes: 'reins, potassium, tension',
+    agit: (e, x) => { e.k -= 0.9 * x; e.dPas -= 10 * x; e.dPad -= 5 * x; }, effet: "Il fait éliminer plus de sel et d'eau par les reins : le volume de sang et la tension baissent. Le potassium part avec, d'où le risque d'hypokaliémie, à surveiller par prise de sang. Associé à un autre facteur (vomissements, Ventoline), il peut faire apparaître une onde U à l'ECG.",
+    source: SRC_HTA },
+  { m: /AMLODIPINE|NIF[ÉE]DIPINE|L[ÉE]RCANIDIPINE/, nom: 'Inhibiteur calcique', classe: 'antihypertenseur', organes: 'parois des artères',
+    agit: (e, x) => { e.dPas -= 14 * x; e.dPad -= 8 * x; e.dFc += 4 * x; }, effet: "Il empêche le calcium d'entrer dans les muscles des parois des artères, qui se relâchent : la tension baisse. Le cœur compense parfois en accélérant un peu.",
+    source: SRC_HTA },
+  { m: /CAF[ÉE]INE/, nom: 'Caféine', classe: 'stimulant', organes: 'cerveau, cœur',
+    agit: (e, x) => { e.cafeine += x; }, effet: "Ajoutée à certains antidouleurs pour renforcer leur effet. Elle accélère un peu le cœur, comme un café.",
+    source: ['EFSA, avis sur la caféine (2015)', 'https://www.efsa.europa.eu/fr/efsajournal/pub/4102'] },
+];
+const principe = sub => PRINCIPES.find(p => p.m.test(sub));
+
+// Causes actives : { id, nom, x, cas } ou { id, nom, x, med: [nom, forme, voie, [[substance, dosage]…], cis] }
+const etat = { actifs: [], sel: null, meds: null };
+
+function deriver(actifs = etat.actifs) {
+  const e = ETAT_BASE();
+  for (const a of actifs) {
+    if (a.x <= 0) continue;
+    if (a.cas) a.cas.agit(e, a.x);
+    if (a.med) for (const [sub] of a.med[3]) { const p = principe(sub); if (p) p.agit(e, a.x * 2); }
+  }
+  const anemie = clamp((12 - e.hb) / 6, 0, 1.2);
+  const hypoK = clamp((3.6 - e.k) / 1.3, 0, 1);
+  const isch = Math.max(e.ischemie.iva, e.ischemie.cx, e.ischemie.cd);
+  const bpm = clamp(Math.round((68 + e.effort * 112 + anemie * 32 + e.cafeine * 3 + isch * 14 + hypoK * 6 + e.dFc) * e.fcMul), 38, 195);
+  return {
+    e, bpm,
+    contract: clamp((1 + 0.45 * e.effort + 0.15 * anemie - 0.35 * e.ischemie.iva) * (0.75 + 0.25 * e.fcMul), 0.5, 1.6),
+    ectopie: clamp(hypoK * 0.35 + Math.max(0, e.cafeine - 3) * 0.05 + (isch > 0.6 ? 0.1 : 0), 0, 0.5), // probabilité d'extrasystole par battement
+    ecg: { t: 0.26 * (1 - 0.8 * hypoK), u: 0.12 * hypoK, st: -0.07 * hypoK + 0.32 * e.ischemie.iva, qt: 1 + 0.25 * hypoK },
+    sang: 1 - 0.45 * clamp(anemie, 0, 1), // 1 = rouge normal, moins = plus pâle
+    ischemie: e.ischemie,
+    pas: Math.round(120 + e.effort * 45 + e.cafeine * 2.5 - isch * 15 + e.dPas), pad: Math.round(78 + e.effort * 4 + e.cafeine * 1.5 - isch * 6 + e.dPad),
+    k: e.k, hb: e.hb,
+  };
+}
+const ETAT_REPOS = deriver([]);
+
+// ECG paramétré : mêmes ondes que ecgAt, déformées par l'état
+const ecgEtat = (p, E) => {
+  const q = E.qt;
+  return 0.12 * gauss(p, 0.06, 0.018) - 0.12 * gauss(p, 0.145, 0.006) + 1.0 * gauss(p, 0.16, 0.0075)
+    - 0.28 * gauss(p, 0.175, 0.007) + E.st * smooth(0.18, 0.2, p) * (1 - smooth(0.3 * q, 0.38 * q, p))
+    + E.t * gauss(p, 0.38 * q, 0.035 * q) + E.u * gauss(p, 0.5 * q, 0.03);
+};
+
+/* ---------- Interface : constantes, recherche, pastilles, carte ---------- */
+const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+async function chargerMeds() {
+  if (etat.meds) return etat.meds;
+  etat.meds = (async () => {
+    try {
+      const b64 = (await (await fetch('medicaments.txt')).text()).trim();
+      const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const txt = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      return JSON.parse(txt).map(m => (m.k = sansAccent(m[0] + ' ' + m[3].map(s => s[0]).join(' ')), m));
+    } catch (err) { console.error(err); return []; }
+  })();
+  etat.meds = await etat.meds; return etat.meds;
+}
+const nomCourt = m => m[0].split(/,\s/)[0].replace(/\s+/g, ' ');
+function chercher(q) {
+  const t = sansAccent(q.trim()); if (t.length < 2) return [];
+  const mots = t.split(/\s+/);
+  const cas = CAS.filter(c => mots.every(w => sansAccent(c.nom + ' ' + c.sous + ' ' + c.cles).includes(w))).map(c => ({ cas: c }));
+  const meds = (Array.isArray(etat.meds) ? etat.meds : []).filter(m => mots.every(w => m.k.includes(w)))
+    .sort((a, b) => (sansAccent(a[0]).startsWith(t) ? 0 : 1) - (sansAccent(b[0]).startsWith(t) ? 0 : 1) || a[0].length - b[0].length || a[0].localeCompare(b[0]))
+    .filter((m, i, l) => i === 0 || l[i - 1][0] !== m[0]).slice(0, 8).map(m => ({ med: m }));
+  return [...cas, ...meds];
+}
+
+function renderEtat() {
+  const box = $('etat'); if (!box) return;
+  box.innerHTML = `<div class="etat-vitals" id="etatVitals"></div>
+    <div class="etat-search"><input id="etatQ" type="search" autocomplete="off" placeholder="Médicament, aliment, carence, maladie…" aria-label="Rechercher un médicament ou une situation"><div class="etat-res" id="etatRes" hidden></div></div>
+    <div class="etat-sugg"><span>Essayer :</span>${CAS.map(c => `<button class="chip-s" data-c="${c.id}">${c.nom}</button>`).join('')}<button class="chip-s" data-q="Doliprane 1000">Doliprane</button><button class="chip-s" data-q="Ventoline">Ventoline</button><button class="chip-s" data-q="bisoprolol">Bêtabloquant</button></div>
+    <div class="etat-actifs" id="etatActifs"></div>
+    <div class="etat-carte" id="etatCarte" hidden></div>
+    <p class="hint">Modèle pédagogique simplifié : il montre des tendances, pas des valeurs cliniques. Ce n'est ni un avis médical ni un remplacement de la notice ou du pharmacien. Médicaments : <a href="${BDPM}" target="_blank" rel="noopener">base de données publique des médicaments</a> (ANSM).</p>`;
+  const q = $('etatQ'), res = $('etatRes');
+  q.onfocus = () => chargerMeds();
+  q.oninput = async () => {
+    await chargerMeds(); const r = chercher(q.value);
+    res.hidden = !q.value.trim();
+    res.innerHTML = r.length ? r.map((o, i) => o.cas
+      ? `<button data-i="${i}"><b>${o.cas.nom}</b><small>${o.cas.cat} · ${o.cas.sous}</small></button>`
+      : `<button data-i="${i}"><b>${esc(nomCourt(o.med))}</b><small>${esc(o.med[3].map(s => s[0].toLowerCase()).join(' + '))} · ${esc(o.med[1])}</small></button>`).join('')
+      : `<p>Aucun résultat pour « ${esc(q.value)} ».</p>`;
+    res.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { ajouter(r[+b.dataset.i]); q.value = ''; res.hidden = true; });
+  };
+  box.querySelectorAll('[data-c]').forEach(b => b.onclick = () => ajouter({ cas: CAS.find(c => c.id === b.dataset.c) }));
+  box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { q.value = b.dataset.q; q.focus(); q.oninput(); });
+  majEtat();
+}
+function ajouter(o) {
+  const id = o.cas ? o.cas.id : 'med:' + o.med[4];
+  let a = etat.actifs.find(x => x.id === id);
+  if (!a) { a = { id, nom: o.cas ? o.cas.nom : nomCourt(o.med), x: 0.5, ...o }; etat.actifs.push(a); }
+  etat.sel = id; majEtat();
+}
+function retirer(id) { etat.actifs = etat.actifs.filter(a => a.id !== id); if (etat.sel === id) etat.sel = null; majEtat(); }
+
+function renderCarte() {
+  const c = $('etatCarte'); const a = etat.actifs.find(x => x.id === etat.sel);
+  c.hidden = !a; if (!a) return;
+  const valeur = x => a.cas ? a.cas.val(x) : PA_DOSE(x);
+  let corps;
+  if (a.cas) {
+    corps = `<p class="eyebrow">${a.cas.cat} · agit sur : ${a.cas.organes}</p><p>${a.cas.fiche}</p>
+      <p class="src">Source : <a href="${a.cas.source[1]}" target="_blank" rel="noopener">${a.cas.source[0]}</a></p>`;
+  } else {
+    const m = a.med;
+    corps = `<p class="eyebrow">${esc(m[1])} · voie ${esc(m[2])}</p>
+      <h5>Principes actifs</h5>
+      <ul class="compo">${m[3].map(([s, d]) => { const p = principe(s); return `<li><b>${esc(s.toLowerCase())}</b> <span>${esc(d)}</span>${p ? `<em>${p.classe}</em>` : ''}</li>`; }).join('')}</ul>
+      ${m[3].map(([s]) => { const p = principe(s); return p
+        ? `<div class="pa"><h5>${p.nom} · agit sur : ${p.organes}</h5><p>${p.effet}</p><p class="src">Source : <a href="${p.source[1]}" target="_blank" rel="noopener">${p.source[0]}</a></p></div>`
+        : `<div class="pa"><h5>${esc(s.toLowerCase())}</h5><p>Pas encore de fiche pour cette substance, donc pas d'effet simulé pour l'instant.</p></div>`; }).join('')}
+      <p class="src">Excipients et notice complète : <a href="${BDPM}/extrait.php?specid=${m[4]}" target="_blank" rel="noopener">fiche officielle du médicament</a>.</p>`;
+  }
+  c.innerHTML = `<div class="carte-tete"><h4>${esc(a.nom)}</h4><button class="btn" id="carteX">Fermer</button></div>
+    <label class="dose"><span>${a.cas ? 'Intensité' : 'Dose'}</span><output id="carteVal">${valeur(a.x)}</output>
+      <input type="range" min="0" max="1" step="0.01" value="${a.x}" id="carteR" aria-label="${a.cas ? 'Intensité' : 'Dose'} : ${esc(a.nom)}"></label>
+    <p class="etat-effet" id="carteEffet"></p>${corps}`;
+  $('carteR').oninput = e => { a.x = +e.target.value; $('carteVal').textContent = valeur(a.x); majEtat(true); };
+  $('carteX').onclick = () => { etat.sel = null; majEtat(); };
+}
+function majEtat(garderCarte) {
+  const D = deriver(), B = ETAT_REPOS; deep.etat = etat.actifs.some(a => a.x > 0) ? D : null;
+  const fl = (v, b) => v > b ? ' ↑' : v < b ? ' ↓' : '';
+  const vit = [['Pouls', `${D.bpm}${fl(D.bpm, B.bpm)}`, 'BPM'], ['Tension', `${D.pas}/${D.pad}${fl(D.pas, B.pas)}`, 'mmHg'],
+    ['Potassium', fr(D.k) + fl(+D.k.toFixed(1), 4.2), 'mmol/L'], ['Hémoglobine', fr(D.hb) + fl(+D.hb.toFixed(1), 14.5), 'g/dL']];
+  $('etatVitals').innerHTML = vit.map(([l, v, u]) => `<div class="${/[↑↓]/.test(v) ? 'chg' : ''}"><span>${l}</span><b>${v}</b><small>${u}</small></div>`).join('');
+  $('etatActifs').innerHTML = etat.actifs.map(a => `<span class="pastille${a.id === etat.sel ? ' on' : ''}"><button data-s="${esc(a.id)}">${esc(a.nom)}</button><button data-x="${esc(a.id)}" aria-label="Retirer ${esc(a.nom)}">×</button></span>`).join('');
+  $('etatActifs').querySelectorAll('[data-s]').forEach(b => b.onclick = () => { etat.sel = b.dataset.s; majEtat(); });
+  $('etatActifs').querySelectorAll('[data-x]').forEach(b => b.onclick = () => retirer(b.dataset.x));
+  if (!garderCarte) renderCarte();
+  const eff = $('carteEffet'); if (eff) eff.textContent = resume(D, B);
+  signaler(D); if (!etat.actifs.some(a => a.x > 0)) renderFrise(D);
+}
+function resume(D, B) {
+  const t = [];
+  if (D.bpm !== B.bpm) t.push(`pouls ${D.bpm > B.bpm ? 'plus rapide' : 'plus lent'} (${D.bpm} BPM)`);
+  if (D.pas !== B.pas) t.push(`tension ${D.pas > B.pas ? 'plus haute' : 'plus basse'} (${D.pas}/${D.pad} mmHg)`);
+  if (D.k < 3.5) t.push('potassium bas : onde T aplatie, onde U');
+  if (D.ectopie > 0.08) t.push('extrasystoles possibles');
+  if (D.sang < 0.95) t.push('sang moins riche en oxygène, plus pâle');
+  if (D.ischemie.iva > 0.05) t.push("muscle antérieur privé d'oxygène, segment ST surélevé");
+  return t.length ? 'Avec tout ce qui est actif : ' + t.join(' ; ') + '.' : "Pas d'effet visible sur le cœur.";
+}
+
+/* ---------- Explications visuelles : la différence explique, pas le texte ---------- */
+// Chaque variable a son signal standard : une fiche n'a rien à écrire pour être expliquée.
+const SIGNAUX = [
+  { ic: '❤️', d: (D, P) => D.bpm - P.bpm, s: 3, t: (D, d) => `pouls ${D.bpm} ${d > 0 ? '↑' : '↓'}` },
+  { ic: '🩸', d: (D, P) => D.pas - P.pas, s: 3, t: (D, d) => `tension ${D.pas}/${D.pad} ${d > 0 ? '↑' : '↓'}` },
+  { ic: '⚡', d: (D, P) => D.k - P.k, s: 0.15, t: (D, d) => D.k < 3.5 ? 'potassium bas : onde U' : `potassium ${fr(D.k)} ${d > 0 ? '↑' : '↓'}`, ecg: 1 },
+  { ic: '🔴', d: (D, P) => D.hb - P.hb, s: 0.4, t: (D, d) => d < 0 ? 'sang plus pâle' : 'sang plus rouge' },
+  { ic: '💥', d: (D, P) => D.ectopie - P.ectopie, s: 0.06, t: (D, d) => d > 0 ? 'battements en trop' : 'rythme plus régulier', ecg: 1 },
+  { ic: '🫀', d: (D, P) => D.ischemie.iva - P.ischemie.iva, s: 0.08, t: (D, d) => d > 0 ? 'zone sans oxygène, ST ↑' : "l'artère se rouvre", ecg: 1,
+    zone: dp => dp.C.vg.add(dp.C.vd).scale(0.5).add(new BABYLON.Vector3(0, -0.012, 0.02)) },
+];
+const ICONE_CAT = { 'Minéraux': '🧪', 'Carences': '🥗', 'Aliments et boissons': '☕', 'Maladies': '🩺', 'Situations': '🏃' };
+const annonce = { file: [], t: 0, prec: null, minuteur: 0 };
+function signaler(D) {
+  // Compare au dernier état affiché, une fois le curseur relâché ou stabilisé
+  clearTimeout(annonce.minuteur);
+  annonce.minuteur = setTimeout(() => {
+    const P = annonce.prec || ETAT_REPOS; annonce.prec = D;
+    const chg = SIGNAUX.map(s => ({ s, d: s.d(D, P) })).filter(o => Math.abs(o.d) >= o.s.s);
+    if (!chg.length) return;
+    annonce.file = chg.map(o => `${o.s.ic} ${o.s.t(D, o.d)}`); annonce.t = 0;
+    deep.ralenti = 1.6; // un battement au ralenti pour voir le changement
+    const zone = chg.find(o => o.s.zone); if (zone && deep.C) deep.focus = { p: zone.s.zone(deep), t: 2.4 };
+    if (chg.some(o => o.s.ecg)) deepEcgC.classList.add('vu'), setTimeout(() => deepEcgC.classList.remove('vu'), 1800);
+    renderFrise(D);
+  }, 350);
+}
+function animerAnnonces(dt) {
+  const el = $('annonce'); if (!el) return;
+  if (!annonce.file.length) { el.style.opacity = 0; return; }
+  annonce.t += dt; const dur = 1.7;
+  const i = Math.floor(annonce.t / dur);
+  if (i >= annonce.file.length) { annonce.file = []; el.style.opacity = 0; return; }
+  const f = (annonce.t % dur) / dur;
+  el.textContent = annonce.file[i]; el.style.opacity = Math.min(1, f * 6, (1 - f) * 4).toFixed(2);
+}
+function renderFrise(D) {
+  const el = $('frise'); if (!el) return;
+  const a = etat.actifs.find(x => x.id === etat.sel) || etat.actifs[etat.actifs.length - 1];
+  if (!a || a.x <= 0) { el.innerHTML = ''; return; }
+  const cause = a.cas ? `${ICONE_CAT[a.cas.cat] || '•'} ${a.nom}` : `💊 ${a.nom}`;
+  const org = a.cas ? a.cas.organes : (a.med[3].map(([s]) => principe(s)).filter(Boolean).map(p => p.organes).join(', ') || 'pas de fiche');
+  const eff = SIGNAUX.map(s => ({ s, d: s.d(D, ETAT_REPOS) })).filter(o => Math.abs(o.d) >= o.s.s).map(o => `${o.s.ic} ${o.s.t(D, o.d)}`);
+  const pas = [cause, '🎯 ' + org.split(',')[0].replace(/\s*\(.*$/, ''), ...(eff.length ? eff : ['· pas d\'effet sur le cœur'])];
+  el.innerHTML = pas.map((p, i) => `<span style="animation-delay:${i * 0.35}s">${esc(p)}</span>`).join('<i>→</i>');
+  el.querySelectorAll('span').forEach((s, i) => s.onclick = () => { annonce.file = [pas[i]]; annonce.t = 0; });
+}
+
+const deep = { p: 0.55, rr: 1, etat: null, speed: 0.5, playing: true, lastPhase: -1, flash: 0, flashTxt: '', cut: true, labels: window.innerWidth > 820, sc: null, loading: null };
 const hc = $('heartCanvas'); const deepEcgC = $('deepEcg'); const dx = deepEcgC.getContext('2d');
 const labelBox = $('deepLabels'); const flashEl = $('deepFlash');
 const H3 = h => BABYLON.Color3.FromHexString(h);
@@ -915,10 +1249,29 @@ const H3 = h => BABYLON.Color3.FromHexString(h);
 const HEART_PARTS = {
   og: ['#b4554c', 1], od: ['#a8564f', 1], vg: ['#9c3a35', 1], vd: ['#97423c', 1],
   aorte: ['#c4453c', 1], tronc_pulm: ['#5d74b4', 1], veines_caves: ['#566fb0', 1], veines_pulm: ['#c25a50', 1],
-  coronaires: ['#d8584c', 1], veines_card: ['#6a82c4', 1],
+  coronaires: ['#d8584c', 1], veines_card: ['#6a82c4', 1], piliers: ['#a8423c', 1],
   tri_inf: ['#eadfcb', 0], tri_sep: ['#eadfcb', 0], mit_post: ['#eadfcb', 0],
   ao_lc: ['#eadfcb', 0], ao_nc: ['#eadfcb', 0], ao_rc: ['#eadfcb', 0], pu_ant: ['#eadfcb', 0], pu_l: ['#eadfcb', 0], pu_r: ['#eadfcb', 0],
 };
+// Cœur Blender (Z-Anatomy pleine résolution) : pièces anglaises → groupes de la plongée
+const HEART_SRC = {
+  og: ['Left atrium'], od: ['Right atrium'],
+  vg: ['Left ventricle - LAD', 'Left ventricle - LCx', 'Left ventricle - RCA'], vd: ['Right ventricle - LAD', 'Right ventricle - RCA'],
+  aorte: ['Ascending aorta', 'Aortic arch', 'Thoracic aorta', 'Brachiocephalic trunk', 'Left common carotid artery', 'Left subclavian artery'],
+  tronc_pulm: ['Pulmonary trunk', 'Bifurcation of pulmonary trunk', 'Left pulmonary artery', 'Right pulmonary artery'],
+  veines_caves: ['Superior vena cava', 'Inferior vena cava (thoracic part)'],
+  veines_pulm: ['Left inferior pulmonary vein', 'Left superior pulmonary vein', 'Right inferior pulmonary vein', 'Right superior pulmonary vein'],
+  coronaires: ['Anterior interventricular artery', 'Septal branches of anterior interventricular artery', 'Circumflex artery of heart', 'Left coronary artery', 'Right coronary artery', 'Right inferolateral branch of right coronary artery'],
+  veines_card: ['Coronary sinus', 'Great cardiac vein', 'Middle cardiac vein', 'Inferior vein of left ventricle', 'Posterior vein of left ventricle'],
+  piliers: ['Anterior papillary muscle of right ventricle', 'Inferior papillary muscle of left ventricle', 'Inferior papillary muscle of right ventricle', 'Septal papillary muscle of right ventricle'],
+  tri_inf: ['Inferior leaflet of right atrioventricular valve'], tri_sep: ['Septal leaflet of right atrioventricular valve'], mit_post: ['Posterior leaflet of left atrioventricular valve'],
+  ao_lc: ['Left coronary leaflet'], ao_nc: ['Non-coronary leaflet'], ao_rc: ['Right coronary leaflet'],
+  pu_ant: ['Anterior semilunar leaflet of pulmonary valve'], pu_l: ['Left semilunar leaflet of pulmonary valve'], pu_r: ['Right semilunar leaflet of pulmonary valve'],
+};
+// Territoires coronaires des ventricules (sous-maillages, dans l'ordre de HEART_SRC)
+const TERR = { vg: ['iva', 'cx', 'cd'], vd: ['iva', 'cd'] };
+// Le modèle Blender est centré sur le cœur ; on le replace dans le repère du corps (mêmes mesures Z-Anatomy)
+const HEART_OFFSET = [-0.0227, 1.291, 0.025];
 function meanOf(m) {
   const P = m.getVerticesData('position'); const c = V3(0, 0, 0); const n = P.length / 3;
   for (let i = 0; i < P.length; i += 3) { c.x += P[i]; c.y += P[i + 1]; c.z += P[i + 2]; }
@@ -943,11 +1296,21 @@ async function initHeart3D() {
 
   const glb = await fetchModel('coeur3d.txt', () => {});
   const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, sc, null, '.glb');
-  const M = {}, C = {};
+  for (const g of res.animationGroups) g.stop(); // le battement est piloté par la plongée, pas par le clip
+  const byName = {};
   for (const m of res.meshes) {
-    const n = (m.name || '').replace(/_primitive\d+$/, ''); if (!HEART_PARTS[n]) continue;
-    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices(); m.isPickable = false;
-    M[n] = m; C[n] = meanOf(m);
+    if (!m.getTotalVertices || !m.getTotalVertices()) continue;
+    m.skeleton = null; for (const kd of ['matricesIndices', 'matricesWeights', 'color']) m.removeVerticesData(kd);
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices();
+    m.position.set(...HEART_OFFSET); m.bakeCurrentTransformIntoVertices(); m.isPickable = false;
+    byName[(m.name || '').replace(/_primitive\d+$/, '')] = m;
+  }
+  for (const n of res.transformNodes) n.dispose();
+  const M = {}, C = {};
+  for (const [k, names] of Object.entries(HEART_SRC)) {
+    const parts = names.map(n => byName[n]).filter(Boolean); if (!parts.length) continue;
+    M[k] = parts.length === 1 ? parts[0] : BABYLON.Mesh.MergeMeshes(parts, true, true, undefined, true, false);
+    M[k].name = k; C[k] = meanOf(M[k]);
   }
   // Plan de coupe « 4 cavités » : contient l'axe droite-gauche et l'axe base-pointe
   const lr = C.og.add(C.vg).subtract(C.od.add(C.vd)).normalize();
@@ -956,15 +1319,22 @@ async function initHeart3D() {
   const c0 = C.og.add(C.vg).add(C.od).add(C.vd).scale(0.25);
   const plane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.004))));
   const vplane = new BABYLON.Plane(n.x, n.y, n.z, -BABYLON.Vector3.Dot(n, c0.add(n.scale(0.014))));
-  const mats = {};
+  const mats = {}, terr = {};
   for (const [k, [col, cut]] of Object.entries(HEART_PARTS)) {
     const m = M[k]; if (!m) continue;
     const mt = new BABYLON.StandardMaterial('m_' + k, sc); mt.diffuseColor = H3(col);
     mt.specularColor = new BABYLON.Color3(0.32, 0.26, 0.26); mt.specularPower = 48; mt.backFaceCulling = false; mt.twoSidedLighting = true;
     if (!cut) mt.emissiveColor = new BABYLON.Color3(0.12, 0.1, 0.09);
     mt.clipPlane = cut ? plane : vplane;
-    m.material = mt; mats[k] = mt;
+    mats[k] = mt;
+    if (TERR[k]) {
+      const mm = new BABYLON.MultiMaterial('mm_' + k, sc); terr[k] = TERR[k].map(t => { const c = mt.clone('m_' + k + '_' + t); c.metadata = { t, base: mt.diffuseColor.clone() }; mm.subMaterials.push(c); return c; });
+      m.material = mm;
+    } else m.material = mt;
   }
+  // Infarctus : le territoire privé d'oxygène pâlit (gris violacé), la contraction y faiblit
+  const PALE = H3('#bfa6a9');
+  const zoneIsch = isch => { for (const k in terr) for (const c of terr[k]) BABYLON.Color3.LerpToRef(c.metadata.base, PALE, clamp(isch[c.metadata.t] || 0, 0, 1) * 0.85, c.diffuseColor); };
   // Cavités : elles se contractent autour de leur centre
   for (const k of ['og', 'od', 'vg', 'vd']) M[k].setPivotPoint(C[k]);
   // Valves : chaque feuillet pivote autour de sa charnière (côté anneau, en amont)
@@ -1028,15 +1398,19 @@ async function initHeart3D() {
     ['Oreillette droite', C.od], ['Ventricule droit', apex('vd').add(C.vd).scale(0.5)], ['Oreillette gauche', C.og], ['Ventricule gauche', apex('vg').add(C.vg).scale(0.5)],
     ['Valve tricuspide', avTri.center, 1], ['Valve mitrale', mitC, 1], ['Valve aortique', slAo.center, 1],
     ['Aorte', P([-0.006, 1.362, 0.03])], ['Veine cave sup.', P([0.0144, 1.37, 0.023])],
+    ['Artère pulmonaire gauche', (() => { const T = M.tronc_pulm.getVerticesData('position'); const s = V3(0, 0, 0); let c = 0; for (let i = 0; i < T.length; i += 3) if (T[i] < C.og.x - 0.04) { s.addInPlaceFromFloats(T[i], T[i + 1], T[i + 2]); c++; } return c ? s.scale(1 / c) : C.tronc_pulm; })()],
   ].map(([t, p, v]) => { const el = document.createElement('div'); el.className = 'lab' + (v ? ' v' : ''); el.textContent = t; labelBox.appendChild(el); return { el, p }; });
 
-  deep.sc = sc; deep.eng = eng; deep.cam = cam; deep.M = M; deep.C = C; deep.mats = mats; deep.valves = valves; deep.parts = parts; deep.labelsList = LABELS; deep.plane = plane; deep.vplane = vplane;
+  deep.sc = sc; deep.eng = eng; deep.cam = cam; deep.M = M; deep.C = C; deep.mats = mats; deep.valves = valves; deep.parts = parts; deep.labelsList = LABELS; deep.plane = plane; deep.vplane = vplane; deep.terr = terr; deep.zoneIsch = zoneIsch; deep.c0 = c0;
   deep.avValves = [avTri, avMit]; deep.slValves = [slPu, slAo]; window.__deep = deep;
 }
 
 function setCut(on) {
   deep.cut = on; $('cutBtn').classList.toggle('primary', on);
-  if (deep.mats) for (const [k, [, cut]] of Object.entries(HEART_PARTS)) if (deep.mats[k]) deep.mats[k].clipPlane = on ? (cut ? deep.plane : deep.vplane) : null;
+  if (deep.mats) for (const [k, [, cut]] of Object.entries(HEART_PARTS)) {
+    if (deep.mats[k]) deep.mats[k].clipPlane = on ? (cut ? deep.plane : deep.vplane) : null;
+    for (const c of deep.terr[k] || []) c.clipPlane = on ? deep.plane : null;
+  }
 }
 function setLabels(on) { deep.labels = on; $('labBtn').classList.toggle('primary', on); labelBox.hidden = !on; }
 
@@ -1063,7 +1437,12 @@ function catmull(pts, s, out) {
 
 function drawHeartDeep(dt) {
   if (!deep.sc) return;
-  if (deep.playing) deep.p = (deep.p + dt * deep.speed * state.bpm / 60) % 1;
+  const D = deep.etat; const bpmEff = clamp(state.bpm + (D ? D.bpm - 68 : 0), 35, 200);
+  if (deep.playing) {
+    if (deep.ralenti > 0) deep.ralenti -= dt;
+    deep.p += dt * deep.speed * (deep.ralenti > 0 ? 0.35 : 1) * bpmEff / 60 / deep.rr;
+    if (deep.p >= 1) { deep.p %= 1; deep.rr = deep.rr < 1 ? 1.45 : (D && Math.random() < D.ectopie ? 0.55 : 1); }
+  }
   const p = deep.p; const v = ventContract(p), a = atrContract(p);
   const i = phaseIdx(p);
   if (i !== deep.lastPhase) {
@@ -1072,10 +1451,12 @@ function drawHeartDeep(dt) {
   }
   const { M, C } = deep;
   // Cavités
-  M.vg.scaling.setAll(1 - 0.075 * v); M.vd.scaling.setAll(1 - 0.07 * v);
+  const ct = D ? D.contract : 1; M.vg.scaling.setAll(1 - 0.075 * v * ct); M.vd.scaling.setAll(1 - 0.07 * v * Math.min(ct, 1.3));
+  deep.zoneIsch(D ? D.ischemie : { iva: 0, cx: 0, cd: 0 });
   const fillA = slOpen(p) ? 0.03 : 0; M.og.scaling.setAll(1 - 0.09 * a + fillA); M.od.scaling.setAll(1 - 0.09 * a + fillA);
   deep.mats.vg.emissiveColor.set(0.35 * v, 0.04 * v, 0.03 * v); deep.mats.vd.emissiveColor.set(0.3 * v, 0.04 * v, 0.05 * v);
   deep.mats.og.emissiveColor.set(0.3 * a, 0.05 * a, 0.03 * a); deep.mats.od.emissiveColor.set(0.28 * a, 0.05 * a, 0.05 * a);
+  for (const k in deep.terr) for (const c of deep.terr[k]) { c.emissiveColor.copyFrom(deep.mats[k].emissiveColor); if (D) c.emissiveColor.scaleInPlace(1 - 0.8 * (D.ischemie[c.metadata.t] || 0)); }
   // Valves : ouverture lissée
   const k = deep.playing ? 1 - Math.exp(-dt * deep.speed * 40) : 1 - Math.exp(-dt * 20);
   for (const vv of deep.valves) {
@@ -1084,7 +1465,7 @@ function drawHeartDeep(dt) {
     for (const lf of vv.leaves) BABYLON.Quaternion.RotationAxisToRef(lf.axis, ang, lf.m.rotationQuaternion);
   }
   // Sang : il attend derrière une valve fermée
-  const beat = 60 / state.bpm; const kk = deep.playing ? dt * deep.speed / beat : 0;
+  const beat = 60 / bpmEff * deep.rr; const kk = deep.playing ? dt * deep.speed / beat : 0;
   for (const fl of deep.parts) {
     const { list, buf, R } = fl;
     for (let n = 0; n < list.length; n++) {
@@ -1100,6 +1481,16 @@ function drawHeartDeep(dt) {
       const o = n * 16; buf[o] = buf[o + 5] = buf[o + 10] = 1; buf[o + 12] = tmpV.x; buf[o + 13] = tmpV.y; buf[o + 14] = tmpV.z; buf[o + 15] = 1;
     }
     fl.mesh.thinInstanceBufferUpdated('matrix');
+  }
+  if (D) for (const fl of deep.parts) { const base = H3(fl.side === 'gauche' ? '#ff4a3a' : '#3f72e0'); const pale = H3(fl.side === 'gauche' ? '#f4c2bb' : '#b9c8ec');
+    BABYLON.Color3.LerpToRef(pale, base, D.sang, fl.mesh.material.diffuseColor); fl.mesh.material.emissiveColor.copyFrom(fl.mesh.material.diffuseColor).scaleInPlace(0.4); }
+  animerAnnonces(dt);
+  if (deep.focus) { // la caméra glisse vers la zone touchée, puis revient
+    const f = deep.focus; f.t -= dt; const aller = f.t > 1.1; const k2 = 1 - Math.exp(-dt * 3);
+    BABYLON.Vector3.LerpToRef(deep.cam.target, aller ? f.p : deep.c0, k2, deep.cam.target);
+    if (f.r0 === undefined) f.r0 = deep.cam.radius;
+    deep.cam.radius += ((aller ? f.r0 * 0.72 : f.r0) - deep.cam.radius) * k2;
+    if (f.t <= 0) deep.focus = null;
   }
   deep.sc.render();
   // Étiquettes projetées
@@ -1123,16 +1514,19 @@ function drawDeepEcg(p) {
   dx.setTransform(dpr, 0, 0, dpr, 0, 0); dx.clearRect(0, 0, w, h);
   const gx = 14, gw = w - 28, H = h - 22;
   PHASES.forEach(ph => { dx.fillStyle = ph.c; dx.globalAlpha = 0.16; dx.fillRect(gx + ph.a * gw, 4, (ph.b - ph.a) * gw, H - 4); dx.globalAlpha = 1; dx.fillRect(gx + ph.a * gw, H + 2, (ph.b - ph.a) * gw - 2, 4); });
+  if (deep.etat) { dx.strokeStyle = 'rgba(236,229,213,.35)'; dx.lineWidth = 1.5; dx.setLineDash([4, 4]); dx.beginPath();
+    for (let n = 0; n <= 300; n++) { const pp = n / 300; const x = gx + pp * gw; const y = 4 + (H - 4) * 0.8 - ecgAt(pp) * (H - 4) * 0.68; n ? dx.lineTo(x, y) : dx.moveTo(x, y); }
+    dx.stroke(); dx.setLineDash([]); }
   dx.strokeStyle = '#ff6a5c'; dx.lineWidth = 2; dx.beginPath();
-  for (let n = 0; n <= 300; n++) { const pp = n / 300; const x = gx + pp * gw; const y = 4 + (H - 4) * 0.8 - ecgAt(pp) * (H - 4) * 0.68; n ? dx.lineTo(x, y) : dx.moveTo(x, y); }
+  for (let n = 0; n <= 300; n++) { const pp = n / 300; const x = gx + pp * gw; const y = 4 + (H - 4) * 0.8 - (deep.etat ? ecgEtat(pp, deep.etat.ecg) : ecgAt(pp)) * (H - 4) * 0.68; n ? dx.lineTo(x, y) : dx.moveTo(x, y); }
   dx.stroke();
   const cx = gx + p * gw; dx.strokeStyle = '#ece5d5'; dx.lineWidth = 1.5; dx.beginPath(); dx.moveTo(cx, 0); dx.lineTo(cx, H + 6); dx.stroke();
   dx.fillStyle = '#a9b1b8'; dx.font = '11px "IBM Plex Mono", monospace'; dx.textAlign = 'left';
-  dx.fillText(`ECG · un battement = ${(60 / state.bpm).toFixed(2).replace('.', ',')} s à ${state.bpm} BPM`, gx, h - 3);
+  { const b = clamp(state.bpm + (deep.etat ? deep.etat.bpm - 68 : 0), 35, 200); dx.fillText(`ECG · un battement = ${(60 / b).toFixed(2).replace('.', ',')} s à ${Math.round(b)} BPM${deep.rr !== 1 ? ' · extrasystole' : ''}`, gx, h - 3); }
 }
 
 async function openDeep() {
-  state.deepOpen = 'coeur'; $('deep').hidden = false; deep.lastPhase = -1; tip.hidden = true;
+  state.deepOpen = 'coeur'; $('deep').hidden = false; if (!$('etat').childElementCount) renderEtat(); deep.lastPhase = -1; tip.hidden = true;
   if (reduceMotion) setSpeed(0.25);
   if (!deep.sc) {
     $('deepLoad').hidden = false;

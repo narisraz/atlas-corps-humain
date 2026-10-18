@@ -12,6 +12,7 @@ Version en ligne : GitHub Pages de ce dépôt. En local, servir le dossier (par 
 
 - `index.html` : toute l'application (Babylon.js 7.54 via CDN).
 - `corps.txt`, `coeur3d.txt`, `poumons3d.txt`, `cerveau3d.txt` : modèles GLB compressés (gzip + base64), décodés dans le navigateur.
+- `medicaments.txt` : médicaments commercialisés en France et leurs principes actifs (gzip + base64), tirés de la base de données publique des médicaments.
 - `trajets.json` : trajets réels des vaisseaux, nerfs et uretères.
 - `outils/` : scripts d'export Blender (Z-Anatomy → GLB) et sources JS ; `assemble.py` construit `index.html`.
 - `NOTES.md` : journal technique détaillé.
@@ -19,3 +20,5 @@ Version en ligne : GitHub Pages de ce dépôt. En local, servir le dossier (par 
 ## Licence et crédits
 
 Les modèles anatomiques sont dérivés de **Z-Anatomy** (https://www.z-anatomy.com), lui-même basé sur **BodyParts3D** (© The Database Center for Life Science, DBCLS), sous licence **CC BY-SA 4.0** (https://creativecommons.org/licenses/by-sa/4.0/). Les fichiers de modèles de ce dépôt sont redistribués sous la même licence. Le crédit est aussi affiché dans l'application.
+
+Les données sur les médicaments viennent de la **base de données publique des médicaments** (ANSM, https://base-donnees-publique.medicaments.gouv.fr), sous licence ouverte Etalab.
