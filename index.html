@@ -1525,6 +1525,17 @@ const phaseIdx = p => PHASES.findIndex(ph => p >= ph.a && p < ph.b);
 const phaseList = $('phaseList');
 phaseList.innerHTML = PHASES.map((ph, i) => `<li data-i="${i}" style="--c:${ph.c}"><i></i><span>${ph.t}</span><span>${ph.ecg}</span></li>`).join('');
 phaseList.querySelectorAll('li').forEach(li => li.onclick = () => { deep.p = PHASES[+li.dataset.i].a + 0.001; });
+// La carte de phase garde la hauteur de son texte le plus long : sinon tout le panneau
+// (état du corps, recherche, curseurs) saute à chaque phase pendant l'animation
+function lockPhaseHeight() {
+  const card = $('phaseText').closest('.phase-card'); if (!card.offsetParent) return;
+  const keep = [$('phaseEyebrow').textContent, $('phaseTitle').textContent, $('phaseText').textContent];
+  card.style.minHeight = ''; let h = 0;
+  PHASES.forEach((ph, i) => { $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`; $('phaseTitle').textContent = ph.t; $('phaseText').textContent = ph.d; h = Math.max(h, card.offsetHeight); });
+  [$('phaseEyebrow').textContent, $('phaseTitle').textContent, $('phaseText').textContent] = keep;
+  card.style.minHeight = h + 'px';
+}
+window.addEventListener('resize', () => { if (state.deepOpen === 'coeur') lockPhaseHeight(); });
 function updateDeepText(i) {
   const ph = PHASES[i];
   $('phaseEyebrow').textContent = `Phase ${i + 1} sur 5 · ECG : ${ph.ecg}`;
@@ -1637,6 +1648,7 @@ function drawDeepEcg(p) {
 
 async function openDeep() {
   state.deepOpen = 'coeur'; $('deep').hidden = false; if (!$('etat').childElementCount) renderEtat(); deep.lastPhase = -1; tip.hidden = true;
+  lockPhaseHeight();
   if (reduceMotion) setSpeed(0.25);
   if (!deep.sc) {
     $('deepLoad').hidden = false;
