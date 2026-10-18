@@ -616,6 +616,49 @@ class WavePlugin extends BABYLON.MaterialPluginBase {
 }
 const waves = [];
 
+// Battement : une seule déformation continue appliquée à toutes les pièces du cœur (muscle, valves,
+// vaisseaux, faces de coupe, sang), dans le repère du cœur. Pendant la systole ventriculaire, le plan
+// des valves descend vers la pointe (qui bouge peu), les parois s'épaississent vers l'axe et la pointe
+// tourne un peu ; les oreillettes, tirées vers le bas, se remplissent. Les gros vaisseaux restent ancrés.
+const beatDef = () => ({ A: V3(0, 0, 0), U: V3(0, 1, 0), L: 0.08, v: 0, a: 0 });
+class BeatPlugin extends BABYLON.MaterialPluginBase {
+  constructor(material, def) { super(material, 'Battement', 210, { BATTEMENT: false }); this.def = def; this._enable(true); }
+  prepareDefines(defines) { defines.BATTEMENT = true; }
+  getClassName() { return 'BeatPlugin'; }
+  getUniforms() {
+    return { ubo: [{ name: 'batA', size: 3, type: 'vec3' }, { name: 'batU', size: 3, type: 'vec3' }, { name: 'batL', size: 1, type: 'float' }, { name: 'batV', size: 1, type: 'float' }, { name: 'batAt', size: 1, type: 'float' }],
+      vertex: '#ifdef BATTEMENT\nuniform vec3 batA; uniform vec3 batU; uniform float batL; uniform float batV; uniform float batAt;\n#endif\n' };
+  }
+  bindForSubMesh(ubo) { const d = this.def; ubo.updateVector3('batA', d.A); ubo.updateVector3('batU', d.U); ubo.updateFloat('batL', d.L); ubo.updateFloat('batV', d.v); ubo.updateFloat('batAt', d.a); }
+  getCustomCode(type) {
+    if (type !== 'vertex') return null;
+    return { CUSTOM_VERTEX_UPDATE_WORLDPOS: `#ifdef BATTEMENT
+{
+  vec3 q = worldPos.xyz - batA; float t = dot(q, batU) / batL; vec3 r = q - batU * (t * batL);
+  float tv = clamp(t, 0.0, 1.0);
+  float wv = 1.0 - smoothstep(0.92, 1.12, t);
+  float wa = smoothstep(0.9, 1.1, t) * (1.0 - smoothstep(1.6, 2.3, t));
+  float dz = -0.13 * batV * batL * (t < 1.0 ? tv : 1.0 - smoothstep(1.05, 2.2, t));
+  float rs = 1.0 - 0.11 * batV * wv * smoothstep(0.0, 0.4, t) - 0.08 * batAt * wa + 0.035 * batV * wa;
+  float th = 0.16 * batV * wv * (1.0 - tv);
+  r = (r * cos(th) + cross(batU, r) * sin(th)) * rs;
+  worldPos.xyz = batA + batU * (t * batL + dz) + r;
+}
+#endif
+` };
+  }
+}
+// Repère du battement : pointe du VG → centre des anneaux tricuspide et mitral
+function setBeatAxis(def, base, vgMesh) {
+  const c = meanOf(vgMesh); const d0 = c.subtract(base).normalize();
+  const P = vgMesh.getVerticesData('position'); let best = -1e9, apex = c;
+  for (let i = 0; i < P.length; i += 3) { const v = V3(P[i], P[i + 1], P[i + 2]); const s = BABYLON.Vector3.Dot(v.subtract(base), d0); if (s > best) { best = s; apex = v; } }
+  def.A.copyFrom(apex); def.U.copyFrom(base.subtract(apex).normalize()); def.L = BABYLON.Vector3.Distance(base, apex);
+}
+function addBeat(materials, def) {
+  for (const m of materials) if (m && !(m instanceof BABYLON.MultiMaterial) && !m.pluginManager?.getPlugin('Battement')) new BeatPlugin(m, def);
+}
+
 /* --- Organes : correspondance entre le modèle Z-Anatomy et les fiches --- */
 const PARTS = {
   peau:       { sys: null },
@@ -925,7 +968,7 @@ engine.runRenderLoop(() => {
   const p = cardiac;
   if (ready) {
     const v = ventContract(p), a = atrContract(p);
-    meshOf.coeur.scaling.set(1 - 0.07 * v + 0.025 * a, 1 - 0.05 * v + 0.02 * a, 1 - 0.07 * v + 0.025 * a);
+    if (bodyBeat) { bodyBeat.v = v; bodyBeat.a = a; } else meshOf.coeur.scaling.set(1 - 0.07 * v + 0.025 * a, 1 - 0.05 * v + 0.02 * a, 1 - 0.07 * v + 0.025 * a);
     const insp = breath < 0.4 ? smooth(0, 0.4, breath) : 1 - smooth(0.4, 1, breath);
     meshOf.poumons.scaling.set(1 + 0.045 * insp, 1 + 0.035 * insp, 1 + 0.045 * insp);
     meshOf.diaphragme.position.y = -0.014 * insp;
@@ -1436,6 +1479,8 @@ async function initHeart3D() {
   };
   mkFlow('droit', '#3f72e0', 110); mkFlow('gauche', '#ff4a3a', 110);
 
+  deep.beat = beatDef(); setBeatAxis(deep.beat, avTri.center.add(mitC).scale(0.5), M.vg);
+  addBeat(sc.materials.filter(m => m instanceof BABYLON.StandardMaterial), deep.beat);
   // Caméra face au plan de coupe, base du cœur en haut et pointe en bas
   const up = perp(ba.negate(), n).normalize(); cam.upVector = up;
   const q = new BABYLON.Quaternion(); BABYLON.Quaternion.FromUnitVectorsToRef(BABYLON.Vector3.UpReadOnly, up, q);
@@ -1507,9 +1552,8 @@ function drawHeartDeep(dt) {
   }
   const { M, C } = deep;
   // Cavités
-  const ct = D ? D.contract : 1; M.vg.scaling.setAll(1 - 0.075 * v * ct); M.vd.scaling.setAll(1 - 0.07 * v * Math.min(ct, 1.3));
+  const ct = D ? D.contract : 1; deep.beat.v = v * ct; deep.beat.a = a;
   deep.zoneIsch(D ? D.ischemie : { iva: 0, cx: 0, cd: 0 });
-  const fillA = slOpen(p) ? 0.03 : 0; M.og.scaling.setAll(1 - 0.09 * a + fillA); M.od.scaling.setAll(1 - 0.09 * a + fillA);
   deep.mats.vg.emissiveColor.set(0.35 * v, 0.04 * v, 0.03 * v); deep.mats.vd.emissiveColor.set(0.3 * v, 0.04 * v, 0.05 * v);
   deep.mats.og.emissiveColor.set(0.3 * a, 0.05 * a, 0.03 * a); deep.mats.od.emissiveColor.set(0.28 * a, 0.05 * a, 0.05 * a);
   for (const k in deep.terr) for (const c of deep.terr[k]) { c.emissiveColor.copyFrom(deep.mats[k].emissiveColor); if (D) c.emissiveColor.scaleInPlace(1 - 0.8 * (D.ischemie[c.metadata.t] || 0)); }
@@ -2369,6 +2413,7 @@ const COEUR_CORPS = {
   og: '#b4473f', od: '#a84a44', vg: '#b42f2d', vd: '#ab3a34', aorte: '#d63b35', tronc_pulm: '#3d6ec6',
   veines_caves: '#3d6ec6', veines_pulm: '#d65a4d', coronaires: '#e0574a', veines_card: '#5b84d6',
 };
+let bodyBeat = null;
 async function heartInBody() {
   const glb = await fetchModel('coeur3d.txt', () => {});
   const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, scene, null, '.glb');
@@ -2395,6 +2440,9 @@ async function heartInBody() {
     m.metadata = { organ: 'coeur', part: 'coeur' }; m.isPickable = true;
     m.setEnabled(groups.cardio.visible); neufs.push(m);
   }
+  const lf = ['Inferior leaflet of right atrioventricular valve', 'Septal leaflet of right atrioventricular valve', 'Posterior leaflet of left atrioventricular valve'].map(n => byName[n]).filter(Boolean);
+  const def = beatDef(); const vgM = neufs.find(m => m.name === 'coeur_vg');
+  if (lf.length && vgM) { setBeatAxis(def, lf.reduce((acc, m) => acc.add(meanOf(m)), V3(0, 0, 0)).scale(1 / lf.length), vgM); addBeat(neufs.map(m => m.material), def); bodyBeat = def; }
   for (const m of Object.values(byName)) m.dispose(); // valves et piliers : invisibles de l'extérieur
   const i = pickables.indexOf(old); if (i >= 0) pickables.splice(i, 1, ...neufs);
   const g = groups.cardio.meshes; g.splice(g.indexOf(old), 1, ...neufs);
