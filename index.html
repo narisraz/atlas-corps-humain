@@ -126,6 +126,9 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
 #deepFlash { position: absolute; top: 104px; left: 0; right: 0; text-align: center; font: italic 600 40px Spectral, Georgia, serif; color: #e6c35c; opacity: 0; pointer-events: none; }
 .stage-tools { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
 .stage-tools .btn { white-space: nowrap; pointer-events: auto; }
+.zoom-tools { margin-left: auto; display: flex; gap: 6px; }
+.zoom-tools .btn { min-width: 40px; font-size: 16px; }
+.zoom-tools #zoomReset { font-size: 13px; }
 .etat { display: flex; flex-direction: column; gap: 12px; }
 .etat > h3 { margin: 0; }
 .etat-vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -288,7 +291,7 @@ input[type=range] { width: 100%; accent-color: var(--artery); }
     </div>
     <div class="deep-body">
       <div class="deep-stage"><canvas id="heartCanvas" aria-label="Cœur en 3D, ouvert en coupe"></canvas><div id="deepLabels"></div><div id="deepFlash"></div><div id="frise" aria-live="polite"></div><div id="annonce" aria-live="polite"></div>
-        <div class="stage-tools"><button class="btn primary" id="cutBtn">Coupe</button><button class="btn primary" id="labBtn">Étiquettes</button></div>
+        <div class="stage-tools"><button class="btn primary" id="cutBtn">Coupe</button><button class="btn primary" id="labBtn">Étiquettes</button><span class="zoom-tools"><button class="btn" id="zoomOut" aria-label="Dézoomer">−</button><button class="btn" id="zoomIn" aria-label="Zoomer">+</button><button class="btn" id="zoomReset">Recentrer</button></span></div>
         <div id="deepLoad" hidden>Chargement du cœur 3D…</div><canvas id="deepEcg"></canvas></div>
       <div class="deep-side">
         <div class="phase-card">
@@ -1329,7 +1332,9 @@ async function initHeart3D() {
   sc.skipPointerMovePicking = true;
   const cam = new BABYLON.ArcRotateCamera('dc', Math.PI / 2, Math.PI / 2, 0.3, V3(0, 1.3, 0), sc);
   cam.attachControl(hc, true); cam.minZ = 0.004; cam.maxZ = 5; cam.fov = 0.6;
-  cam.wheelDeltaPercentage = 0.01; cam.pinchDeltaPercentage = 0.004; cam.lowerRadiusLimit = 0.08; cam.upperRadiusLimit = 0.6;
+  cam.wheelDeltaPercentage = 0.01; cam.pinchDeltaPercentage = 0.004; cam.lowerRadiusLimit = 0.05; cam.upperRadiusLimit = 0.8;
+  // La molette et le pincement zooment vers l'endroit visé, pas seulement vers le centre
+  if (cam.inputs.attached.mousewheel) cam.inputs.attached.mousewheel.zoomToMouseLocation = true;
   cam.panningSensibility = 0; cam.inertia = 0.85;
   const hemi = new BABYLON.HemisphericLight('h', V3(0, 1, 0.4), sc); hemi.intensity = 0.6; hemi.groundColor = new BABYLON.Color3(0.18, 0.12, 0.14);
   const key = new BABYLON.DirectionalLight('k', V3(-0.3, -0.5, -1), sc); key.intensity = 1.0;
@@ -1485,7 +1490,7 @@ async function initHeart3D() {
   const up = perp(ba.negate(), n).normalize(); cam.upVector = up;
   const q = new BABYLON.Quaternion(); BABYLON.Quaternion.FromUnitVectorsToRef(BABYLON.Vector3.UpReadOnly, up, q);
   const loc = n.applyRotationQuaternion(BABYLON.Quaternion.Inverse(q));
-  cam.target = c0.clone(); cam.alpha = Math.atan2(loc.z, loc.x); cam.beta = Math.acos(clamp(loc.y, -1, 1)); cam.radius = hc.clientWidth < 520 ? 0.27 : 0.23;
+  cam.target = c0.clone(); cam.alpha = Math.atan2(loc.z, loc.x); cam.beta = Math.acos(clamp(loc.y, -1, 1)); cam.radius = hc.clientWidth < 520 ? 0.27 : 0.23; deep.r0 = cam.radius;
   cam.lowerBetaLimit = 0.05; cam.upperBetaLimit = Math.PI - 0.05;
 
   // Étiquettes
@@ -1587,6 +1592,9 @@ function drawHeartDeep(dt) {
   if (D) for (const fl of deep.parts) { const base = H3(fl.side === 'gauche' ? '#ff4a3a' : '#3f72e0'); const pale = H3(fl.side === 'gauche' ? '#f4c2bb' : '#b9c8ec');
     BABYLON.Color3.LerpToRef(pale, base, D.sang, fl.mesh.material.diffuseColor); fl.mesh.material.emissiveColor.copyFrom(fl.mesh.material.diffuseColor).scaleInPlace(0.4); }
   animerAnnonces(dt);
+  if (deep.zoom) { const k3 = 1 - Math.exp(-dt * 8); deep.cam.radius += (deep.zoom.r - deep.cam.radius) * k3;
+    if (deep.zoom.t) BABYLON.Vector3.LerpToRef(deep.cam.target, deep.zoom.t, k3, deep.cam.target);
+    if (Math.abs(deep.zoom.r - deep.cam.radius) < 1e-4 && (!deep.zoom.t || BABYLON.Vector3.Distance(deep.cam.target, deep.zoom.t) < 1e-4)) deep.zoom = null; }
   if (deep.focus) { // la caméra glisse vers la zone touchée, puis revient
     const f = deep.focus; f.t -= dt; const aller = f.t > 1.1; const k2 = 1 - Math.exp(-dt * 3);
     BABYLON.Vector3.LerpToRef(deep.cam.target, aller ? f.p : deep.c0, k2, deep.cam.target);
@@ -1644,6 +1652,10 @@ setSpeed(0.5);
 $('playBtn').onclick = () => { deep.playing = !deep.playing; $('playBtn').textContent = deep.playing ? 'Pause' : 'Lecture'; };
 $('stepBtn').onclick = () => { const i = phaseIdx(deep.p); deep.p = PHASES[(i + 1) % 5].a + 0.001; };
 $('cutBtn').onclick = () => setCut(!deep.cut);
+// Zoom par boutons : glissement doux vers le nouveau rayon
+const zoomBy = f => { if (deep.cam) deep.zoom = { r: clamp((deep.zoom ? deep.zoom.r : deep.cam.radius) * f, deep.cam.lowerRadiusLimit, deep.cam.upperRadiusLimit) }; };
+$('zoomIn').onclick = () => zoomBy(0.7); $('zoomOut').onclick = () => zoomBy(1.4);
+$('zoomReset').onclick = () => { if (deep.cam) deep.zoom = { r: deep.r0, t: deep.c0 }; };
 $('labBtn').onclick = () => setLabels(!deep.labels);
 $('closeDeep').onclick = () => { state.deepOpen = false; $('deep').hidden = true; last = performance.now(); };
 window.addEventListener('resize', () => { if (deep.eng) deep.eng.resize(); });
