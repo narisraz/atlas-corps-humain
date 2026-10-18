@@ -755,7 +755,7 @@ async function loadBody() {
     neurons = { dot, buf, level: new Float32Array(count) };
     groups.nerveux.meshes.push(dot);
   }
-  loaderEl.hidden = true; ready = true;
+  loaderEl.hidden = true; ready = true; window.__body = { meshOf, flows, scene };
 }
 
 /* ------------------------------------------------------------------ */
@@ -2363,7 +2363,45 @@ function drawBrainGraph(step) {
 }
 
 
-loadBody().catch(err => { console.error(err); loaderEl.querySelector('span').textContent = "Le modèle 3D n'a pas pu se charger. Rechargez la page."; loaderEl.querySelector('b').textContent = ''; });
+// Vue corps : le cœur Blender (pleine résolution) remplace l'ancien cœur, au même endroit,
+// avec ses gros vaisseaux qui rejoignent les artères et les veines du corps.
+const COEUR_CORPS = {
+  og: '#b4473f', od: '#a84a44', vg: '#b42f2d', vd: '#ab3a34', aorte: '#d63b35', tronc_pulm: '#3d6ec6',
+  veines_caves: '#3d6ec6', veines_pulm: '#d65a4d', coronaires: '#e0574a', veines_card: '#5b84d6',
+};
+async function heartInBody() {
+  const glb = await fetchModel('coeur3d.txt', () => {});
+  const res = await BABYLON.SceneLoader.ImportMeshAsync('', '', glb, scene, null, '.glb');
+  for (const g of res.animationGroups) g.dispose();
+  const old = meshOf.coeur; old.computeWorldMatrix(true);
+  const root = new BABYLON.TransformNode('coeur', scene); root.setPivotPoint(old.getBoundingInfo().boundingBox.centerWorld.clone());
+  const byName = {};
+  for (const m of res.meshes) {
+    if (!m.getTotalVertices || !m.getTotalVertices()) { continue; }
+    m.skeleton = null; for (const kd of ['matricesIndices', 'matricesWeights', 'color']) m.removeVerticesData(kd);
+    m.computeWorldMatrix(true); m.setParent(null); m.bakeCurrentTransformIntoVertices();
+    m.position.set(...HEART_OFFSET); m.bakeCurrentTransformIntoVertices();
+    byName[(m.name || '').replace(/_primitive\d+$/, '')] = m;
+  }
+  for (const n of res.transformNodes) n.dispose();
+  for (const sk of res.skeletons) sk.dispose();
+  const neufs = [];
+  for (const [k, col] of Object.entries(COEUR_CORPS)) {
+    const ps = HEART_SRC[k].map(n => byName[n]).filter(Boolean); if (!ps.length) continue;
+    const m = ps.length === 1 ? ps[0] : BABYLON.Mesh.MergeMeshes(ps, true, true);
+    for (const n of HEART_SRC[k]) delete byName[n];
+    m.name = 'coeur_' + k; m.parent = root;
+    m.material = organMat('coeur_' + k, col, { rough: 0.35, coat: k === 'aorte' || k.startsWith('veines') || k === 'tronc_pulm' ? 0.5 : 0.8 });
+    m.metadata = { organ: 'coeur', part: 'coeur' }; m.isPickable = true;
+    m.setEnabled(groups.cardio.visible); neufs.push(m);
+  }
+  for (const m of Object.values(byName)) m.dispose(); // valves et piliers : invisibles de l'extérieur
+  const i = pickables.indexOf(old); if (i >= 0) pickables.splice(i, 1, ...neufs);
+  const g = groups.cardio.meshes; g.splice(g.indexOf(old), 1, ...neufs);
+  setHighlight('coeur', false); organMeshes.coeur = neufs; old.dispose();
+  meshOf.coeur = root; applyDim(); if (state.selected === 'coeur') setHighlight('coeur', true);
+}
+loadBody().then(() => heartInBody().catch(err => console.error(err)), err => { console.error(err); loaderEl.querySelector('span').textContent = "Le modèle 3D n'a pas pu se charger. Rechargez la page."; loaderEl.querySelector('b').textContent = ''; });
 renderHome(); setBpm(70);
 })();
 </script>
